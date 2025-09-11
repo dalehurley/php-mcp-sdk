@@ -14,6 +14,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Implemented comprehensive transport layer (`src/Server/Transport/`, `src/Client/Transport/`):
+  - STDIO Server Transport with message buffering and partial message handling
+  - STDIO Client Transport with process management and environment variable security
+  - Streamable HTTP Server Transport with session management, SSE streaming, and security features
+  - Streamable HTTP Client Transport with reconnection support and event resumability
+  - Deprecated SSE transports for backward compatibility with migration guidance
+  - WebSocket transport placeholder with clear implementation roadmap
+- Created transport utilities (`src/Shared/`):
+  - `MessageFraming` utility for JSON-RPC message serialization, validation, and chunking
+  - `HttpTransportAdapter` interface for PSR-7 integration with Laravel/Symfony frameworks
+  - `LaravelIntegration` helpers for route handlers, middleware, service providers, and Artisan commands
+- Added comprehensive transport tests:
+  - Message framing validation and chunking tests
+  - WebSocket placeholder functionality tests
+  - HTTP transport adapter integration tests
+  - Laravel integration helper tests
+- Implemented Client components (`src/Client/`):
+  - `Client` class extending Protocol with full MCP client-side functionality
+  - `ClientOptions` class for configuring client behavior and capabilities
+  - Automatic initialization flow with server protocol negotiation
+  - Support for all MCP operations: tools, resources, prompts, completion, logging
+  - Tool output validation against cached schemas from listTools
+  - Server capability checking with detailed error messages
+  - Built-in handlers for server-initiated requests (sampling, elicitation, roots)
+  - Convenience methods for common operations (callToolByName, readResourceByUri, etc.)
+  - Protocol version compatibility checking and HTTP transport support
+  - Capability merging and registration before connection
+  - Graceful error handling with proper connection cleanup on initialization failure
+- Created comprehensive AI implementation prompt (`ai-prompts/11-implement-client-enhancements.md`):
+  - OAuth authentication client with PKCE support and automatic token refresh
+  - Middleware system for cross-cutting concerns (authentication, logging, retry, caching)
+  - WebSocket transport support with auto-reconnection and heartbeat
+  - Generic type support for protocol extensions
+  - AJV-style compiled validators for performance optimization
+  - Schema parameter support for flexible validation
+  - Detailed implementation guidelines, testing requirements, and usage examples
 - Implemented Server components (`src/Server/`):
   - Low-level `Server` class extending Protocol with MCP server-side logic
   - High-level `McpServer` class with convenient API for registering tools, resources, and prompts

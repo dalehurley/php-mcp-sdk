@@ -58,17 +58,17 @@ async(function () use ($client, $transport) {
         }
         echo "\n";
 
-        // Call the calculate tool
+        // Call the calculate tool using convenience method
         echo "Calling calculate tool with '2 + 2'...\n";
-        $result = await($client->callTool('calculate', ['expression' => '2 + 2']));
+        $result = $client->callToolByName('calculate', ['expression' => '2 + 2'])->await();
         if ($result->isError()) {
             echo "Error: ";
         } else {
             echo "Result: ";
         }
         foreach ($result->getContent() as $content) {
-            if ($content['type'] === 'text') {
-                echo $content['text'] . "\n";
+            if ($content->getType() === 'text') {
+                echo $content->getText() . "\n";
             }
         }
         echo "\n";
@@ -84,11 +84,11 @@ async(function () use ($client, $transport) {
         }
         echo "\n";
 
-        // Read a resource
+        // Read a resource using convenience method
         echo "Reading server info resource...\n";
-        $resourceContent = await($client->readResource('file:///info.txt'));
+        $resourceContent = $client->readResourceByUri('file:///info.txt')->await();
         foreach ($resourceContent->getContents() as $content) {
-            if ($content->isText()) {
+            if ($content->getType() === 'text') {
                 echo $content->getText() . "\n";
             }
         }
@@ -108,12 +108,12 @@ async(function () use ($client, $transport) {
         }
         echo "\n";
 
-        // Get a prompt
+        // Get a prompt using convenience method
         echo "Getting greeting prompt with name='World' and style='enthusiastic'...\n";
-        $promptResult = await($client->getPrompt(
+        $promptResult = $client->getPromptByName(
             'greeting',
             ['name' => 'World', 'style' => 'enthusiastic']
-        ));
+        )->await();
         foreach ($promptResult->getMessages() as $message) {
             echo "Role: {$message->getRole()}\n";
             echo "Content: {$message->getContent()->getText()}\n";
