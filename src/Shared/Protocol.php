@@ -1,0 +1,819 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MCP\Shared;
+
+use Amp\CancelledException;
+use Amp\DeferredFuture;
+use Amp\Future;
+use Amp\TimeoutCancellation;
+use Evenement\EventEmitter;
+use MCP\Types\ErrorCode;
+use MCP\Types\JsonRpc\JSONRPCError;
+use MCP\Types\JsonRpc\JSONRPCMessage;
+use MCP\Types\JsonRpc\JSONRPCNotification;
+use MCP\Types\JsonRpc\JSONRPCRequest;
+use MCP\Types\JsonRpc\JSONRPCResponse;
+use MCP\Types\McpError;
+use MCP\Types\Notification;
+use MCP\Types\Notifications\CancelledNotification;
+use MCP\Types\Notifications\ProgressNotification;
+use MCP\Types\Progress;
+use MCP\Types\Request;
+use MCP\Types\RequestId;
+use MCP\Types\RequestMeta;
+use MCP\Types\Requests\PingRequest;
+use MCP\Types\Result;
+use MCP\Types\Capabilities\ServerCapabilities;
+use MCP\Types\Capabilities\ClientCapabilities;
+use MCP\Validation\ValidationService;
+use function Amp\async;
+use function Amp\delay;
+
+/**
+ * Type alias for progress callback.
+ */
+// PHP doesn't support type aliases, so we'll use callable directly
+
+/**
+ * Additional initialization options.
+ */
+class ProtocolOptions
+{
+    /**
+     * @param array<string> $debouncedNotificationMethods
+     */
+    public function __construct(
+        public readonly bool $enforceStrictCapabilities = false,
+        public readonly array $debouncedNotificationMethods = []
+    ) {}
+}
+
+/**
+ * The default request timeout, in milliseconds.
+ */
+const DEFAULT_REQUEST_TIMEOUT_MSEC = 60000;
+
+/**
+ * Options that can be given per request.
+ */
+class RequestOptions
+{
+    public function __construct(
+        public readonly mixed $onprogress = null,
+        public readonly ?\Revolt\EventLoop\Suspension $signal = null,
+        public readonly ?int $timeout = null,
+        public readonly bool $resetTimeoutOnProgress = false,
+        public readonly ?int $maxTotalTimeout = null,
+        public readonly ?RequestId $relatedRequestId = null,
+        public readonly ?string $resumptionToken = null,
+        public readonly mixed $onresumptiontoken = null
+    ) {}
+}
+
+/**
+ * Options that can be given per notification.
+ */
+class NotificationOptions
+{
+    public function __construct(
+        public readonly ?RequestId $relatedRequestId = null
+    ) {}
+}
+
+/**
+ * Extra data given to request handlers.
+ * 
+ * @template SendRequestT of Request
+ * @template SendNotificationT of Notification
+ */
+class RequestHandlerExtra
+{
+    /**
+     * @param callable(SendNotificationT): Future<void> $sendNotification
+     * @param callable(SendRequestT, ValidationService, RequestOptions|null): Future $sendRequest
+     */
+    public function __construct(
+        public readonly \Revolt\EventLoop\Suspension $signal,
+        public readonly mixed $authInfo,
+        public readonly ?string $sessionId,
+        public readonly ?RequestMeta $_meta,
+        public readonly RequestId $requestId,
+        public readonly ?array $requestInfo,
+        public $sendNotification,
+        public $sendRequest
+    ) {}
+}
+
+/**
+ * Information about a request's timeout state
+ */
+class TimeoutInfo
+{
+    public function __construct(
+        public string $timeoutId,
+        public int $startTime,
+        public int $timeout,
+        public ?int $maxTotalTimeout,
+        public bool $resetTimeoutOnProgress,
+        public \Closure $onTimeout
+    ) {}
+}
+
+/**
+ * Implements MCP protocol framing on top of a pluggable transport, including
+ * features like request/response linking, notifications, and progress.
+ * 
+ * @template SendRequestT of Request
+ * @template SendNotificationT of Notification
+ * @template SendResultT of Result
+ */
+abstract class Protocol extends EventEmitter
+{
+    private ?Transport $transport = null;
+    private int $requestMessageId = 0;
+
+    /** @var array<string, callable(JSONRPCRequest, RequestHandlerExtra): Future<SendResultT>> */
+    private array $requestHandlers = [];
+
+    /** @var array<string|int, \Revolt\EventLoop\Suspension> */
+    private array $requestHandlerAbortControllers = [];
+
+    /** @var array<string, callable(JSONRPCNotification): Future<void>> */
+    private array $notificationHandlers = [];
+
+    /** @var array<int, DeferredFuture> */
+    private array $responseHandlers = [];
+
+    /** @var array<int, callable> */
+    private array $progressHandlers = [];
+
+    /** @var array<int, TimeoutInfo> */
+    private array $timeoutInfo = [];
+
+    /** @var array<string, bool> */
+    private array $pendingDebouncedNotifications = [];
+
+    private ValidationService $validationService;
+
+    /**
+     * Callback for when the connection is closed for any reason.
+     * This is invoked when close() is called as well.
+     */
+    public ?\Closure $onclose = null;
+
+    /**
+     * Callback for when an error occurs.
+     * Note that errors are not necessarily fatal; they are used for reporting 
+     * any kind of exceptional condition out of band.
+     */
+    public ?\Closure $onerror = null;
+
+    /**
+     * A handler to invoke for any request types that do not have their own handler installed.
+     * @var callable(JSONRPCRequest, RequestHandlerExtra): Future<SendResultT>|null
+     */
+    public $fallbackRequestHandler = null;
+
+    /**
+     * A handler to invoke for any notification types that do not have their own handler installed.
+     * @var callable(Notification): Future<void>|null
+     */
+    public $fallbackNotificationHandler = null;
+
+    public function __construct(
+        private readonly ?ProtocolOptions $options = null
+    ) {
+        $this->validationService = new ValidationService();
+
+        // Register default handlers
+        $this->setNotificationHandler(
+            CancelledNotification::class,
+            function (CancelledNotification $notification): void {
+                $requestId = $notification->getRequestId();
+                if ($requestId !== null) {
+                    $requestIdStr = $requestId instanceof RequestId ? (string) $requestId : (string) $requestId;
+                    $controller = $this->requestHandlerAbortControllers[$requestIdStr] ?? null;
+                    $controller?->suspend();
+                }
+            }
+        );
+
+        $this->setNotificationHandler(
+            ProgressNotification::class,
+            function (ProgressNotification $notification): void {
+                $this->onprogress($notification);
+            }
+        );
+
+        $this->setRequestHandler(
+            PingRequest::class,
+            function (PingRequest $request) {
+                // Automatic pong by default
+                return new Result();
+            }
+        );
+    }
+
+    private function setupTimeout(
+        int $messageId,
+        int $timeout,
+        ?int $maxTotalTimeout,
+        \Closure $onTimeout,
+        bool $resetTimeoutOnProgress = false
+    ): void {
+        $timeoutId = \Revolt\EventLoop::delay($timeout / 1000, $onTimeout);
+
+        $this->timeoutInfo[$messageId] = new TimeoutInfo(
+            $timeoutId,
+            time() * 1000,
+            $timeout,
+            $maxTotalTimeout,
+            $resetTimeoutOnProgress,
+            $onTimeout
+        );
+    }
+
+    private function resetTimeout(int $messageId): void
+    {
+        $info = $this->timeoutInfo[$messageId] ?? null;
+        if (!$info) {
+            return;
+        }
+
+        $totalElapsed = (time() * 1000) - $info->startTime;
+        if ($info->maxTotalTimeout && $totalElapsed >= $info->maxTotalTimeout) {
+            unset($this->timeoutInfo[$messageId]);
+            throw new McpError(
+                ErrorCode::RequestTimeout,
+                "Maximum total timeout exceeded",
+                ['maxTotalTimeout' => $info->maxTotalTimeout, 'totalElapsed' => $totalElapsed]
+            );
+        }
+
+        \Revolt\EventLoop::cancel($info->timeoutId);
+        $info->timeoutId = \Revolt\EventLoop::delay($info->timeout / 1000, $info->onTimeout);
+    }
+
+    private function cleanupTimeout(int $messageId): void
+    {
+        $info = $this->timeoutInfo[$messageId] ?? null;
+        if ($info) {
+            \Revolt\EventLoop::cancel($info->timeoutId);
+            unset($this->timeoutInfo[$messageId]);
+        }
+    }
+
+    /**
+     * Attaches to the given transport, starts it, and starts listening for messages.
+     */
+    public function connect(Transport $transport): Future
+    {
+        return async(function () use ($transport) {
+            $this->transport = $transport;
+
+            // Set up transport handlers
+            $transport->setCloseHandler(function () {
+                $this->onclose();
+            });
+
+            $transport->setErrorHandler(function (\Throwable $error) {
+                $this->onerror($error);
+            });
+
+            $transport->setMessageHandler(function (array $message, ?array $extra = null) {
+                $jsonrpcMessage = JSONRPCMessage::fromArray($message);
+
+                if ($jsonrpcMessage instanceof JSONRPCResponse || $jsonrpcMessage instanceof JSONRPCError) {
+                    $this->onresponse($jsonrpcMessage);
+                } elseif ($jsonrpcMessage instanceof JSONRPCRequest) {
+                    $this->onrequest($jsonrpcMessage, $extra);
+                } elseif ($jsonrpcMessage instanceof JSONRPCNotification) {
+                    $this->onnotification($jsonrpcMessage);
+                } else {
+                    $this->onerror(new \Error("Unknown message type: " . json_encode($message)));
+                }
+            });
+
+            $transport->start()->await();
+        });
+    }
+
+    private function onclose(): void
+    {
+        $responseHandlers = $this->responseHandlers;
+        $this->responseHandlers = [];
+        $this->progressHandlers = [];
+        $this->pendingDebouncedNotifications = [];
+        $this->transport = null;
+
+        if ($this->onclose) {
+            ($this->onclose)();
+        }
+
+        $error = new McpError(ErrorCode::ConnectionClosed, "Connection closed");
+        foreach ($responseHandlers as $deferred) {
+            $deferred->error($error);
+        }
+    }
+
+    private function onerror(\Throwable $error): void
+    {
+        if ($this->onerror) {
+            ($this->onerror)($error);
+        }
+    }
+
+    private function onnotification(JSONRPCNotification $notification): void
+    {
+        $method = $notification->getMethod();
+        $handler = $this->notificationHandlers[$method] ?? $this->fallbackNotificationHandler;
+
+        // Ignore notifications not being subscribed to
+        if ($handler === null) {
+            return;
+        }
+
+        // Execute handler asynchronously
+        async(function () use ($handler, $notification) {
+            try {
+                $handler($notification);
+            } catch (\Throwable $error) {
+                $this->onerror(new \Error("Uncaught error in notification handler: " . $error->getMessage()));
+            }
+        });
+    }
+
+    private function onrequest(JSONRPCRequest $request, ?array $extra = null): void
+    {
+        $handler = $this->requestHandlers[$request->getMethod()] ?? $this->fallbackRequestHandler;
+
+        // Capture the current transport at request time
+        $capturedTransport = $this->transport;
+
+        if ($handler === null) {
+            async(function () use ($capturedTransport, $request) {
+                $capturedTransport?->send([
+                    'jsonrpc' => '2.0',
+                    'id' => $request->getId()->jsonSerialize(),
+                    'error' => [
+                        'code' => ErrorCode::MethodNotFound->value,
+                        'message' => 'Method not found',
+                    ],
+                ])->await();
+            });
+            return;
+        }
+
+        $suspension = \Revolt\EventLoop::getSuspension();
+        $this->requestHandlerAbortControllers[$request->getId()->jsonSerialize()] = $suspension;
+
+        $fullExtra = new RequestHandlerExtra(
+            signal: $suspension,
+            authInfo: $extra['authInfo'] ?? null,
+            sessionId: isset($extra['sessionId']) ? $extra['sessionId'] : null,
+            _meta: $request->getParams()['_meta'] ?? null,
+            requestId: $request->getId(),
+            requestInfo: $extra['requestInfo'] ?? null,
+            sendNotification: function (Notification $notification) use ($request) {
+                return $this->notification($notification, new NotificationOptions($request->getId()));
+            },
+            sendRequest: function (Request $r, ValidationService $resultSchema, ?RequestOptions $options = null) use ($request) {
+                $newOptions = new RequestOptions(
+                    onprogress: $options?->onprogress,
+                    signal: $options?->signal,
+                    timeout: $options?->timeout,
+                    resetTimeoutOnProgress: $options?->resetTimeoutOnProgress,
+                    maxTotalTimeout: $options?->maxTotalTimeout,
+                    relatedRequestId: $request->getId(),
+                    resumptionToken: $options?->resumptionToken,
+                    onresumptiontoken: $options?->onresumptiontoken
+                );
+                return $this->request($r, $resultSchema, $newOptions);
+            }
+        );
+
+        // Execute handler asynchronously
+        async(function () use ($handler, $request, $fullExtra, $capturedTransport, $suspension) {
+            try {
+                $result = $handler($request, $fullExtra);
+
+                // If the suspension is resumed, the request was cancelled
+                if (false) { // Placeholder for suspension check
+                    return;
+                }
+
+                $capturedTransport?->send([
+                    'result' => $result,
+                    'jsonrpc' => '2.0',
+                    'id' => $request->getId()->jsonSerialize(),
+                ])->await();
+            } catch (\Throwable $error) {
+                // If the suspension is resumed, the request was cancelled
+                if (false) { // Placeholder for suspension check
+                    return;
+                }
+
+                $capturedTransport?->send([
+                    'jsonrpc' => '2.0',
+                    'id' => $request->getId()->jsonSerialize(),
+                    'error' => [
+                        'code' => $error instanceof McpError
+                            ? $error->errorCode->value
+                            : ErrorCode::InternalError->value,
+                        'message' => $error->getMessage() ?: 'Internal error',
+                    ],
+                ])->await();
+            } finally {
+                unset($this->requestHandlerAbortControllers[$request->getId()->jsonSerialize()]);
+            }
+        });
+    }
+
+    private function onprogress(ProgressNotification $notification): void
+    {
+        $progressToken = $notification->getProgressToken();
+        if (!$progressToken) {
+            $this->onerror(new \Error("Received a progress notification without a token"));
+            return;
+        }
+
+        $messageId = (int) (string) $progressToken;
+        $progress = $notification->getProgress();
+
+        $handler = $this->progressHandlers[$messageId] ?? null;
+        if (!$handler || !$progress) {
+            $this->onerror(new \Error("Received a progress notification for an unknown token: " . json_encode($notification)));
+            return;
+        }
+
+        $responseHandler = $this->responseHandlers[$messageId] ?? null;
+        $timeoutInfo = $this->timeoutInfo[$messageId] ?? null;
+
+        if ($timeoutInfo && $responseHandler && $timeoutInfo->resetTimeoutOnProgress) {
+            try {
+                $this->resetTimeout($messageId);
+            } catch (McpError $error) {
+                $responseHandler->error($error);
+                return;
+            }
+        }
+
+        $handler($progress);
+    }
+
+    private function onresponse(JSONRPCResponse|JSONRPCError $response): void
+    {
+        $messageId = (int) $response->getId()->jsonSerialize();
+        $deferred = $this->responseHandlers[$messageId] ?? null;
+
+        if ($deferred === null) {
+            $this->onerror(new \Error(
+                "Received a response for an unknown message ID: " . json_encode($response)
+            ));
+            return;
+        }
+
+        unset($this->responseHandlers[$messageId]);
+        unset($this->progressHandlers[$messageId]);
+        $this->cleanupTimeout($messageId);
+
+        if ($response instanceof JSONRPCResponse) {
+            $deferred->complete($response);
+        } else {
+            $error = new McpError(
+                ErrorCode::tryFrom($response->getCode()) ?? ErrorCode::InternalError,
+                $response->getMessage(),
+                $response->getData()
+            );
+            $deferred->error($error);
+        }
+    }
+
+    public function getTransport(): ?Transport
+    {
+        return $this->transport;
+    }
+
+    /**
+     * Closes the connection.
+     */
+    public function close(): Future
+    {
+        return async(function () {
+            $this->transport?->close()->await();
+        });
+    }
+
+    /**
+     * A method to check if a capability is supported by the remote side.
+     * This should be implemented by subclasses.
+     */
+    abstract protected function assertCapabilityForMethod(string $method): void;
+
+    /**
+     * A method to check if a notification is supported by the local side.
+     * This should be implemented by subclasses.
+     */
+    abstract protected function assertNotificationCapability(string $method): void;
+
+    /**
+     * A method to check if a request handler is supported by the local side.
+     * This should be implemented by subclasses.
+     */
+    abstract protected function assertRequestHandlerCapability(string $method): void;
+
+    /**
+     * Sends a request and wait for a response.
+     * 
+     * @template T
+     * @param SendRequestT $request
+     * @param ValidationService $resultSchema
+     * @param RequestOptions|null $options
+     * @return Future<T>
+     */
+    public function request(
+        Request $request,
+        ValidationService $resultSchema,
+        ?RequestOptions $options = null
+    ): Future {
+        return async(function () use ($request, $resultSchema, $options) {
+            if (!$this->transport) {
+                throw new \Error("Not connected");
+            }
+
+            if ($this->options?->enforceStrictCapabilities === true) {
+                $this->assertCapabilityForMethod($request->getMethod());
+            }
+
+            // Check if signal is suspended
+            // Note: signal handling depends on the specific implementation
+
+            $messageId = $this->requestMessageId++;
+            $jsonrpcRequest = [
+                'jsonrpc' => '2.0',
+                'id' => $messageId,
+                'method' => $request->getMethod(),
+            ];
+
+            $params = $request->getParams();
+            if ($params !== null) {
+                $jsonrpcRequest['params'] = $params;
+            }
+
+            if ($options?->onprogress) {
+                $this->progressHandlers[$messageId] = $options->onprogress;
+                $jsonrpcRequest['params'] = array_merge(
+                    $params ?? [],
+                    [
+                        '_meta' => array_merge(
+                            $params['_meta'] ?? [],
+                            ['progressToken' => $messageId]
+                        )
+                    ]
+                );
+            }
+
+            $deferred = new DeferredFuture();
+            $this->responseHandlers[$messageId] = $deferred;
+
+            $cancel = function (mixed $reason) use ($messageId, $deferred, $options) {
+                unset($this->responseHandlers[$messageId]);
+                unset($this->progressHandlers[$messageId]);
+                $this->cleanupTimeout($messageId);
+
+                async(function () use ($messageId, $reason, $options) {
+                    $this->transport?->send([
+                        'jsonrpc' => '2.0',
+                        'method' => 'notifications/cancelled',
+                        'params' => [
+                            'requestId' => $messageId,
+                            'reason' => (string) $reason,
+                        ],
+                    ])->await();
+                });
+
+                $deferred->error($reason instanceof \Throwable ? $reason : new \Error((string) $reason));
+            };
+
+            if ($options?->signal) {
+                \Revolt\EventLoop::onSignal(SIGTERM, function () use ($cancel, $options) {
+                    $cancel("Aborted");
+                });
+            }
+
+            $timeout = $options?->timeout ?? DEFAULT_REQUEST_TIMEOUT_MSEC;
+            $timeoutHandler = function () use ($cancel, $timeout) {
+                $cancel(new McpError(
+                    ErrorCode::RequestTimeout,
+                    "Request timed out",
+                    ['timeout' => $timeout]
+                ));
+            };
+
+            $this->setupTimeout(
+                $messageId,
+                $timeout,
+                $options?->maxTotalTimeout,
+                $timeoutHandler,
+                $options?->resetTimeoutOnProgress ?? false
+            );
+
+            try {
+                $this->transport->send($jsonrpcRequest)->await();
+            } catch (\Throwable $error) {
+                $this->cleanupTimeout($messageId);
+                throw $error;
+            }
+
+            // Wait for the response
+            $future = $deferred->getFuture();
+            $response = $future->await(new \Amp\TimeoutCancellation($timeout / 1000));
+
+            if ($response instanceof JSONRPCResponse) {
+                $result = $response->getResult()->jsonSerialize();
+                // TODO: Implement proper validation
+                // $resultSchema->validate($result);
+                return $result;
+            }
+
+            throw new \Error("Unexpected response type");
+        });
+    }
+
+    /**
+     * Emits a notification, which is a one-way message that does not expect a response.
+     */
+    public function notification(
+        Notification $notification,
+        ?NotificationOptions $options = null
+    ): Future {
+        return async(function () use ($notification, $options) {
+            if (!$this->transport) {
+                throw new \Error("Not connected");
+            }
+
+            $this->assertNotificationCapability($notification->getMethod());
+
+            $debouncedMethods = $this->options?->debouncedNotificationMethods ?? [];
+            $canDebounce = in_array($notification->getMethod(), $debouncedMethods, true)
+                && !$notification->hasParams()
+                && !$options?->relatedRequestId;
+
+            if ($canDebounce) {
+                // If a notification of this type is already scheduled, do nothing
+                if (isset($this->pendingDebouncedNotifications[$notification->getMethod()])) {
+                    return;
+                }
+
+                // Mark this notification type as pending
+                $this->pendingDebouncedNotifications[$notification->getMethod()] = true;
+
+                // Schedule the actual send to happen in the next tick
+                \Revolt\EventLoop::defer(function () use ($notification, $options) {
+                    unset($this->pendingDebouncedNotifications[$notification->getMethod()]);
+
+                    // Safety check: If the connection was closed while this was pending, abort
+                    if (!$this->transport) {
+                        return;
+                    }
+
+                    $jsonrpcNotification = array_merge(
+                        ['jsonrpc' => '2.0'],
+                        $notification->jsonSerialize()
+                    );
+
+                    try {
+                        $this->transport->send($jsonrpcNotification)->await();
+                    } catch (\Throwable $error) {
+                        $this->onerror($error);
+                    }
+                });
+
+                return;
+            }
+
+            $jsonrpcNotification = array_merge(
+                ['jsonrpc' => '2.0'],
+                $notification->jsonSerialize()
+            );
+
+            $this->transport->send($jsonrpcNotification)->await();
+        });
+    }
+
+    /**
+     * Registers a handler to invoke when this protocol object receives a request with the given method.
+     * Note that this will replace any previous request handler for the same method.
+     * 
+     * @template T
+     * @param class-string<T> $requestClass
+     * @param callable(T, RequestHandlerExtra): SendResultT|Future<SendResultT> $handler
+     */
+    public function setRequestHandler(
+        string $requestClass,
+        callable $handler
+    ): void {
+        if (!is_subclass_of($requestClass, Request::class)) {
+            throw new \InvalidArgumentException("Request class must extend Request");
+        }
+
+        $method = $requestClass::METHOD ?? throw new \Error("Request class must have METHOD constant");
+        $this->assertRequestHandlerCapability($method);
+
+        $this->requestHandlers[$method] = function (JSONRPCRequest $request, RequestHandlerExtra $extra) use ($requestClass, $handler) {
+            $typedRequest = $requestClass::fromArray($request->jsonSerialize());
+            $result = $handler($typedRequest, $extra);
+
+            return $result instanceof Future ? $result : async(fn() => $result);
+        };
+    }
+
+    /**
+     * Removes the request handler for the given method.
+     */
+    public function removeRequestHandler(string $method): void
+    {
+        unset($this->requestHandlers[$method]);
+    }
+
+    /**
+     * Asserts that a request handler has not already been set for the given method.
+     */
+    public function assertCanSetRequestHandler(string $method): void
+    {
+        if (isset($this->requestHandlers[$method])) {
+            throw new \Error(
+                "A request handler for {$method} already exists, which would be overridden"
+            );
+        }
+    }
+
+    /**
+     * Registers a handler to invoke when this protocol object receives a notification with the given method.
+     * Note that this will replace any previous notification handler for the same method.
+     * 
+     * @template T
+     * @param class-string<T> $notificationClass
+     * @param callable(T): void|Future<void> $handler
+     */
+    public function setNotificationHandler(
+        string $notificationClass,
+        callable $handler
+    ): void {
+        if (!is_subclass_of($notificationClass, Notification::class)) {
+            throw new \InvalidArgumentException("Notification class must extend Notification");
+        }
+
+        $method = $notificationClass::METHOD ?? throw new \Error("Notification class must have METHOD constant");
+
+        $this->notificationHandlers[$method] = function (JSONRPCNotification $notification) use ($notificationClass, $handler) {
+            $typedNotification = $notificationClass::fromArray($notification->jsonSerialize());
+            $result = $handler($typedNotification);
+
+            return $result instanceof Future ? $result : async(fn() => $result);
+        };
+    }
+
+    /**
+     * Removes the notification handler for the given method.
+     */
+    public function removeNotificationHandler(string $method): void
+    {
+        unset($this->notificationHandlers[$method]);
+    }
+}
+
+/**
+ * Merge capabilities objects.
+ * 
+ * @template T of ServerCapabilities|ClientCapabilities
+ * @param T $base
+ * @param T $additional
+ * @return T
+ */
+function mergeCapabilities(
+    ServerCapabilities|ClientCapabilities $base,
+    ServerCapabilities|ClientCapabilities $additional
+): ServerCapabilities|ClientCapabilities {
+    $result = clone $base;
+
+    foreach (get_object_vars($additional) as $key => $value) {
+        if ($value !== null && is_object($value)) {
+            $baseValue = $result->$key ?? null;
+            if ($baseValue !== null) {
+                $result->$key = (object) array_merge(
+                    (array) $baseValue,
+                    (array) $value
+                );
+            } else {
+                $result->$key = $value;
+            }
+        } else {
+            $result->$key = $value;
+        }
+    }
+
+    return $result;
+}

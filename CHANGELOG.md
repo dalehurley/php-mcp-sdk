@@ -14,7 +14,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Implemented Protocol base class in `src/Shared/Protocol.php` with:
+  - Request/response correlation and timeout handling
+  - Event emission using Evenement
+  - Support for request handlers, notification handlers, and progress callbacks
+  - Automatic ping/pong handling
+  - Request cancellation support
+  - Debounced notification support
+  - Full compatibility with Amphp async operations
+- Implemented URI Template support in `src/Shared/UriTemplate.php`:
+  - RFC 6570 compliant URI template parsing and expansion
+  - Support for simple string expansion with {variable} syntax
+  - Variable extraction from URIs with match() method
+  - Operators: +, #, ., /, ?, &
+  - Protection against malicious inputs with length limits
+- Created authentication utilities in `src/Shared/AuthUtils.php`:
+  - OAuth resource URL handling (RFC 8707 compliant)
+  - PKCE code verifier and challenge generation
+  - JWT token parsing and expiration checking (without verification)
+  - OAuth state parameter generation
+  - Authorization URL building
+- Implemented STDIO support in `src/Shared/Stdio.php`:
+  - ReadBuffer class for buffering and parsing newline-delimited JSON
+  - Non-blocking STDIN reading support
+  - Message serialization and deserialization
+  - Stream utilities for checking data availability
+- Created metadata utilities in `src/Shared/MetadataUtils.php`:
+  - Display name resolution with proper precedence (title → annotations.title → name)
+  - Description extraction from metadata
+  - Support for both object and array metadata formats
+- Implemented OAuth and OpenID Connect schemas in `src/Shared/Auth.php`:
+  - OAuth Protected Resource Metadata (RFC 9728)
+  - OAuth 2.0 Authorization Server Metadata (RFC 8414)
+  - OAuth token response and error response structures
+  - OAuth Dynamic Client Registration metadata (RFC 7591)
+  - URL validation with protection against dangerous schemes
 - Created Transport interface in `src/Shared/Transport.php` using Amphp for async operations
+- Added comprehensive unit tests for shared components:
+  - UriTemplate tests covering expansion, matching, and RFC 6570 compliance
+  - AuthUtils tests for OAuth flows, JWT parsing, and resource URL validation
+  - MetadataUtils tests for display name resolution and metadata handling
+  - Stdio tests for message buffering and serialization
+  - Protocol tests for request/response handling, timeouts, and event management
+  - Auth schema tests for OAuth and OpenID Connect structures
+- Fixed issues identified during testing:
+  - Split Auth.php into separate files for PSR-4 compliance (OAuthProtectedResourceMetadata, OAuthMetadata, OAuthTokens, OAuthErrorResponse, OAuthClientMetadata, OAuthClientInformation)
+  - Fixed Protocol constructor to not call parent constructor on EventEmitter
+  - Corrected Future handling in Protocol methods by properly awaiting transport operations
+  - Separated ReadBuffer class into its own file for autoloading
+  - Fixed URL validation in OAuth classes to check scheme before other validations
+  - Changed RequestOptions onprogress type from callable to mixed due to PHP property type limitations
+  - Improved AuthUtils::checkResourceAllowed to normalize paths before comparison
 - Initial PHP MCP SDK project structure with Composer configuration
 - Core type definitions: `ErrorCode`, `McpError`, and `Implementation`
 - Complete type system conversion from TypeScript SDK:
