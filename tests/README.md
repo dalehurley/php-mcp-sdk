@@ -118,6 +118,7 @@ class MyTypeTest extends TestCase
 ### Coverage Areas
 
 1. **Type System Tests** (81 tests)
+
    - Base types (ProgressToken, Cursor, RequestId, etc.)
    - Request/Response types
    - JSON-RPC message types
@@ -128,7 +129,7 @@ class MyTypeTest extends TestCase
 2. **Protocol Message Tests** (70 tests)
    - Pagination base types
    - Request messages (Initialize, List, Read, etc.)
-   - Result messages  
+   - Result messages
    - Notification types
    - Reference types
    - Elicitation schemas

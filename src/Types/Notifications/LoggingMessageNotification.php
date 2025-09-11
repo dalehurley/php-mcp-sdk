@@ -36,7 +36,7 @@ final class LoggingMessageNotification extends Notification
             'level' => $level->value,
             'data' => $data,
         ];
-        
+
         if ($logger !== null) {
             $params['logger'] = $logger;
         }
