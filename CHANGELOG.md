@@ -14,6 +14,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Implemented Server components (`src/Server/`):
+  - Low-level `Server` class extending Protocol with MCP server-side logic
+  - High-level `McpServer` class with convenient API for registering tools, resources, and prompts
+  - `ServerOptions` class for configuring server behavior
+  - `RegisteredTool`, `RegisteredResource`, `RegisteredPrompt` classes for managing registered items
+  - `Completable` class for adding autocompletion support to prompt arguments
+  - `ResourceTemplate` class for dynamic resource URIs with template patterns
+  - Full support for dynamic enable/disable of registered items
+  - Automatic capability management and list_changed notifications
+- Implemented Transport layers (`src/Server/Transport/` and `src/Client/Transport/`):
+  - `StdioServerTransport` for server-side stdio communication
+  - `StdioClientTransport` for client-side stdio with process spawning
+  - Automatic message framing with newline-delimited JSON
+  - Process lifecycle management with graceful shutdown
+  - Environment variable filtering for security
+  - Full Amphp async integration
+- Added automated build script `ai-prompts/build.sh` for processing implementation prompts:
+  - Automatically processes markdown prompt files in sequence
+  - Integrates with cursor-agent for code generation
+  - Moves completed prompts to done/ directory
+  - Commits changes after each implementation step
 - Implemented Protocol base class in `src/Shared/Protocol.php` with:
   - Request/response correlation and timeout handling
   - Event emission using Evenement
