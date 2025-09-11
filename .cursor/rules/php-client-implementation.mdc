@@ -1,0 +1,335 @@
+---
+description: Guidelines for implementing MCP clients in PHP
+---
+
+# PHP MCP Client Implementation Guide
+
+## Client Class Structure
+
+The `Client` class handles communication with MCP servers and manages the protocol lifecycle.
+
+### Basic Client Implementation
+
+```php
+namespace MCP\Client;
+
+use MCP\Shared\Protocol;
+use MCP\Shared\Transport;
+use MCP\Types\Implementation;
+use MCP\Types\ClientCapabilities;
+use MCP\Types\ServerCapabilities;
+use React\Promise\Promise;
+use React\Promise\PromiseInterface;
+
+class Client extends Protocol {
+    private ?ServerCapabilities $serverCapabilities = null;
+    private ?Implementation $serverVersion = null;
+    private ClientCapabilities $capabilities;
+    private ?string $instructions = null;
+
+    public function __construct(
+        Implementation $clientInfo,
+        ?ClientOptions $options = null
+    ) {
+        parent::__construct($clientInfo, $options);
+        $this->capabilities = $options?->capabilities ?? new ClientCapabilities();
+    }
+
+    /**
+     * Connect to server and perform initialization
+     */
+    public function connect(Transport $transport): PromiseInterface {
+        return $this->protocol->connect($transport)
+            ->then(function () {
+                return $this->initialize();
+            });
+    }
+}
+```
+
+### Initialization Flow
+
+```php
+private function initialize(): PromiseInterface {
+    return $this->request([
+        'method' => 'initialize',
+        'params' => [
+            'protocolVersion' => self::LATEST_PROTOCOL_VERSION,
+            'capabilities' => $this->capabilities->toArray(),
+            'clientInfo' => [
+                'name' => $this->clientInfo->getName(),
+                'version' => $this->clientInfo->getVersion()
+            ]
+        ]
+    ])->then(function (array $result) {
+        // Validate protocol version
+        if (!in_array($result['protocolVersion'], self::SUPPORTED_PROTOCOL_VERSIONS)) {
+            throw new McpError(
+                ErrorCode::InvalidRequest,
+                "Unsupported protocol version: {$result['protocolVersion']}"
+            );
+        }
+
+        $this->serverCapabilities = ServerCapabilities::fromArray($result['capabilities']);
+        $this->serverVersion = Implementation::fromArray($result['serverInfo']);
+        $this->instructions = $result['instructions'] ?? null;
+
+        // Send initialized notification
+        return $this->notify([
+            'method' => 'notifications/initialized'
+        ]);
+    });
+}
+```
+
+### Resource Operations
+
+```php
+/**
+ * List available resources
+ */
+public function listResources(?string $cursor = null): PromiseInterface {
+    $this->assertCapability('resources');
+
+    $params = [];
+    if ($cursor !== null) {
+        $params['cursor'] = $cursor;
+    }
+
+    return $this->request([
+        'method' => 'resources/list',
+        'params' => $params
+    ]);
+}
+
+/**
+ * List resource templates
+ */
+public function listResourceTemplates(?string $cursor = null): PromiseInterface {
+    $this->assertCapability('resources');
+
+    return $this->request([
+        'method' => 'resources/templates/list',
+        'params' => $cursor ? ['cursor' => $cursor] : []
+    ]);
+}
+
+/**
+ * Read a resource
+ */
+public function readResource(string $uri): PromiseInterface {
+    $this->assertCapability('resources');
+
+    return $this->request([
+        'method' => 'resources/read',
+        'params' => ['uri' => $uri]
+    ]);
+}
+
+/**
+ * Subscribe to resource updates
+ */
+public function subscribeResource(string $uri): PromiseInterface {
+    $this->assertCapability('resources', 'subscribe');
+
+    return $this->request([
+        'method' => 'resources/subscribe',
+        'params' => ['uri' => $uri]
+    ]);
+}
+```
+
+### Tool Operations
+
+```php
+/**
+ * List available tools
+ */
+public function listTools(?string $cursor = null): PromiseInterface {
+    $this->assertCapability('tools');
+
+    return $this->request([
+        'method' => 'tools/list',
+        'params' => $cursor ? ['cursor' => $cursor] : []
+    ])->then(function (array $result) {
+        // Cache tool output schemas for validation
+        foreach ($result['tools'] as $tool) {
+            if (isset($tool['outputSchema'])) {
+                $this->cacheToolOutputValidator($tool['name'], $tool['outputSchema']);
+            }
+        }
+        return $result;
+    });
+}
+
+/**
+ * Call a tool
+ */
+public function callTool(string $name, ?array $arguments = null): PromiseInterface {
+    $this->assertCapability('tools');
+
+    return $this->request([
+        'method' => 'tools/call',
+        'params' => [
+            'name' => $name,
+            'arguments' => $arguments ?? []
+        ]
+    ])->then(function (array $result) use ($name) {
+        // Validate output if schema is available
+        if ($validator = $this->getToolOutputValidator($name)) {
+            $this->validateToolOutput($result, $validator);
+        }
+        return $result;
+    });
+}
+```
+
+### Prompt Operations
+
+```php
+/**
+ * List available prompts
+ */
+public function listPrompts(?string $cursor = null): PromiseInterface {
+    $this->assertCapability('prompts');
+
+    return $this->request([
+        'method' => 'prompts/list',
+        'params' => $cursor ? ['cursor' => $cursor] : []
+    ]);
+}
+
+/**
+ * Get a prompt
+ */
+public function getPrompt(string $name, ?array $arguments = null): PromiseInterface {
+    $this->assertCapability('prompts');
+
+    return $this->request([
+        'method' => 'prompts/get',
+        'params' => [
+            'name' => $name,
+            'arguments' => $arguments ?? []
+        ]
+    ]);
+}
+```
+
+### Completion Support
+
+```php
+/**
+ * Request completions for prompt arguments or resource templates
+ */
+public function complete(CompleteRequest $request): PromiseInterface {
+    $this->assertCapability('completions');
+
+    return $this->request([
+        'method' => 'completion/complete',
+        'params' => $request->toArray()
+    ]);
+}
+```
+
+### Logging
+
+```php
+/**
+ * Set server logging level
+ */
+public function setLoggingLevel(LoggingLevel $level): PromiseInterface {
+    $this->assertCapability('logging');
+
+    return $this->request([
+        'method' => 'logging/setLevel',
+        'params' => ['level' => $level->value]
+    ]);
+}
+```
+
+### Handling Server Requests
+
+```php
+// Handle sampling requests from server
+$client->setRequestHandler('sampling/createMessage', function (array $params) {
+    // Present to user for approval
+    $userApproval = $this->getUserApproval($params);
+
+    if (!$userApproval) {
+        throw new McpError(ErrorCode::InvalidRequest, "User rejected sampling request");
+    }
+
+    // Call LLM API
+    $response = $this->llmClient->createMessage($params);
+
+    return [
+        'model' => $response->model,
+        'stopReason' => $response->stopReason,
+        'role' => $response->role,
+        'content' => $response->content
+    ];
+});
+```
+
+### Error Handling
+
+```php
+private function request(array $request): PromiseInterface {
+    return $this->protocol->request($request)
+        ->then(null, function ($error) {
+            if ($error instanceof McpError) {
+                throw $error;
+            }
+
+            throw new McpError(
+                ErrorCode::InternalError,
+                "Request failed: " . $error->getMessage()
+            );
+        });
+}
+```
+
+### Client Usage Example
+
+```php
+use MCP\Client\Client;
+use MCP\Client\Transport\StdioClientTransport;
+
+// Create client
+$client = new Client([
+    'name' => 'example-client',
+    'version' => '1.0.0'
+], [
+    'capabilities' => [
+        'sampling' => [],
+        'elicitation' => [],
+        'roots' => ['listChanged' => true]
+    ]
+]);
+
+// Connect via stdio
+$transport = new StdioClientTransport([
+    'command' => 'node',
+    'args' => ['server.js']
+]);
+
+$client->connect($transport)->then(function () use ($client) {
+    // List and call tools
+    return $client->listTools();
+})->then(function ($tools) use ($client) {
+    return $client->callTool('example-tool', [
+        'param1' => 'value1'
+    ]);
+})->then(function ($result) {
+    echo "Tool result: " . json_encode($result) . PHP_EOL;
+});
+```
+
+## Best Practices
+
+1. **Capability Checking**: Always check server capabilities before making requests
+2. **Error Handling**: Handle both protocol errors and transport errors
+3. **Type Safety**: Use typed classes for all protocol messages
+4. **Async Operations**: Use promise chains properly
+5. **Resource Management**: Clean up subscriptions when done
+6. **Validation**: Validate server responses against expected schemas

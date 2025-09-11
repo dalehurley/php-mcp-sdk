@@ -1,0 +1,457 @@
+---
+description: Guidelines for integrating PHP MCP SDK with Laravel and InertiaJS
+---
+
+# Laravel and InertiaJS Integration Guide
+
+## Laravel Service Provider
+
+Create a service provider to register MCP components in Laravel:
+
+```php
+namespace MCP\Laravel;
+
+use Illuminate\Support\ServiceProvider;
+use MCP\Server\McpServer;
+use MCP\Client\Client;
+use MCP\Types\Implementation;
+
+class McpServiceProvider extends ServiceProvider {
+    public function register(): void {
+        // Register MCP Server as singleton
+        $this->app->singleton(McpServer::class, function ($app) {
+            $server = new McpServer(
+                new Implementation(
+                    name: config('mcp.server.name', 'laravel-mcp'),
+                    version: config('mcp.server.version', '1.0.0')
+                )
+            );
+
+            // Auto-register tools from config
+            foreach (config('mcp.tools', []) as $name => $config) {
+                $handler = $app->make($config['handler']);
+                $server->registerTool($name, $config['definition'], [$handler, 'handle']);
+            }
+
+            return $server;
+        });
+
+        // Register MCP Client
+        $this->app->singleton(Client::class, function ($app) {
+            return new Client(
+                new Implementation(
+                    name: config('mcp.client.name', 'laravel-client'),
+                    version: config('mcp.client.version', '1.0.0')
+                ),
+                [
+                    'capabilities' => config('mcp.client.capabilities', [])
+                ]
+            );
+        });
+    }
+
+    public function boot(): void {
+        // Publish config
+        $this->publishes([
+            __DIR__ . '/../config/mcp.php' => config_path('mcp.php'),
+        ], 'mcp-config');
+
+        // Register routes if enabled
+        if (config('mcp.routes.enabled', false)) {
+            $this->loadRoutesFrom(__DIR__ . '/../routes/mcp.php');
+        }
+    }
+}
+```
+
+## Configuration File
+
+```php
+// config/mcp.php
+return [
+    'server' => [
+        'name' => env('MCP_SERVER_NAME', 'laravel-mcp-server'),
+        'version' => env('MCP_SERVER_VERSION', '1.0.0'),
+        'transport' => env('MCP_SERVER_TRANSPORT', 'streamable-http'),
+    ],
+
+    'client' => [
+        'name' => env('MCP_CLIENT_NAME', 'laravel-mcp-client'),
+        'version' => env('MCP_CLIENT_VERSION', '1.0.0'),
+        'capabilities' => [
+            'sampling' => [],
+            'roots' => ['listChanged' => true],
+        ],
+    ],
+
+    'routes' => [
+        'enabled' => env('MCP_ROUTES_ENABLED', true),
+        'prefix' => env('MCP_ROUTES_PREFIX', 'mcp'),
+        'middleware' => ['api'],
+    ],
+
+    'tools' => [
+        'database-query' => [
+            'definition' => [
+                'title' => 'Database Query',
+                'description' => 'Execute database queries',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'query' => ['type' => 'string'],
+                        'bindings' => ['type' => 'array'],
+                    ],
+                    'required' => ['query'],
+                ],
+            ],
+            'handler' => \App\Mcp\Tools\DatabaseQueryTool::class,
+        ],
+    ],
+
+    'auth' => [
+        'enabled' => env('MCP_AUTH_ENABLED', false),
+        'provider' => env('MCP_AUTH_PROVIDER', 'oauth'),
+        'oauth' => [
+            'client_id' => env('MCP_OAUTH_CLIENT_ID'),
+            'client_secret' => env('MCP_OAUTH_CLIENT_SECRET'),
+            'redirect_uri' => env('MCP_OAUTH_REDIRECT_URI'),
+        ],
+    ],
+];
+```
+
+## Laravel Routes
+
+```php
+// routes/mcp.php
+use Illuminate\Support\Facades\Route;
+use MCP\Laravel\Http\Controllers\McpController;
+use MCP\Laravel\Http\Middleware\McpAuth;
+
+Route::group([
+    'prefix' => config('mcp.routes.prefix'),
+    'middleware' => config('mcp.routes.middleware'),
+], function () {
+    // Streamable HTTP endpoints
+    Route::post('/', [McpController::class, 'handle']);
+    Route::get('/', [McpController::class, 'sse']);
+    Route::delete('/', [McpController::class, 'terminate']);
+
+    // OAuth endpoints if auth is enabled
+    if (config('mcp.auth.enabled')) {
+        Route::get('/oauth/metadata', [McpController::class, 'metadata']);
+        Route::get('/oauth/authorize', [McpController::class, 'authorize']);
+        Route::post('/oauth/token', [McpController::class, 'token']);
+        Route::post('/oauth/revoke', [McpController::class, 'revoke']);
+    }
+});
+```
+
+## Laravel Controller
+
+```php
+namespace MCP\Laravel\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use MCP\Server\McpServer;
+use MCP\Server\Transport\StreamableHttpServerTransport;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+class McpController extends Controller {
+    private McpServer $server;
+    private array $transports = [];
+
+    public function __construct(McpServer $server) {
+        $this->server = $server;
+    }
+
+    public function handle(Request $request): Response {
+        $sessionId = $request->header('Mcp-Session-Id');
+
+        // Get or create transport
+        $transport = $this->getOrCreateTransport($sessionId);
+
+        // Handle the request
+        $body = $request->json()->all();
+        $response = new Response();
+
+        return $transport->handleRequest($request, $response, $body);
+    }
+
+    public function sse(Request $request): StreamedResponse {
+        $sessionId = $request->header('Mcp-Session-Id');
+
+        if (!$sessionId || !isset($this->transports[$sessionId])) {
+            abort(400, 'Invalid session');
+        }
+
+        $transport = $this->transports[$sessionId];
+
+        return response()->stream(function () use ($transport) {
+            $transport->handleSse();
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'Connection' => 'keep-alive',
+            'X-Accel-Buffering' => 'no', // Disable Nginx buffering
+        ]);
+    }
+
+    private function getOrCreateTransport(?string $sessionId): StreamableHttpServerTransport {
+        if ($sessionId && isset($this->transports[$sessionId])) {
+            return $this->transports[$sessionId];
+        }
+
+        $transport = new StreamableHttpServerTransport([
+            'sessionIdGenerator' => fn() => Str::uuid()->toString(),
+            'enableDnsRebindingProtection' => !app()->environment('local'),
+            'allowedHosts' => [request()->getHost()],
+        ]);
+
+        $transport->onsessioninitialized = function ($newSessionId) use ($transport) {
+            $this->transports[$newSessionId] = $transport;
+        };
+
+        $this->server->connect($transport);
+
+        return $transport;
+    }
+}
+```
+
+## InertiaJS Integration
+
+### React Component for MCP Client
+
+```tsx
+// resources/js/Components/McpClient.tsx
+import React, { useState, useEffect } from "react";
+import { usePage } from "@inertiajs/react";
+
+interface McpClientProps {
+  serverUrl?: string;
+  tools?: string[];
+}
+
+export function McpClient({ serverUrl = "/mcp", tools = [] }: McpClientProps) {
+  const [client, setClient] = useState<any>(null);
+  const [connected, setConnected] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Initialize MCP client
+    const initClient = async () => {
+      const { Client } = await import("@modelcontextprotocol/sdk/client");
+      const { StreamableHTTPClientTransport } = await import(
+        "@modelcontextprotocol/sdk/client/streamableHttp"
+      );
+
+      const transport = new StreamableHTTPClientTransport(
+        new URL(serverUrl, window.location.origin)
+      );
+
+      const mcpClient = new Client({
+        name: "inertia-client",
+        version: "1.0.0",
+      });
+
+      await mcpClient.connect(transport);
+      setClient(mcpClient);
+      setConnected(true);
+    };
+
+    initClient();
+
+    return () => {
+      if (client) {
+        client.close();
+      }
+    };
+  }, [serverUrl]);
+
+  const callTool = async (toolName: string, args: any) => {
+    if (!client) throw new Error("Client not connected");
+
+    return await client.callTool(toolName, args);
+  };
+
+  return (
+    <div className="mcp-client">
+      <div className="connection-status">
+        {connected ? "🟢 Connected" : "🔴 Disconnected"}
+      </div>
+      {tools.map((tool) => (
+        <McpTool key={tool} name={tool} onCall={callTool} />
+      ))}
+    </div>
+  );
+}
+```
+
+### Laravel Tool Implementation
+
+```php
+namespace App\Mcp\Tools;
+
+use App\Models\User;
+use MCP\Types\Content\TextContent;
+use MCP\Types\Content\ResourceLink;
+
+class UserSearchTool {
+    public function handle(array $params): array {
+        $query = $params['query'] ?? '';
+        $limit = $params['limit'] ?? 10;
+
+        $users = User::where('name', 'like', "%{$query}%")
+            ->orWhere('email', 'like', "%{$query}%")
+            ->limit($limit)
+            ->get();
+
+        $content = [
+            new TextContent("Found {$users->count()} users")
+        ];
+
+        foreach ($users as $user) {
+            $content[] = new ResourceLink(
+                uri: "user://{$user->id}",
+                name: $user->name,
+                title: $user->email,
+                description: "User since {$user->created_at->format('Y-m-d')}"
+            );
+        }
+
+        return [
+            'content' => array_map(fn($c) => $c->toArray(), $content)
+        ];
+    }
+}
+```
+
+### Inertia Page Component
+
+```tsx
+// resources/js/Pages/McpDemo.tsx
+import React, { useState } from "react";
+import { Head } from "@inertiajs/react";
+import { McpClient } from "@/Components/McpClient";
+
+export default function McpDemo() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+
+  const handleSearch = async () => {
+    const client = new McpClient();
+    const result = await client.callTool("user-search", {
+      query: searchQuery,
+      limit: 20,
+    });
+
+    setResults(result.content);
+  };
+
+  return (
+    <>
+      <Head title="MCP Demo" />
+
+      <div className="py-12">
+        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+          <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div className="p-6">
+              <h2 className="text-2xl font-bold mb-4">MCP User Search</h2>
+
+              <div className="flex gap-4 mb-6">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search users..."
+                  className="flex-1 rounded-md border-gray-300"
+                />
+                <button
+                  onClick={handleSearch}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                >
+                  Search
+                </button>
+              </div>
+
+              <div className="results">
+                {results.map((item, index) => (
+                  <div key={index} className="p-4 border-b">
+                    {item.type === "text" && <p>{item.text}</p>}
+                    {item.type === "resource_link" && (
+                      <div>
+                        <h3 className="font-bold">{item.name}</h3>
+                        <p className="text-gray-600">{item.title}</p>
+                        <p className="text-sm text-gray-500">
+                          {item.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+```
+
+## Laravel Middleware
+
+```php
+namespace MCP\Laravel\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use MCP\Server\Auth\OAuthProvider;
+
+class McpAuth {
+    private OAuthProvider $provider;
+
+    public function __construct(OAuthProvider $provider) {
+        $this->provider = $provider;
+    }
+
+    public function handle(Request $request, Closure $next) {
+        if (!config('mcp.auth.enabled')) {
+            return $next($request);
+        }
+
+        $token = $request->bearerToken();
+
+        if (!$token) {
+            return response()->json([
+                'error' => 'unauthorized',
+                'error_description' => 'Missing bearer token'
+            ], 401);
+        }
+
+        try {
+            $authInfo = $this->provider->verifyAccessToken($token)->wait();
+            $request->merge(['auth_info' => $authInfo]);
+
+            return $next($request);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'invalid_token',
+                'error_description' => $e->getMessage()
+            ], 401);
+        }
+    }
+}
+```
+
+## Best Practices
+
+1. **Service Container**: Use Laravel's service container for dependency injection
+2. **Configuration**: Store MCP settings in Laravel config files
+3. **Queue Jobs**: Use Laravel queues for long-running MCP operations
+4. **Broadcasting**: Use Laravel Echo for real-time MCP notifications
+5. **Validation**: Use Laravel's validation for request validation
+6. **Logging**: Integrate with Laravel's logging system
+7. **Testing**: Write feature tests for MCP endpoints

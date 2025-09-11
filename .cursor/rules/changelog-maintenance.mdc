@@ -1,0 +1,77 @@
+---
+alwaysApply: true
+---
+
+# Changelog Maintenance Requirements
+
+## IMPORTANT: Always Review and Update the Changelog
+
+The [CHANGELOG.md](mdc:CHANGELOG.md) file must be maintained for every change to the PHP MCP SDK.
+
+### Before Starting Any Work
+
+1. **Review the changelog** to understand:
+
+   - Recent changes that might affect your work
+   - Current version and unreleased changes
+   - Any deprecated features to avoid using
+
+2. **Check for conflicts** with ongoing work listed in "Unreleased"
+
+### After Completing Changes
+
+1. **Update the changelog** immediately with:
+
+   - Clear description of what changed
+   - Category (Added/Changed/Deprecated/Removed/Fixed/Security)
+   - Any breaking changes or migration notes
+   - Dependencies added or updated
+
+2. **Format entries** properly:
+
+   ```markdown
+   ### Added
+
+   - Brief description of new feature or capability
+   - Another new feature with explanation if needed
+
+   ### Changed
+
+   - What was modified and why (if not obvious)
+
+   ### Fixed
+
+   - Bug that was fixed with issue reference if applicable
+   ```
+
+### Changelog Update Checklist
+
+When making changes, ensure the changelog includes:
+
+- [ ] All new features or capabilities added
+- [ ] Any changes to existing functionality
+- [ ] Bug fixes with clear descriptions
+- [ ] New dependencies or dependency updates
+- [ ] Breaking changes highlighted with migration notes
+- [ ] Security fixes (if applicable)
+- [ ] Deprecation notices for features being phased out
+
+### Examples of Good Changelog Entries
+
+✅ **Good**: "Added `McpServer::registerBatchTools()` method to register multiple tools at once, improving initialization performance"
+
+❌ **Bad**: "Updated server code"
+
+✅ **Good**: "Fixed memory leak in `StdioTransport` when handling messages larger than 1MB"
+
+❌ **Bad**: "Fixed bug"
+
+### Remember
+
+- The changelog is for humans, not machines - write clearly
+- Include the "why" when the reason isn't obvious
+- Group related changes together
+- Keep entries concise but informative
+- Update immediately after changes to avoid forgetting details
+
+**Note**: If you're unsure about how to categorize a change, review the [Keep a Changelog](https://keepachangelog.com) guidelines linked in the changelog header.

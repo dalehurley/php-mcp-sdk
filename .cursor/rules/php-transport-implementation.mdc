@@ -1,0 +1,446 @@
+---
+description: Guidelines for implementing transport layers in PHP MCP SDK
+---
+
+# PHP MCP Transport Implementation Guide
+
+## Transport Interface
+
+All transports must implement the base Transport interface:
+
+```php
+namespace MCP\Shared;
+
+use React\Promise\PromiseInterface;
+
+interface Transport {
+    /**
+     * Start the transport connection
+     */
+    public function start(): PromiseInterface;
+
+    /**
+     * Send a message through the transport
+     */
+    public function send(array $message): PromiseInterface;
+
+    /**
+     * Close the transport connection
+     */
+    public function close(): PromiseInterface;
+
+    /**
+     * Set handler for incoming messages
+     */
+    public function setMessageHandler(callable $handler): void;
+
+    /**
+     * Set handler for transport closure
+     */
+    public function setCloseHandler(callable $handler): void;
+
+    /**
+     * Set handler for transport errors
+     */
+    public function setErrorHandler(callable $handler): void;
+}
+```
+
+## STDIO Transport
+
+### Server STDIO Transport
+
+```php
+namespace MCP\Server\Transport;
+
+use MCP\Shared\Transport;
+use React\EventLoop\LoopInterface;
+use React\Stream\ReadableResourceStream;
+use React\Stream\WritableResourceStream;
+use React\Promise\Promise;
+use React\Promise\PromiseInterface;
+
+class StdioServerTransport implements Transport {
+    private ReadableResourceStream $stdin;
+    private WritableResourceStream $stdout;
+    private LoopInterface $loop;
+    private ?callable $messageHandler = null;
+    private string $buffer = '';
+
+    public function __construct(?LoopInterface $loop = null) {
+        $this->loop = $loop ?? Loop::get();
+    }
+
+    public function start(): PromiseInterface {
+        return new Promise(function ($resolve) {
+            // Set up streams
+            $this->stdin = new ReadableResourceStream(STDIN, $this->loop);
+            $this->stdout = new WritableResourceStream(STDOUT, $this->loop);
+
+            // Handle incoming data
+            $this->stdin->on('data', [$this, 'handleData']);
+            $this->stdin->on('close', [$this, 'handleClose']);
+            $this->stdin->on('error', [$this, 'handleError']);
+
+            $resolve();
+        });
+    }
+
+    private function handleData(string $chunk): void {
+        $this->buffer .= $chunk;
+
+        // Parse messages from buffer
+        while (($pos = strpos($this->buffer, "\n")) !== false) {
+            $line = substr($this->buffer, 0, $pos);
+            $this->buffer = substr($this->buffer, $pos + 1);
+
+            if (trim($line) === '') {
+                continue;
+            }
+
+            try {
+                $message = json_decode($line, true, 512, JSON_THROW_ON_ERROR);
+                if ($this->messageHandler) {
+                    ($this->messageHandler)($message);
+                }
+            } catch (\JsonException $e) {
+                $this->handleError(new \RuntimeException("Invalid JSON: " . $e->getMessage()));
+            }
+        }
+    }
+
+    public function send(array $message): PromiseInterface {
+        return new Promise(function ($resolve, $reject) use ($message) {
+            try {
+                $json = json_encode($message, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+                $this->stdout->write($json . "\n");
+                $resolve();
+            } catch (\JsonException $e) {
+                $reject(new \RuntimeException("Failed to encode message: " . $e->getMessage()));
+            }
+        });
+    }
+}
+```
+
+### Client STDIO Transport
+
+```php
+namespace MCP\Client\Transport;
+
+use React\ChildProcess\Process;
+use React\Promise\Promise;
+use React\Promise\PromiseInterface;
+
+class StdioClientTransport extends StdioServerTransport {
+    private Process $process;
+    private array $command;
+    private array $env;
+
+    public function __construct(array $config) {
+        parent::__construct($config['loop'] ?? null);
+
+        $this->command = array_merge(
+            [$config['command']],
+            $config['args'] ?? []
+        );
+        $this->env = $config['env'] ?? [];
+    }
+
+    public function start(): PromiseInterface {
+        return new Promise(function ($resolve, $reject) {
+            // Start the process
+            $this->process = new Process(
+                implode(' ', array_map('escapeshellarg', $this->command)),
+                null,
+                $this->env
+            );
+
+            $this->process->start($this->loop);
+
+            if (!$this->process->isRunning()) {
+                $reject(new \RuntimeException("Failed to start process"));
+                return;
+            }
+
+            // Set up streams
+            $this->stdin = $this->process->stdout;
+            $this->stdout = $this->process->stdin;
+
+            // Handle process events
+            $this->stdin->on('data', [$this, 'handleData']);
+            $this->process->on('exit', [$this, 'handleProcessExit']);
+
+            $resolve();
+        });
+    }
+
+    private function handleProcessExit(int $code): void {
+        if ($this->closeHandler) {
+            ($this->closeHandler)();
+        }
+    }
+}
+```
+
+## Streamable HTTP Transport
+
+### Server Streamable HTTP Transport
+
+```php
+namespace MCP\Server\Transport;
+
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use GuzzleHttp\Psr7\Response;
+use React\Promise\Promise;
+use React\Promise\PromiseInterface;
+
+class StreamableHttpServerTransport implements Transport {
+    private ?string $sessionId = null;
+    private ?callable $sessionIdGenerator = null;
+    private array $messageQueue = [];
+    private ?callable $messageHandler = null;
+    private bool $enableDnsRebindingProtection;
+    private array $allowedHosts;
+    private array $allowedOrigins;
+
+    public function __construct(array $options = []) {
+        $this->sessionIdGenerator = $options['sessionIdGenerator'] ?? null;
+        $this->enableDnsRebindingProtection = $options['enableDnsRebindingProtection'] ?? false;
+        $this->allowedHosts = $options['allowedHosts'] ?? ['127.0.0.1'];
+        $this->allowedOrigins = $options['allowedOrigins'] ?? [];
+    }
+
+    /**
+     * Handle HTTP POST request
+     */
+    public function handleRequest(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $body
+    ): ResponseInterface {
+        // DNS rebinding protection
+        if ($this->enableDnsRebindingProtection) {
+            $host = $request->getHeaderLine('Host');
+            if (!in_array($host, $this->allowedHosts)) {
+                return new Response(403, [], json_encode([
+                    'error' => 'Forbidden: Invalid host'
+                ]));
+            }
+        }
+
+        // Handle session management
+        if ($this->sessionIdGenerator && !$this->sessionId) {
+            $this->sessionId = ($this->sessionIdGenerator)();
+            $response = $response->withHeader('Mcp-Session-Id', $this->sessionId);
+        }
+
+        // Process the message
+        if ($this->messageHandler) {
+            $result = ($this->messageHandler)($body);
+
+            // Handle async results
+            if ($result instanceof PromiseInterface) {
+                return $result->then(function ($responseData) use ($response) {
+                    return $response
+                        ->withStatus(200)
+                        ->withHeader('Content-Type', 'application/json')
+                        ->withBody(stream_for(json_encode($responseData)));
+                });
+            }
+
+            return $response
+                ->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->withBody(stream_for(json_encode($result)));
+        }
+
+        return $response->withStatus(500);
+    }
+
+    /**
+     * Handle SSE endpoint for server-to-client notifications
+     */
+    public function handleSse(
+        ServerRequestInterface $request,
+        ResponseInterface $response
+    ): ResponseInterface {
+        // Set up SSE headers
+        $response = $response
+            ->withHeader('Content-Type', 'text/event-stream')
+            ->withHeader('Cache-Control', 'no-cache')
+            ->withHeader('Connection', 'keep-alive');
+
+        // Stream queued messages
+        while (!empty($this->messageQueue)) {
+            $message = array_shift($this->messageQueue);
+            $response->getBody()->write("data: " . json_encode($message) . "\n\n");
+        }
+
+        return $response;
+    }
+
+    public function send(array $message): PromiseInterface {
+        return new Promise(function ($resolve) use ($message) {
+            // Queue message for SSE delivery
+            $this->messageQueue[] = $message;
+            $resolve();
+        });
+    }
+}
+```
+
+### Client Streamable HTTP Transport
+
+```php
+namespace MCP\Client\Transport;
+
+use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Psr7\Request;
+use React\Promise\Promise;
+use React\EventSource\EventSource;
+
+class StreamableHttpClientTransport implements Transport {
+    private HttpClient $httpClient;
+    private string $baseUrl;
+    private ?string $sessionId = null;
+    private ?EventSource $eventSource = null;
+
+    public function __construct(string $baseUrl, array $options = []) {
+        $this->baseUrl = rtrim($baseUrl, '/');
+        $this->httpClient = new HttpClient($options['httpOptions'] ?? []);
+    }
+
+    public function start(): PromiseInterface {
+        return new Promise(function ($resolve) {
+            // Initial connection is established on first request
+            $resolve();
+        });
+    }
+
+    public function send(array $message): PromiseInterface {
+        return new Promise(function ($resolve, $reject) use ($message) {
+            $headers = ['Content-Type' => 'application/json'];
+
+            if ($this->sessionId) {
+                $headers['Mcp-Session-Id'] = $this->sessionId;
+            }
+
+            try {
+                $response = $this->httpClient->post($this->baseUrl . '/mcp', [
+                    'headers' => $headers,
+                    'json' => $message
+                ]);
+
+                // Extract session ID from response
+                if (!$this->sessionId && $response->hasHeader('Mcp-Session-Id')) {
+                    $this->sessionId = $response->getHeaderLine('Mcp-Session-Id');
+                    $this->startEventSource();
+                }
+
+                $result = json_decode($response->getBody()->getContents(), true);
+                $resolve($result);
+            } catch (\Exception $e) {
+                $reject($e);
+            }
+        });
+    }
+
+    private function startEventSource(): void {
+        $this->eventSource = new EventSource($this->baseUrl . '/mcp', [
+            'headers' => ['Mcp-Session-Id' => $this->sessionId]
+        ]);
+
+        $this->eventSource->on('message', function ($event) {
+            if ($this->messageHandler) {
+                $data = json_decode($event->data, true);
+                ($this->messageHandler)($data);
+            }
+        });
+    }
+}
+```
+
+## WebSocket Transport (Future)
+
+```php
+namespace MCP\Client\Transport;
+
+use Ratchet\Client\Connector;
+use Ratchet\Client\WebSocket;
+use React\Promise\Promise;
+
+class WebSocketClientTransport implements Transport {
+    private string $url;
+    private ?WebSocket $connection = null;
+
+    public function __construct(string $url) {
+        $this->url = $url;
+    }
+
+    public function start(): PromiseInterface {
+        $connector = new Connector($this->loop);
+
+        return $connector($this->url)->then(function (WebSocket $conn) {
+            $this->connection = $conn;
+
+            $conn->on('message', function ($msg) {
+                if ($this->messageHandler) {
+                    $data = json_decode($msg->getPayload(), true);
+                    ($this->messageHandler)($data);
+                }
+            });
+
+            $conn->on('close', function () {
+                if ($this->closeHandler) {
+                    ($this->closeHandler)();
+                }
+            });
+        });
+    }
+
+    public function send(array $message): PromiseInterface {
+        return new Promise(function ($resolve, $reject) use ($message) {
+            if (!$this->connection) {
+                $reject(new \RuntimeException("Not connected"));
+                return;
+            }
+
+            $this->connection->send(json_encode($message));
+            $resolve();
+        });
+    }
+}
+```
+
+## Transport Best Practices
+
+1. **Error Handling**: Always handle JSON encoding/decoding errors
+2. **Buffering**: Buffer incomplete messages in stream-based transports
+3. **Reconnection**: Implement reconnection logic for network transports
+4. **Timeouts**: Set appropriate timeouts for network operations
+5. **Security**: Implement DNS rebinding protection for HTTP transports
+6. **Session Management**: Handle session lifecycle properly
+7. **Resource Cleanup**: Properly close streams and connections
+
+## Testing Transports
+
+```php
+class TransportTest extends TestCase {
+    public function testMessageRoundtrip(): void {
+        $transport = new StdioServerTransport();
+        $received = null;
+
+        $transport->setMessageHandler(function ($msg) use (&$received) {
+            $received = $msg;
+        });
+
+        $transport->start()->then(function () use ($transport) {
+            return $transport->send(['test' => 'message']);
+        });
+
+        $this->assertEquals(['test' => 'message'], $received);
+    }
+}
+```

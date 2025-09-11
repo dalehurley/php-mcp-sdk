@@ -1,0 +1,434 @@
+---
+description: Guidelines for implementing authentication and authorization in PHP MCP SDK
+---
+
+# PHP MCP Authentication and Authorization Guide
+
+## Authentication Architecture
+
+MCP supports OAuth 2.0 authentication with proper token validation and client management.
+
+### AuthInfo Interface
+
+```php
+namespace MCP\Auth;
+
+interface AuthInfo {
+    public function getToken(): string;
+    public function getClientId(): string;
+    public function getScopes(): array;
+    public function getExpiresAt(): ?int;
+    public function getResource(): ?string;
+    public function getExtra(): array;
+}
+
+class DefaultAuthInfo implements AuthInfo {
+    public function __construct(
+        private string $token,
+        private string $clientId,
+        private array $scopes,
+        private ?int $expiresAt = null,
+        private ?string $resource = null,
+        private array $extra = []
+    ) {}
+
+    // Implement interface methods...
+}
+```
+
+## OAuth Provider Interface
+
+```php
+namespace MCP\Server\Auth;
+
+use React\Promise\PromiseInterface;
+
+interface OAuthProvider {
+    /**
+     * Get authorization URL
+     */
+    public function getAuthorizationUrl(array $params): string;
+
+    /**
+     * Exchange authorization code for tokens
+     */
+    public function exchangeCode(string $code, array $params): PromiseInterface;
+
+    /**
+     * Refresh an access token
+     */
+    public function refreshToken(string $refreshToken): PromiseInterface;
+
+    /**
+     * Verify an access token
+     */
+    public function verifyAccessToken(string $token): PromiseInterface;
+
+    /**
+     * Revoke a token
+     */
+    public function revokeToken(string $token, string $tokenType): PromiseInterface;
+
+    /**
+     * Get client information
+     */
+    public function getClient(string $clientId): PromiseInterface;
+}
+```
+
+## Proxy OAuth Provider
+
+For proxying OAuth requests to an external provider:
+
+```php
+namespace MCP\Server\Auth\Providers;
+
+use GuzzleHttp\Client;
+use React\Promise\Promise;
+use React\Promise\PromiseInterface;
+
+class ProxyOAuthProvider implements OAuthProvider {
+    private Client $httpClient;
+    private array $endpoints;
+    private callable $verifyAccessToken;
+    private callable $getClient;
+
+    public function __construct(array $config) {
+        $this->httpClient = new Client();
+        $this->endpoints = $config['endpoints'];
+        $this->verifyAccessToken = $config['verifyAccessToken'];
+        $this->getClient = $config['getClient'];
+    }
+
+    public function exchangeCode(string $code, array $params): PromiseInterface {
+        return new Promise(function ($resolve, $reject) use ($code, $params) {
+            try {
+                $response = $this->httpClient->post($this->endpoints['tokenUrl'], [
+                    'form_params' => [
+                        'grant_type' => 'authorization_code',
+                        'code' => $code,
+                        'redirect_uri' => $params['redirect_uri'],
+                        'client_id' => $params['client_id'],
+                        'client_secret' => $params['client_secret'] ?? null,
+                        'code_verifier' => $params['code_verifier'] ?? null,
+                    ]
+                ]);
+
+                $data = json_decode($response->getBody()->getContents(), true);
+                $resolve($data);
+            } catch (\Exception $e) {
+                $reject($e);
+            }
+        });
+    }
+
+    public function verifyAccessToken(string $token): PromiseInterface {
+        return new Promise(function ($resolve, $reject) use ($token) {
+            try {
+                $authInfo = ($this->verifyAccessToken)($token);
+                $resolve($authInfo);
+            } catch (\Exception $e) {
+                $reject($e);
+            }
+        });
+    }
+}
+```
+
+## MCP Auth Router
+
+Express-style router for handling OAuth endpoints:
+
+```php
+namespace MCP\Server\Auth;
+
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use GuzzleHttp\Psr7\Response;
+
+class McpAuthRouter {
+    private OAuthProvider $provider;
+    private string $issuerUrl;
+    private string $baseUrl;
+    private string $serviceDocumentationUrl;
+
+    public function __construct(array $config) {
+        $this->provider = $config['provider'];
+        $this->issuerUrl = $config['issuerUrl'];
+        $this->baseUrl = $config['baseUrl'];
+        $this->serviceDocumentationUrl = $config['serviceDocumentationUrl'];
+    }
+
+    /**
+     * Handle OAuth metadata endpoint
+     */
+    public function handleMetadata(
+        ServerRequestInterface $request,
+        ResponseInterface $response
+    ): ResponseInterface {
+        $metadata = [
+            'issuer' => $this->issuerUrl,
+            'authorization_endpoint' => $this->baseUrl . '/oauth2/authorize',
+            'token_endpoint' => $this->baseUrl . '/oauth2/token',
+            'revocation_endpoint' => $this->baseUrl . '/oauth2/revoke',
+            'response_types_supported' => ['code'],
+            'grant_types_supported' => ['authorization_code', 'refresh_token'],
+            'code_challenge_methods_supported' => ['S256'],
+            'token_endpoint_auth_methods_supported' => ['client_secret_post'],
+            'service_documentation' => $this->serviceDocumentationUrl,
+        ];
+
+        return $response
+            ->withStatus(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(stream_for(json_encode($metadata)));
+    }
+
+    /**
+     * Handle authorization endpoint
+     */
+    public function handleAuthorize(
+        ServerRequestInterface $request,
+        ResponseInterface $response
+    ): ResponseInterface {
+        $params = $request->getQueryParams();
+
+        // Validate required parameters
+        $requiredParams = ['response_type', 'client_id', 'redirect_uri', 'state'];
+        foreach ($requiredParams as $param) {
+            if (!isset($params[$param])) {
+                return $this->errorResponse($response, 'invalid_request', "Missing {$param}");
+            }
+        }
+
+        // PKCE validation
+        if (!isset($params['code_challenge']) || !isset($params['code_challenge_method'])) {
+            return $this->errorResponse($response, 'invalid_request', 'PKCE required');
+        }
+
+        // Forward to authorization provider
+        $authUrl = $this->provider->getAuthorizationUrl($params);
+
+        return $response
+            ->withStatus(302)
+            ->withHeader('Location', $authUrl);
+    }
+
+    /**
+     * Handle token endpoint
+     */
+    public function handleToken(
+        ServerRequestInterface $request,
+        ResponseInterface $response
+    ): ResponseInterface {
+        $params = $request->getParsedBody();
+
+        if ($params['grant_type'] === 'authorization_code') {
+            return $this->handleAuthorizationCodeGrant($params, $response);
+        } elseif ($params['grant_type'] === 'refresh_token') {
+            return $this->handleRefreshTokenGrant($params, $response);
+        }
+
+        return $this->errorResponse($response, 'unsupported_grant_type');
+    }
+}
+```
+
+## Bearer Token Middleware
+
+```php
+namespace MCP\Server\Auth\Middleware;
+
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+
+class BearerAuthMiddleware implements MiddlewareInterface {
+    private OAuthProvider $provider;
+
+    public function __construct(OAuthProvider $provider) {
+        $this->provider = $provider;
+    }
+
+    public function process(
+        ServerRequestInterface $request,
+        RequestHandlerInterface $handler
+    ): ResponseInterface {
+        $authHeader = $request->getHeaderLine('Authorization');
+
+        if (!preg_match('/^Bearer\s+(.+)$/i', $authHeader, $matches)) {
+            return new Response(401, [], json_encode([
+                'error' => 'invalid_token',
+                'error_description' => 'Missing or invalid authorization header'
+            ]));
+        }
+
+        $token = $matches[1];
+
+        try {
+            $authInfo = $this->provider->verifyAccessToken($token)->wait();
+
+            // Add auth info to request attributes
+            $request = $request->withAttribute('authInfo', $authInfo);
+
+            return $handler->handle($request);
+        } catch (\Exception $e) {
+            return new Response(401, [], json_encode([
+                'error' => 'invalid_token',
+                'error_description' => $e->getMessage()
+            ]));
+        }
+    }
+}
+```
+
+## Client Authentication Support
+
+```php
+namespace MCP\Client\Auth;
+
+use GuzzleHttp\Client;
+use React\Promise\PromiseInterface;
+
+class OAuthClient {
+    private Client $httpClient;
+    private string $clientId;
+    private string $clientSecret;
+    private ?string $accessToken = null;
+    private ?string $refreshToken = null;
+    private ?int $expiresAt = null;
+
+    public function __construct(string $clientId, string $clientSecret) {
+        $this->httpClient = new Client();
+        $this->clientId = $clientId;
+        $this->clientSecret = $clientSecret;
+    }
+
+    /**
+     * Get authorization URL with PKCE
+     */
+    public function getAuthorizationUrl(array $params): array {
+        $codeVerifier = $this->generateCodeVerifier();
+        $codeChallenge = $this->generateCodeChallenge($codeVerifier);
+
+        $params = array_merge($params, [
+            'response_type' => 'code',
+            'client_id' => $this->clientId,
+            'code_challenge' => $codeChallenge,
+            'code_challenge_method' => 'S256',
+            'state' => bin2hex(random_bytes(16))
+        ]);
+
+        return [
+            'url' => $params['authorization_endpoint'] . '?' . http_build_query($params),
+            'code_verifier' => $codeVerifier,
+            'state' => $params['state']
+        ];
+    }
+
+    /**
+     * Exchange authorization code for tokens
+     */
+    public function exchangeCode(
+        string $code,
+        string $codeVerifier,
+        string $redirectUri,
+        string $tokenEndpoint
+    ): PromiseInterface {
+        return $this->httpClient->postAsync($tokenEndpoint, [
+            'form_params' => [
+                'grant_type' => 'authorization_code',
+                'code' => $code,
+                'redirect_uri' => $redirectUri,
+                'client_id' => $this->clientId,
+                'client_secret' => $this->clientSecret,
+                'code_verifier' => $codeVerifier
+            ]
+        ])->then(function ($response) {
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            $this->accessToken = $data['access_token'];
+            $this->refreshToken = $data['refresh_token'] ?? null;
+            $this->expiresAt = time() + ($data['expires_in'] ?? 3600);
+
+            return $data;
+        });
+    }
+
+    /**
+     * Get valid access token, refreshing if needed
+     */
+    public function getAccessToken(): PromiseInterface {
+        if ($this->accessToken && $this->expiresAt > time() + 60) {
+            return \React\Promise\resolve($this->accessToken);
+        }
+
+        if ($this->refreshToken) {
+            return $this->refreshAccessToken();
+        }
+
+        return \React\Promise\reject(new \Exception('No valid token available'));
+    }
+
+    private function generateCodeVerifier(): string {
+        return rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+    }
+
+    private function generateCodeChallenge(string $verifier): string {
+        return rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+    }
+}
+```
+
+## Integration with MCP Server
+
+```php
+// Set up OAuth provider
+$oauthProvider = new ProxyOAuthProvider([
+    'endpoints' => [
+        'authorizationUrl' => 'https://auth.example.com/oauth2/authorize',
+        'tokenUrl' => 'https://auth.example.com/oauth2/token',
+        'revocationUrl' => 'https://auth.example.com/oauth2/revoke',
+    ],
+    'verifyAccessToken' => function (string $token): AuthInfo {
+        // Verify token and return auth info
+        return new DefaultAuthInfo(
+            token: $token,
+            clientId: '123',
+            scopes: ['read', 'write']
+        );
+    },
+    'getClient' => function (string $clientId): array {
+        // Return client configuration
+        return [
+            'client_id' => $clientId,
+            'redirect_uris' => ['http://localhost:3000/callback']
+        ];
+    }
+]);
+
+// Add auth middleware to server
+$server->useMiddleware(new BearerAuthMiddleware($oauthProvider));
+
+// Access auth info in handlers
+$server->registerTool('protected-tool', [...], function ($params, $extra) {
+    $authInfo = $extra['authInfo'];
+
+    if (!in_array('write', $authInfo->getScopes())) {
+        throw new McpError(ErrorCode::InvalidRequest, 'Insufficient permissions');
+    }
+
+    // Tool implementation...
+});
+```
+
+## Best Practices
+
+1. **PKCE**: Always use PKCE for authorization code flow
+2. **Token Storage**: Store tokens securely (encrypted)
+3. **Token Refresh**: Implement automatic token refresh
+4. **Scope Validation**: Check scopes before performing operations
+5. **Error Handling**: Return proper OAuth error responses
+6. **HTTPS Only**: Always use HTTPS for auth endpoints
+7. **CORS**: Configure CORS properly for browser-based clients

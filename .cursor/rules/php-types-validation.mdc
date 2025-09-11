@@ -1,0 +1,489 @@
+---
+description: Guidelines for type definitions and validation in PHP MCP SDK
+---
+
+# PHP MCP Types and Validation Guide
+
+## Core Type Definitions
+
+PHP MCP SDK should use strong typing with PHP 8+ features to match TypeScript's type safety.
+
+### Protocol Version Constants
+
+```php
+namespace MCP\Types;
+
+final class Protocol {
+    public const LATEST_PROTOCOL_VERSION = '2025-06-18';
+    public const DEFAULT_NEGOTIATED_PROTOCOL_VERSION = '2025-03-26';
+    public const SUPPORTED_PROTOCOL_VERSIONS = [
+        '2025-06-18',
+        '2025-03-26',
+        '2024-11-05',
+        '2024-10-07',
+    ];
+    public const JSONRPC_VERSION = '2.0';
+}
+```
+
+### Error Codes Enum
+
+```php
+namespace MCP\Types;
+
+enum ErrorCode: int {
+    // SDK error codes
+    case ConnectionClosed = -32000;
+    case RequestTimeout = -32001;
+
+    // Standard JSON-RPC error codes
+    case ParseError = -32700;
+    case InvalidRequest = -32600;
+    case MethodNotFound = -32601;
+    case InvalidParams = -32602;
+    case InternalError = -32603;
+}
+```
+
+### Base Types
+
+```php
+namespace MCP\Types;
+
+/**
+ * Base metadata interface
+ */
+interface BaseMetadata {
+    public function getName(): string;
+    public function getTitle(): ?string;
+}
+
+/**
+ * Implementation info
+ */
+class Implementation implements BaseMetadata {
+    public function __construct(
+        private string $name,
+        private string $version,
+        private ?string $title = null
+    ) {}
+
+    public function getName(): string {
+        return $this->name;
+    }
+
+    public function getVersion(): string {
+        return $this->version;
+    }
+
+    public function getTitle(): ?string {
+        return $this->title;
+    }
+
+    public function toArray(): array {
+        $data = [
+            'name' => $this->name,
+            'version' => $this->version,
+        ];
+
+        if ($this->title !== null) {
+            $data['title'] = $this->title;
+        }
+
+        return $data;
+    }
+}
+```
+
+### Content Types
+
+```php
+namespace MCP\Types\Content;
+
+interface ContentBlock {
+    public function getType(): string;
+    public function toArray(): array;
+}
+
+class TextContent implements ContentBlock {
+    public function __construct(
+        private string $text,
+        private array $meta = []
+    ) {}
+
+    public function getType(): string {
+        return 'text';
+    }
+
+    public function getText(): string {
+        return $this->text;
+    }
+
+    public function toArray(): array {
+        $data = [
+            'type' => 'text',
+            'text' => $this->text,
+        ];
+
+        if (!empty($this->meta)) {
+            $data['_meta'] = $this->meta;
+        }
+
+        return $data;
+    }
+}
+
+class ImageContent implements ContentBlock {
+    public function __construct(
+        private string $data,
+        private string $mimeType,
+        private array $meta = []
+    ) {}
+
+    public function getType(): string {
+        return 'image';
+    }
+
+    public function toArray(): array {
+        return [
+            'type' => 'image',
+            'data' => $this->data,
+            'mimeType' => $this->mimeType,
+            '_meta' => $this->meta ?: null,
+        ];
+    }
+}
+
+class ResourceLink implements ContentBlock {
+    public function __construct(
+        private string $uri,
+        private string $name,
+        private ?string $title = null,
+        private ?string $description = null,
+        private ?string $mimeType = null
+    ) {}
+
+    public function getType(): string {
+        return 'resource_link';
+    }
+
+    public function toArray(): array {
+        return array_filter([
+            'type' => 'resource_link',
+            'uri' => $this->uri,
+            'name' => $this->name,
+            'title' => $this->title,
+            'description' => $this->description,
+            'mimeType' => $this->mimeType,
+        ], fn($v) => $v !== null);
+    }
+}
+```
+
+## Validation System
+
+### Validator Interface
+
+```php
+namespace MCP\Validation;
+
+interface Validator {
+    /**
+     * Validate data against schema
+     * @throws ValidationException
+     */
+    public function validate(mixed $data): void;
+
+    /**
+     * Check if data is valid
+     */
+    public function isValid(mixed $data): bool;
+
+    /**
+     * Get validation errors
+     */
+    public function getErrors(): array;
+}
+```
+
+### Schema-based Validation
+
+```php
+namespace MCP\Validation;
+
+use Respect\Validation\Validator as v;
+use Respect\Validation\Exceptions\ValidationException;
+
+class SchemaValidator implements Validator {
+    private v $validator;
+    private array $errors = [];
+
+    public function __construct(array $schema) {
+        $this->validator = $this->buildValidator($schema);
+    }
+
+    private function buildValidator(array $schema): v {
+        switch ($schema['type']) {
+            case 'object':
+                return $this->buildObjectValidator($schema);
+            case 'string':
+                return $this->buildStringValidator($schema);
+            case 'number':
+            case 'integer':
+                return $this->buildNumberValidator($schema);
+            case 'boolean':
+                return v::boolType();
+            case 'array':
+                return $this->buildArrayValidator($schema);
+            default:
+                throw new \InvalidArgumentException("Unknown schema type: {$schema['type']}");
+        }
+    }
+
+    private function buildObjectValidator(array $schema): v {
+        $validator = v::arrayType();
+
+        if (isset($schema['properties'])) {
+            foreach ($schema['properties'] as $prop => $propSchema) {
+                $propValidator = $this->buildValidator($propSchema);
+
+                if (in_array($prop, $schema['required'] ?? [])) {
+                    $validator = $validator->key($prop, $propValidator);
+                } else {
+                    $validator = $validator->keyOptional($prop, $propValidator);
+                }
+            }
+        }
+
+        return $validator;
+    }
+}
+```
+
+### Request/Response Validation
+
+```php
+namespace MCP\Validation;
+
+class MessageValidator {
+    private static array $schemas = [];
+
+    public static function registerSchema(string $method, array $schema): void {
+        self::$schemas[$method] = new SchemaValidator($schema);
+    }
+
+    public static function validateRequest(array $request): void {
+        // Validate JSON-RPC structure
+        if (!isset($request['jsonrpc']) || $request['jsonrpc'] !== '2.0') {
+            throw new ValidationException('Invalid JSON-RPC version');
+        }
+
+        if (!isset($request['method'])) {
+            throw new ValidationException('Missing method');
+        }
+
+        // Validate params against schema
+        if (isset(self::$schemas[$request['method']])) {
+            self::$schemas[$request['method']]->validate($request['params'] ?? []);
+        }
+    }
+}
+```
+
+## Type Builders and Factories
+
+### Tool Definition Builder
+
+```php
+namespace MCP\Types\Builders;
+
+class ToolBuilder {
+    private string $name;
+    private ?string $title = null;
+    private ?string $description = null;
+    private array $inputSchema = ['type' => 'object'];
+    private ?array $outputSchema = null;
+    private array $annotations = [];
+
+    public function __construct(string $name) {
+        $this->name = $name;
+    }
+
+    public function withTitle(string $title): self {
+        $this->title = $title;
+        return $this;
+    }
+
+    public function withDescription(string $description): self {
+        $this->description = $description;
+        return $this;
+    }
+
+    public function withInputSchema(array $schema): self {
+        $this->inputSchema = $schema;
+        return $this;
+    }
+
+    public function withOutputSchema(array $schema): self {
+        $this->outputSchema = $schema;
+        return $this;
+    }
+
+    public function readOnly(): self {
+        $this->annotations['readOnlyHint'] = true;
+        return $this;
+    }
+
+    public function idempotent(): self {
+        $this->annotations['idempotentHint'] = true;
+        return $this;
+    }
+
+    public function build(): Tool {
+        return new Tool(
+            name: $this->name,
+            title: $this->title,
+            description: $this->description,
+            inputSchema: $this->inputSchema,
+            outputSchema: $this->outputSchema,
+            annotations: $this->annotations
+        );
+    }
+}
+```
+
+### Resource Template Builder
+
+```php
+namespace MCP\Types\Builders;
+
+use MCP\Shared\UriTemplate;
+
+class ResourceTemplateBuilder {
+    private string $name;
+    private UriTemplate $uriTemplate;
+    private ?string $title = null;
+    private ?string $description = null;
+    private ?string $mimeType = null;
+    private array $completions = [];
+
+    public function __construct(string $name, string $uriTemplate) {
+        $this->name = $name;
+        $this->uriTemplate = new UriTemplate($uriTemplate);
+    }
+
+    public function withTitle(string $title): self {
+        $this->title = $title;
+        return $this;
+    }
+
+    public function withCompletion(string $param, callable $completer): self {
+        $this->completions[$param] = $completer;
+        return $this;
+    }
+
+    public function build(): ResourceTemplate {
+        return new ResourceTemplate(
+            name: $this->name,
+            uriTemplate: $this->uriTemplate,
+            title: $this->title,
+            description: $this->description,
+            mimeType: $this->mimeType,
+            completions: $this->completions
+        );
+    }
+}
+```
+
+## JSON Schema Integration
+
+```php
+namespace MCP\Utils;
+
+class JsonSchema {
+    /**
+     * Convert PHP validation array to JSON Schema
+     */
+    public static function fromArray(array $schema): array {
+        $jsonSchema = [
+            '$schema' => 'http://json-schema.org/draft-07/schema#',
+            'type' => $schema['type'] ?? 'object',
+        ];
+
+        if (isset($schema['properties'])) {
+            $jsonSchema['properties'] = [];
+            foreach ($schema['properties'] as $name => $prop) {
+                $jsonSchema['properties'][$name] = self::convertProperty($prop);
+            }
+        }
+
+        if (isset($schema['required'])) {
+            $jsonSchema['required'] = $schema['required'];
+        }
+
+        return $jsonSchema;
+    }
+
+    private static function convertProperty(array $prop): array {
+        $converted = ['type' => $prop['type']];
+
+        if (isset($prop['description'])) {
+            $converted['description'] = $prop['description'];
+        }
+
+        if (isset($prop['default'])) {
+            $converted['default'] = $prop['default'];
+        }
+
+        if (isset($prop['enum'])) {
+            $converted['enum'] = $prop['enum'];
+        }
+
+        return $converted;
+    }
+}
+```
+
+## Usage Examples
+
+```php
+// Define a tool with type-safe builder
+$tool = (new ToolBuilder('search'))
+    ->withTitle('Search Tool')
+    ->withDescription('Search for information')
+    ->withInputSchema([
+        'type' => 'object',
+        'properties' => [
+            'query' => ['type' => 'string', 'description' => 'Search query'],
+            'limit' => ['type' => 'integer', 'default' => 10],
+        ],
+        'required' => ['query']
+    ])
+    ->readOnly()
+    ->build();
+
+// Validate request
+try {
+    MessageValidator::validateRequest([
+        'jsonrpc' => '2.0',
+        'method' => 'tools/call',
+        'params' => [
+            'name' => 'search',
+            'arguments' => ['query' => 'example']
+        ],
+        'id' => 1
+    ]);
+} catch (ValidationException $e) {
+    // Handle validation error
+}
+```
+
+## Best Practices
+
+1. **Type Safety**: Use PHP 8+ type declarations everywhere
+2. **Validation**: Validate all incoming data against schemas
+3. **Immutability**: Make type objects immutable where possible
+4. **Builders**: Use builder pattern for complex type construction
+5. **Error Messages**: Provide clear validation error messages
+6. **Schema Caching**: Cache compiled validators for performance
+7. **Null Safety**: Handle nullable types explicitly

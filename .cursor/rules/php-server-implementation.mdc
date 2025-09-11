@@ -1,0 +1,288 @@
+---
+description: Guidelines for implementing MCP servers in PHP
+---
+
+# PHP MCP Server Implementation Guide
+
+## High-Level McpServer Class
+
+The `McpServer` class provides a simplified API for creating MCP servers. It wraps the lower-level `Server` class.
+
+### Basic Server Structure
+
+```php
+namespace MCP\Server;
+
+use MCP\Types\Implementation;
+use MCP\Shared\Transport;
+use React\Promise\Promise;
+
+class McpServer {
+    private Server $server;
+    private array $registeredTools = [];
+    private array $registeredResources = [];
+    private array $registeredResourceTemplates = [];
+    private array $registeredPrompts = [];
+
+    public function __construct(Implementation $serverInfo, ?ServerOptions $options = null) {
+        $this->server = new Server($serverInfo, $options);
+    }
+
+    public function connect(Transport $transport): Promise {
+        return $this->server->connect($transport);
+    }
+}
+```
+
+### Registering Tools
+
+```php
+/**
+ * Register a tool with validation schema and handler
+ */
+public function registerTool(
+    string $name,
+    array $config,
+    callable $handler
+): RegisteredTool {
+    // Tool configuration includes:
+    // - title: Display name
+    // - description: Tool description
+    // - inputSchema: Input validation schema
+    // - outputSchema: Optional output schema
+    // - annotations: Tool hints
+
+    $tool = new RegisteredTool($name, $config, $handler);
+    $this->registeredTools[$name] = $tool;
+
+    // Emit list changed notification if connected
+    if ($this->server->isConnected()) {
+        $this->server->sendNotification([
+            'method' => 'notifications/tools/list_changed'
+        ]);
+    }
+
+    return $tool;
+}
+```
+
+### Registering Resources
+
+```php
+/**
+ * Register a static resource
+ */
+public function registerResource(
+    string $name,
+    string $uri,
+    array $metadata,
+    callable $handler
+): RegisteredResource {
+    $resource = new RegisteredResource($name, $uri, $metadata, $handler);
+    $this->registeredResources[$uri] = $resource;
+    return $resource;
+}
+
+/**
+ * Register a resource template for dynamic resources
+ */
+public function registerResourceTemplate(
+    string $name,
+    UriTemplate $template,
+    array $metadata,
+    callable $handler
+): RegisteredResourceTemplate {
+    $resourceTemplate = new RegisteredResourceTemplate($name, $template, $metadata, $handler);
+    $this->registeredResourceTemplates[$name] = $resourceTemplate;
+    return $resourceTemplate;
+}
+```
+
+### Registering Prompts
+
+```php
+/**
+ * Register a prompt template
+ */
+public function registerPrompt(
+    string $name,
+    array $config,
+    callable $handler
+): RegisteredPrompt {
+    // Config includes:
+    // - title: Display name
+    // - description: Prompt description
+    // - argsSchema: Arguments validation schema
+
+    $prompt = new RegisteredPrompt($name, $config, $handler);
+    $this->registeredPrompts[$name] = $prompt;
+    return $prompt;
+}
+```
+
+## Tool Implementation Pattern
+
+```php
+// Example: Calculator tool
+$server->registerTool(
+    'calculate',
+    [
+        'title' => 'Calculator',
+        'description' => 'Perform mathematical calculations',
+        'inputSchema' => [
+            'type' => 'object',
+            'properties' => [
+                'expression' => ['type' => 'string'],
+                'precision' => ['type' => 'integer', 'default' => 2]
+            ],
+            'required' => ['expression']
+        ]
+    ],
+    function (array $params) use ($calculator): array {
+        try {
+            $result = $calculator->evaluate($params['expression']);
+            return [
+                'content' => [[
+                    'type' => 'text',
+                    'text' => (string) round($result, $params['precision'] ?? 2)
+                ]]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'content' => [[
+                    'type' => 'text',
+                    'text' => "Error: " . $e->getMessage()
+                ]],
+                'isError' => true
+            ];
+        }
+    }
+);
+```
+
+## Resource Implementation Pattern
+
+```php
+// Static resource
+$server->registerResource(
+    'config',
+    'config://app',
+    [
+        'title' => 'Application Config',
+        'description' => 'Current application configuration',
+        'mimeType' => 'application/json'
+    ],
+    function (string $uri): array {
+        return [
+            'contents' => [[
+                'uri' => $uri,
+                'text' => json_encode($this->getConfig()),
+                'mimeType' => 'application/json'
+            ]]
+        ];
+    }
+);
+
+// Dynamic resource with template
+$server->registerResourceTemplate(
+    'user-profile',
+    new UriTemplate('users://{userId}/profile'),
+    [
+        'title' => 'User Profile',
+        'description' => 'User profile information'
+    ],
+    function (string $uri, array $params): array {
+        $user = $this->userRepository->find($params['userId']);
+        return [
+            'contents' => [[
+                'uri' => $uri,
+                'text' => json_encode($user),
+                'mimeType' => 'application/json'
+            ]]
+        ];
+    }
+);
+```
+
+## Prompt Implementation Pattern
+
+```php
+use MCP\Utils\Completable;
+
+$server->registerPrompt(
+    'code-review',
+    [
+        'title' => 'Code Review',
+        'description' => 'Review code for best practices',
+        'argsSchema' => [
+            'language' => Completable::string()
+                ->withCompletions(['php', 'javascript', 'python']),
+            'code' => Completable::string()
+        ]
+    ],
+    function (array $args): array {
+        return [
+            'messages' => [[
+                'role' => 'user',
+                'content' => [
+                    'type' => 'text',
+                    'text' => sprintf(
+                        "Please review this %s code:\n\n%s",
+                        $args['language'],
+                        $args['code']
+                    )
+                ]
+            ]]
+        ];
+    }
+);
+```
+
+## Server Lifecycle Management
+
+```php
+// Dynamic tool management
+$tool = $server->registerTool('example', [...], $handler);
+
+// Disable tool temporarily
+$tool->disable();
+
+// Enable tool
+$tool->enable();
+
+// Update tool configuration
+$tool->update(['description' => 'Updated description']);
+
+// Remove tool completely
+$tool->remove();
+```
+
+## Error Handling
+
+```php
+// In handlers, return errors properly
+function toolHandler(array $params): array {
+    try {
+        // Tool logic
+        return ['content' => [['type' => 'text', 'text' => 'Success']]];
+    } catch (\Exception $e) {
+        // Return error in result, not as exception
+        return [
+            'content' => [[
+                'type' => 'text',
+                'text' => 'Error: ' . $e->getMessage()
+            ]],
+            'isError' => true
+        ];
+    }
+}
+```
+
+## Best Practices
+
+1. **Validation**: Always validate input against schemas
+2. **Error Handling**: Return errors in results, not as protocol errors
+3. **Async Operations**: Use ReactPHP promises for async operations
+4. **Resource Links**: Tools can return resource links without content
+5. **Notifications**: Send list_changed notifications when modifying registrations
+6. **Logging**: Use the server's logging capabilities for debugging

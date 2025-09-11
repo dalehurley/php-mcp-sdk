@@ -1,0 +1,91 @@
+{
+  "name": "dalehurley/php-mcp-sdk",
+  "description": "Model Context Protocol (MCP) implementation for PHP",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Your Name",
+      "email": "your.email@example.com"
+    }
+  ],
+  "homepage": "https://github.com/yourusername/php-mcp-sdk",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "llm",
+    "ai"
+  ],
+  "require": {
+    "php": "^8.1",
+    "react/promise": "^3.0",
+    "react/event-loop": "^1.4",
+    "react/stream": "^1.3",
+    "react/child-process": "^0.6",
+    "react/http": "^1.9",
+    "evenement/evenement": "^3.0",
+    "guzzlehttp/guzzle": "^7.8",
+    "guzzlehttp/psr7": "^2.6",
+    "psr/http-message": "^1.0 || ^2.0",
+    "psr/http-server-handler": "^1.0",
+    "psr/http-server-middleware": "^1.0",
+    "respect/validation": "^2.2",
+    "monolog/monolog": "^3.5",
+    "ramsey/uuid": "^4.7",
+    "symfony/console": "^6.4|^7.0",
+    "ext-json": "*",
+    "ext-mbstring": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.5",
+    "mockery/mockery": "^1.6",
+    "phpstan/phpstan": "^1.10",
+    "squizlabs/php_codesniffer": "^3.7",
+    "friendsofphp/php-cs-fixer": "^3.48",
+    "vimeo/psalm": "^5.20 || ^6.0@dev",
+    "symfony/var-dumper": "^6.4|^7.0"
+  },
+  "suggest": {
+    "react/async": "For async/await-like syntax with ReactPHP",
+    "clue/eventsource-react": "For EventSource client support",
+    "ratchet/pawl": "For WebSocket client support",
+    "league/oauth2-client": "For OAuth 2.0 client support"
+  },
+  "autoload": {
+    "psr-4": {
+      "MCP\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "MCP\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "test-coverage": "XDEBUG_MODE=coverage phpunit --coverage-html coverage",
+    "phpstan": "phpstan analyse src tests --level=8",
+    "psalm": "psalm",
+    "cs-check": "phpcs",
+    "cs-fix": "php-cs-fixer fix",
+    "check": [
+      "@cs-check",
+      "@phpstan",
+      "@psalm",
+      "@test"
+    ]
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {
+      "php-http/discovery": true
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-main": "1.0-dev"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

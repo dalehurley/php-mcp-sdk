@@ -1,0 +1,148 @@
+---
+alwaysApply: true
+---
+
+# PHP MCP SDK Architecture Guide
+
+This is the PHP implementation of the Model Context Protocol (MCP) SDK, following the patterns established by the TypeScript SDK.
+
+## Core Architecture Principles
+
+1. **Follow TypeScript SDK Patterns**: The PHP SDK should mirror the TypeScript SDK's architecture while using PHP idioms
+2. **Type Safety**: Use PHP 8+ type declarations, union types, and attributes extensively
+3. **Async Support**: Utilize ReactPHP or similar for async operations where the TypeScript SDK uses Promises
+4. **PSR Standards**: Follow PSR-4 for autoloading, PSR-12 for coding standards, PSR-7 for HTTP messages
+
+## Project Structure
+
+```
+php-mcp-sdk/
+├── src/
+│   ├── Server/                  # Server implementations
+│   │   ├── McpServer.php       # High-level server API
+│   │   ├── Server.php          # Low-level server implementation
+│   │   ├── Auth/               # Authentication providers
+│   │   │   ├── Provider.php
+│   │   │   └── Providers/
+│   │   └── Transport/          # Server transport implementations
+│   │       ├── StdioServerTransport.php
+│   │       ├── StreamableHttpServerTransport.php
+│   │       └── SseServerTransport.php (deprecated)
+│   ├── Client/                  # Client implementations
+│   │   ├── Client.php          # MCP client
+│   │   └── Transport/          # Client transport implementations
+│   │       ├── StdioClientTransport.php
+│   │       ├── StreamableHttpClientTransport.php
+│   │       └── SseClientTransport.php (deprecated)
+│   ├── Shared/                  # Shared components
+│   │   ├── Protocol.php        # Protocol base class
+│   │   ├── Transport.php       # Transport interface
+│   │   ├── UriTemplate.php     # URI template handling
+│   │   └── AuthUtils.php       # Authentication utilities
+│   ├── Types/                   # Type definitions
+│   │   ├── Types.php           # Core type definitions
+│   │   ├── Schemas.php         # Validation schemas
+│   │   └── Exceptions.php      # MCP exceptions
+│   └── Utils/                   # Utility classes
+│       ├── JsonSchema.php      # JSON Schema validation
+│       └── Completable.php     # Completion support
+├── tests/                       # Test files mirroring src structure
+├── examples/                    # Example implementations
+│   ├── server/
+│   └── client/
+├── composer.json
+└── README.md
+```
+
+## Key Components Mapping
+
+### TypeScript → PHP
+
+1. **Zod Schemas → PHP Validation**
+
+   - Use `respect/validation` or `symfony/validator` for schema validation
+   - Create dedicated validator classes for each schema type
+
+2. **Promises → ReactPHP Promises**
+
+   ```php
+   // TypeScript: async/await
+   // PHP: ReactPHP promises
+   use React\Promise\Promise;
+   ```
+
+3. **EventEmitter → Evenement**
+
+   ```php
+   use Evenement\EventEmitter;
+   ```
+
+4. **Type Definitions**
+   ```php
+   // Use PHP 8 union types and enums
+   enum ErrorCode: int {
+       case ConnectionClosed = -32000;
+       case RequestTimeout = -32001;
+       case ParseError = -32700;
+       // ...
+   }
+   ```
+
+## Core Interfaces
+
+### Transport Interface
+
+```php
+interface Transport {
+    public function start(): Promise;
+    public function send(array $message): Promise;
+    public function close(): Promise;
+    public function setMessageHandler(callable $handler): void;
+    public function setCloseHandler(callable $handler): void;
+    public function setErrorHandler(callable $handler): void;
+}
+```
+
+### Protocol Base Class
+
+```php
+abstract class Protocol {
+    protected function assertCapability(string $capability): void;
+    public function setRequestHandler(string $schema, callable $handler): void;
+    public function sendNotification(array $notification): Promise;
+    // ...
+}
+```
+
+## Namespace Structure
+
+- `MCP\Server` - Server implementations
+- `MCP\Client` - Client implementations
+- `MCP\Shared` - Shared components
+- `MCP\Types` - Type definitions
+- `MCP\Transport` - Transport implementations
+- `MCP\Auth` - Authentication components
+
+## Error Handling
+
+1. Use custom exceptions extending `McpError`
+2. Implement proper error codes from the protocol
+3. Provide detailed error messages with context
+
+## Testing Strategy
+
+1. Unit tests for all components
+2. Integration tests for transport layers
+3. Example servers and clients for manual testing
+4. Use PHPUnit for testing framework
+
+## Dependencies
+
+Core dependencies to use:
+
+- `react/promise` - Async operations
+- `react/event-loop` - Event loop for async
+- `evenement/evenement` - Event emitter
+- `respect/validation` or `symfony/validator` - Schema validation
+- `guzzlehttp/psr7` - PSR-7 HTTP messages
+- `monolog/monolog` - Logging

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<ruleset name="PHP MCP SDK">
+    <description>PSR-12 coding standard for PHP MCP SDK</description>
+
+    <!-- Paths to check -->
+    <file>src</file>
+    <file>tests</file>
+    <file>examples</file>
+
+    <!-- Exclude patterns -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/cache/*</exclude-pattern>
+    <exclude-pattern>*/build/*</exclude-pattern>
+
+    <!-- Include the whole PSR-12 standard -->
+    <rule ref="PSR12"/>
+
+    <!-- Additional rules -->
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="150"/>
+        </properties>
+    </rule>
+
+    <!-- Show progress and use colors -->
+    <arg value="p"/>
+    <arg name="colors"/>
+</ruleset>
