@@ -50,7 +50,9 @@ class RegisteredTool
         public $outputSchema,
         public ?ToolAnnotations $annotations,
         public ToolCallback $callback,
-        public bool $enabled = true
+        public bool $enabled = true,
+        private ?\Closure $onUpdate = null,
+        private ?\Closure $onRemove = null
     ) {}
 
     /**
@@ -59,6 +61,8 @@ class RegisteredTool
     public function enable(): void
     {
         $this->enabled = true;
+        // Trigger update callback for list_changed notifications
+        ($this->onUpdate) && ($this->onUpdate)(['enabled' => true]);
     }
 
     /**
@@ -67,6 +71,8 @@ class RegisteredTool
     public function disable(): void
     {
         $this->enabled = false;
+        // Trigger update callback for list_changed notifications
+        ($this->onUpdate) && ($this->onUpdate)(['enabled' => false]);
     }
 
     /**
@@ -84,7 +90,7 @@ class RegisteredTool
      * } $updates
      * @param callable $onUpdate Callback to handle name changes and list updates
      */
-    public function update(array $updates, callable $onUpdate): void
+    public function update(array $updates): void
     {
         if (array_key_exists('title', $updates)) {
             $this->title = $updates['title'];
@@ -115,7 +121,7 @@ class RegisteredTool
         }
 
         // Notify parent about updates (especially name changes)
-        $onUpdate($updates);
+        ($this->onUpdate) && ($this->onUpdate)($updates);
     }
 
     /**
@@ -123,9 +129,9 @@ class RegisteredTool
      * 
      * @param callable $onRemove Callback to handle removal
      */
-    public function remove(callable $onRemove): void
+    public function remove(): void
     {
-        $onRemove();
+        ($this->onRemove) && ($this->onRemove)();
     }
 }
 
@@ -158,7 +164,9 @@ class RegisteredResource
         public ?string $title,
         public ?ResourceMetadata $metadata,
         public ReadResourceCallback $readCallback,
-        public bool $enabled = true
+        public bool $enabled = true,
+        private ?\Closure $onUpdate = null,
+        private ?\Closure $onRemove = null
     ) {}
 
     /**
@@ -167,6 +175,7 @@ class RegisteredResource
     public function enable(): void
     {
         $this->enabled = true;
+        ($this->onUpdate) && ($this->onUpdate)(['enabled' => true]);
     }
 
     /**
@@ -175,6 +184,7 @@ class RegisteredResource
     public function disable(): void
     {
         $this->enabled = false;
+        ($this->onUpdate) && ($this->onUpdate)(['enabled' => false]);
     }
 
     /**
@@ -190,7 +200,7 @@ class RegisteredResource
      * } $updates
      * @param callable $onUpdate Callback to handle URI changes and list updates
      */
-    public function update(array $updates, callable $onUpdate): void
+    public function update(array $updates): void
     {
         if (array_key_exists('name', $updates)) {
             $this->name = $updates['name'];
@@ -213,7 +223,7 @@ class RegisteredResource
         }
 
         // Notify parent about updates (especially URI changes)
-        $onUpdate($updates);
+        ($this->onUpdate) && ($this->onUpdate)($updates);
     }
 
     /**
@@ -221,9 +231,9 @@ class RegisteredResource
      * 
      * @param callable $onRemove Callback to handle removal
      */
-    public function remove(callable $onRemove): void
+    public function remove(): void
     {
-        $onRemove();
+        ($this->onRemove) && ($this->onRemove)();
     }
 }
 
@@ -257,7 +267,9 @@ class RegisteredResourceTemplate
         public ?string $title,
         public ?ResourceMetadata $metadata,
         public ReadResourceTemplateCallback $readCallback,
-        public bool $enabled = true
+        public bool $enabled = true,
+        private ?\Closure $onUpdate = null,
+        private ?\Closure $onRemove = null
     ) {}
 
     /**
@@ -266,6 +278,7 @@ class RegisteredResourceTemplate
     public function enable(): void
     {
         $this->enabled = true;
+        ($this->onUpdate) && ($this->onUpdate)(['enabled' => true]);
     }
 
     /**
@@ -274,6 +287,7 @@ class RegisteredResourceTemplate
     public function disable(): void
     {
         $this->enabled = false;
+        ($this->onUpdate) && ($this->onUpdate)(['enabled' => false]);
     }
 
     /**
@@ -289,7 +303,7 @@ class RegisteredResourceTemplate
      * } $updates
      * @param callable $onUpdate Callback to handle name changes and list updates
      */
-    public function update(array $updates, callable $onUpdate): void
+    public function update(array $updates): void
     {
         if (array_key_exists('title', $updates)) {
             $this->title = $updates['title'];
@@ -312,7 +326,7 @@ class RegisteredResourceTemplate
         }
 
         // Notify parent about updates (especially name changes)
-        $onUpdate($updates);
+        ($this->onUpdate) && ($this->onUpdate)($updates);
     }
 
     /**
@@ -320,9 +334,9 @@ class RegisteredResourceTemplate
      * 
      * @param callable $onRemove Callback to handle removal
      */
-    public function remove(callable $onRemove): void
+    public function remove(): void
     {
-        $onRemove();
+        ($this->onRemove) && ($this->onRemove)();
     }
 }
 
@@ -360,7 +374,9 @@ class RegisteredPrompt
         public ?string $description,
         public $argsSchema,
         public PromptCallback $callback,
-        public bool $enabled = true
+        public bool $enabled = true,
+        private ?\Closure $onUpdate = null,
+        private ?\Closure $onRemove = null
     ) {}
 
     /**
@@ -369,6 +385,7 @@ class RegisteredPrompt
     public function enable(): void
     {
         $this->enabled = true;
+        ($this->onUpdate) && ($this->onUpdate)(['enabled' => true]);
     }
 
     /**
@@ -377,6 +394,7 @@ class RegisteredPrompt
     public function disable(): void
     {
         $this->enabled = false;
+        ($this->onUpdate) && ($this->onUpdate)(['enabled' => false]);
     }
 
     /**
@@ -392,7 +410,7 @@ class RegisteredPrompt
      * } $updates
      * @param callable $onUpdate Callback to handle name changes and list updates
      */
-    public function update(array $updates, callable $onUpdate): void
+    public function update(array $updates): void
     {
         if (array_key_exists('title', $updates)) {
             $this->title = $updates['title'];
@@ -415,7 +433,7 @@ class RegisteredPrompt
         }
 
         // Notify parent about updates (especially name changes)
-        $onUpdate($updates);
+        ($this->onUpdate) && ($this->onUpdate)($updates);
     }
 
     /**
@@ -423,8 +441,8 @@ class RegisteredPrompt
      * 
      * @param callable $onRemove Callback to handle removal
      */
-    public function remove(callable $onRemove): void
+    public function remove(): void
     {
-        $onRemove();
+        ($this->onRemove) && ($this->onRemove)();
     }
 }

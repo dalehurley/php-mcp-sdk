@@ -23,6 +23,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `ResourceTemplate` class for dynamic resource URIs with template patterns
   - Full support for dynamic enable/disable of registered items
   - Automatic capability management and list_changed notifications
+- Implemented comprehensive JSON Schema validation (`src/Utils/JsonSchemaValidator.php`):
+  - Full JSON Schema validation for tool input/output schemas
+  - Prompt argument schema validation with detailed error messages
+  - Schema normalization and field extraction utilities
+  - Support for nested objects, arrays, string patterns, and numeric constraints
+- Added comprehensive test suite:
+  - Unit tests for Server initialization and protocol handling
+  - Unit tests for McpServer registration methods and dynamic management
+  - Unit tests for JSON Schema validation with 17 test cases
+  - Integration tests with mock transport for end-to-end testing
 - Implemented Transport layers (`src/Server/Transport/` and `src/Client/Transport/`):
   - `StdioServerTransport` for server-side stdio communication
   - `StdioClientTransport` for client-side stdio with process spawning
@@ -36,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Moves completed prompts to done/ directory
   - Commits changes after each implementation step
 - Implemented Protocol base class in `src/Shared/Protocol.php` with:
+- Resource subscription support in server:
+  - Handlers for `resources/subscribe` and `resources/unsubscribe`
+  - In-memory tracking of subscriptions by session ID
+  - Compatible with debounced `list_changed` notifications
   - Request/response correlation and timeout handling
   - Event emission using Evenement
   - Support for request handlers, notification handlers, and progress callbacks
@@ -240,4 +254,10 @@ When making changes to the PHP MCP SDK:
 ### Fixed
 
 - Fixed memory leak in long-running servers when handling large payloads
+- Fixed capability merging in Server class to properly handle readonly ServerCapabilities properties
+- Fixed WritableIterableStream constructor calls in transport implementations to include buffer size
+- Fixed Response constructor calls to use readable stream iterators instead of writable streams
+- Fixed JsonSerializable interface checks in transport and protocol classes
+- Fixed Amp buffer() method calls to remove deprecated size parameters
+- Fixed schema validation integration in McpServer for tools and prompts with actual validation logic
 ```

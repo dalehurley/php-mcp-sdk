@@ -30,10 +30,14 @@ use MCP\Types\Requests\ListResourcesRequest;
 use MCP\Types\Requests\ListResourceTemplatesRequest;
 use MCP\Types\Requests\ReadResourceRequest;
 use MCP\Types\Requests\CompleteRequest;
+use MCP\Types\Requests\SubscribeRequest;
+use MCP\Types\Requests\UnsubscribeRequest;
+use MCP\Types\EmptyResult;
 use MCP\Types\Notifications\LoggingMessageNotification;
 use MCP\Types\McpError;
 use MCP\Types\ErrorCode;
 use MCP\Types\Capabilities\ServerCapabilities;
+use MCP\Utils\JsonSchemaValidator;
 use function Amp\async;
 use function Amp\Future\await;
 
@@ -84,6 +88,12 @@ class McpServer
     private bool $_resourceHandlersInitialized = false;
     private bool $_promptHandlersInitialized = false;
 
+    /**
+     * Map of sessionId => set of subscribed resource URIs
+     * @var array<string, array<string, bool>>
+     */
+    private array $_resourceSubscriptionsBySession = [];
+
     public function __construct(
         Implementation $serverInfo,
         ?ServerOptions $options = null
@@ -127,12 +137,12 @@ class McpServer
             return;
         }
 
-        $this->server->assertCanSetRequestHandler(ListToolsRequest::METHOD);
-        $this->server->assertCanSetRequestHandler(CallToolRequest::METHOD);
-
         $this->server->registerCapabilities(new ServerCapabilities(
             tools: ['listChanged' => true]
         ));
+
+        $this->server->assertCanSetRequestHandler(ListToolsRequest::METHOD);
+        $this->server->assertCanSetRequestHandler(CallToolRequest::METHOD);
 
         $this->server->setRequestHandler(
             ListToolsRequest::class,
@@ -191,8 +201,7 @@ class McpServer
                         if ($tool->inputSchema !== null) {
                             // Validate input arguments
                             $args = $request->getArguments();
-                            // TODO: Implement actual schema validation
-                            // For now, just pass through
+                            JsonSchemaValidator::validate($args, JsonSchemaValidator::normalizeSchema($tool->inputSchema));
 
                             $callback = $tool->callback;
                             $result = $callback($args, $extra);
@@ -226,7 +235,11 @@ class McpServer
                             );
                         }
 
-                        // TODO: Implement actual schema validation for structured content
+                        // Validate structured content against output schema
+                        $structuredContent = $result->getStructuredContent();
+                        if ($structuredContent !== null) {
+                            JsonSchemaValidator::validate($structuredContent, JsonSchemaValidator::normalizeSchema($tool->outputSchema));
+                        }
                     }
 
                     return $result;
@@ -388,26 +401,22 @@ class McpServer
             outputSchema: $outputSchema,
             annotations: $annotations,
             callback: $callback,
-            enabled: true
-        );
-
-        // Set up update/remove handlers that manage the registry
-        $updateHandler = function (array $updates) use ($name, &$registeredTool) {
-            if (isset($updates['name']) && $updates['name'] !== $name) {
-                unset($this->_registeredTools[$name]);
-                if ($updates['name'] !== null) {
-                    $this->_registeredTools[$updates['name']] = $registeredTool;
+            enabled: true,
+            onUpdate: function (array $updates) use (&$name, &$registeredTool) {
+                if (isset($updates['name']) && $updates['name'] !== $name) {
+                    unset($this->_registeredTools[$name]);
+                    if ($updates['name'] !== null) {
+                        $this->_registeredTools[$updates['name']] = $registeredTool;
+                        $name = $updates['name'];
+                    }
                 }
+                $this->sendToolListChanged();
+            },
+            onRemove: function () use (&$name) {
+                unset($this->_registeredTools[$name]);
+                $this->sendToolListChanged();
             }
-            $this->sendToolListChanged();
-        };
-
-        $removeHandler = function () use ($name) {
-            unset($this->_registeredTools[$name]);
-            $this->sendToolListChanged();
-        };
-
-        // We'll pass the handlers to the update/remove methods directly
+        );
 
         $this->_registeredTools[$name] = $registeredTool;
         $this->setToolRequestHandlers();
@@ -424,13 +433,15 @@ class McpServer
             return;
         }
 
-        $this->server->assertCanSetRequestHandler(ListResourcesRequest::METHOD);
-        $this->server->assertCanSetRequestHandler(ListResourceTemplatesRequest::METHOD);
-        $this->server->assertCanSetRequestHandler(ReadResourceRequest::METHOD);
-
         $this->server->registerCapabilities(new ServerCapabilities(
             resources: ['listChanged' => true]
         ));
+
+        $this->server->assertCanSetRequestHandler(ListResourcesRequest::METHOD);
+        $this->server->assertCanSetRequestHandler(ListResourceTemplatesRequest::METHOD);
+        $this->server->assertCanSetRequestHandler(ReadResourceRequest::METHOD);
+        $this->server->assertCanSetRequestHandler(SubscribeRequest::METHOD);
+        $this->server->assertCanSetRequestHandler(UnsubscribeRequest::METHOD);
 
         $this->server->setRequestHandler(
             ListResourcesRequest::class,
@@ -564,6 +575,52 @@ class McpServer
                         "Resource {$uri} not found"
                     );
                 });
+            }
+        );
+
+        // Subscribe to resource updates for a given URI
+        $this->server->setRequestHandler(
+            SubscribeRequest::class,
+            function (SubscribeRequest $request, RequestHandlerExtra $extra): EmptyResult {
+                $uri = $request->getUri();
+                if ($uri === null) {
+                    throw new McpError(ErrorCode::InvalidParams, 'Missing uri');
+                }
+
+                $sessionId = $extra->sessionId ?? ($extra->requestInfo['headers']['mcp-session-id'] ?? null);
+                if (!is_string($sessionId) || $sessionId === '') {
+                    // If no session id, treat as no-op; protocol allows stateless clients
+                    return new EmptyResult();
+                }
+
+                $this->_resourceSubscriptionsBySession[$sessionId] ??= [];
+                $this->_resourceSubscriptionsBySession[$sessionId][$uri] = true;
+                return new EmptyResult();
+            }
+        );
+
+        // Unsubscribe from resource updates for a given URI
+        $this->server->setRequestHandler(
+            UnsubscribeRequest::class,
+            function (UnsubscribeRequest $request, RequestHandlerExtra $extra): EmptyResult {
+                $uri = $request->getUri();
+                if ($uri === null) {
+                    throw new McpError(ErrorCode::InvalidParams, 'Missing uri');
+                }
+
+                $sessionId = $extra->sessionId ?? ($extra->requestInfo['headers']['mcp-session-id'] ?? null);
+                if (!is_string($sessionId) || $sessionId === '') {
+                    return new EmptyResult();
+                }
+
+                if (isset($this->_resourceSubscriptionsBySession[$sessionId][$uri])) {
+                    unset($this->_resourceSubscriptionsBySession[$sessionId][$uri]);
+                    if (empty($this->_resourceSubscriptionsBySession[$sessionId])) {
+                        unset($this->_resourceSubscriptionsBySession[$sessionId]);
+                    }
+                }
+
+                return new EmptyResult();
             }
         );
 
@@ -736,26 +793,22 @@ class McpServer
             title: $title,
             metadata: $metadata,
             readCallback: $readCallback,
-            enabled: true
-        );
-
-        // Set up update/remove handlers
-        $updateHandler = function (array $updates) use ($uri, &$registeredResource) {
-            if (isset($updates['uri']) && $updates['uri'] !== $uri) {
-                unset($this->_registeredResources[$uri]);
-                if ($updates['uri'] !== null) {
-                    $this->_registeredResources[$updates['uri']] = $registeredResource;
+            enabled: true,
+            onUpdate: function (array $updates) use (&$uri, &$registeredResource) {
+                if (isset($updates['uri']) && $updates['uri'] !== $uri) {
+                    unset($this->_registeredResources[$uri]);
+                    if ($updates['uri'] !== null) {
+                        $this->_registeredResources[$updates['uri']] = $registeredResource;
+                        $uri = $updates['uri'];
+                    }
                 }
+                $this->sendResourceListChanged();
+            },
+            onRemove: function () use (&$uri) {
+                unset($this->_registeredResources[$uri]);
+                $this->sendResourceListChanged();
             }
-            $this->sendResourceListChanged();
-        };
-
-        $removeHandler = function () use ($uri) {
-            unset($this->_registeredResources[$uri]);
-            $this->sendResourceListChanged();
-        };
-
-        // We'll pass the handlers to the update/remove methods directly
+        );
 
         $this->_registeredResources[$uri] = $registeredResource;
         $this->setResourceRequestHandlers();
@@ -776,26 +829,22 @@ class McpServer
             title: $title,
             metadata: $metadata,
             readCallback: $readCallback,
-            enabled: true
-        );
-
-        // Set up update/remove handlers
-        $updateHandler = function (array $updates) use ($name, &$registeredResourceTemplate) {
-            if (isset($updates['name']) && $updates['name'] !== $name) {
-                unset($this->_registeredResourceTemplates[$name]);
-                if ($updates['name'] !== null) {
-                    $this->_registeredResourceTemplates[$updates['name']] = $registeredResourceTemplate;
+            enabled: true,
+            onUpdate: function (array $updates) use (&$name, &$registeredResourceTemplate) {
+                if (isset($updates['name']) && $updates['name'] !== $name) {
+                    unset($this->_registeredResourceTemplates[$name]);
+                    if ($updates['name'] !== null) {
+                        $this->_registeredResourceTemplates[$updates['name']] = $registeredResourceTemplate;
+                        $name = $updates['name'];
+                    }
                 }
+                $this->sendResourceListChanged();
+            },
+            onRemove: function () use (&$name) {
+                unset($this->_registeredResourceTemplates[$name]);
+                $this->sendResourceListChanged();
             }
-            $this->sendResourceListChanged();
-        };
-
-        $removeHandler = function () use ($name) {
-            unset($this->_registeredResourceTemplates[$name]);
-            $this->sendResourceListChanged();
-        };
-
-        // We'll pass the handlers to the update/remove methods directly
+        );
 
         $this->_registeredResourceTemplates[$name] = $registeredResourceTemplate;
         $this->setResourceRequestHandlers();
@@ -812,12 +861,12 @@ class McpServer
             return;
         }
 
-        $this->server->assertCanSetRequestHandler(ListPromptsRequest::METHOD);
-        $this->server->assertCanSetRequestHandler(GetPromptRequest::METHOD);
-
         $this->server->registerCapabilities(new ServerCapabilities(
             prompts: ['listChanged' => true]
         ));
+
+        $this->server->assertCanSetRequestHandler(ListPromptsRequest::METHOD);
+        $this->server->assertCanSetRequestHandler(GetPromptRequest::METHOD);
 
         $this->server->setRequestHandler(
             ListPromptsRequest::class,
@@ -876,8 +925,7 @@ class McpServer
                     if ($prompt->argsSchema !== null) {
                         // Validate arguments
                         $args = $request->getArguments();
-                        // TODO: Implement actual schema validation
-                        // For now, just pass through
+                        JsonSchemaValidator::validate($args, JsonSchemaValidator::normalizeSchema($prompt->argsSchema));
 
                         $callback = $prompt->callback;
                         $result = $callback($args, $extra);
@@ -1019,26 +1067,22 @@ class McpServer
             description: $description,
             argsSchema: $argsSchema,
             callback: $callback,
-            enabled: true
-        );
-
-        // Set up update/remove handlers
-        $updateHandler = function (array $updates) use ($name, &$registeredPrompt) {
-            if (isset($updates['name']) && $updates['name'] !== $name) {
-                unset($this->_registeredPrompts[$name]);
-                if ($updates['name'] !== null) {
-                    $this->_registeredPrompts[$updates['name']] = $registeredPrompt;
+            enabled: true,
+            onUpdate: function (array $updates) use (&$name, &$registeredPrompt) {
+                if (isset($updates['name']) && $updates['name'] !== $name) {
+                    unset($this->_registeredPrompts[$name]);
+                    if ($updates['name'] !== null) {
+                        $this->_registeredPrompts[$updates['name']] = $registeredPrompt;
+                        $name = $updates['name'];
+                    }
                 }
+                $this->sendPromptListChanged();
+            },
+            onRemove: function () use (&$name) {
+                unset($this->_registeredPrompts[$name]);
+                $this->sendPromptListChanged();
             }
-            $this->sendPromptListChanged();
-        };
-
-        $removeHandler = function () use ($name) {
-            unset($this->_registeredPrompts[$name]);
-            $this->sendPromptListChanged();
-        };
-
-        // We'll pass the handlers to the update/remove methods directly
+        );
 
         $this->_registeredPrompts[$name] = $registeredPrompt;
 
@@ -1053,11 +1097,11 @@ class McpServer
             return;
         }
 
-        $this->server->assertCanSetRequestHandler(CompleteRequest::METHOD);
-
         $this->server->registerCapabilities(new ServerCapabilities(
             completions: []
         ));
+
+        $this->server->assertCanSetRequestHandler(CompleteRequest::METHOD);
 
         $this->server->setRequestHandler(
             CompleteRequest::class,
@@ -1243,39 +1287,25 @@ class McpServer
 
     /**
      * Convert schema to JSON Schema format
-     * This is a placeholder - implement based on your schema library
      */
     private function schemaToJsonSchema($schema): array
     {
-        // If it's already in JSON Schema format, return as-is
-        if (is_array($schema) && isset($schema['type'])) {
-            return $schema;
-        }
-
-        // TODO: Implement conversion from your schema library to JSON Schema
-        // For now, return a basic object schema
-        return EMPTY_OBJECT_JSON_SCHEMA;
+        return JsonSchemaValidator::normalizeSchema($schema);
     }
 
     /**
      * Extract prompt arguments from schema
-     * This is a placeholder - implement based on your schema library
      */
     private function promptArgumentsFromSchema($schema): array
     {
-        // TODO: Implement extraction of argument definitions from schema
-        // For now, return empty array
-        return [];
+        return JsonSchemaValidator::extractPromptArguments($schema);
     }
 
     /**
      * Get a field from a schema by name
-     * This is a placeholder - implement based on your schema library
      */
     private function getSchemaField($schema, string $fieldName)
     {
-        // TODO: Implement field extraction from schema
-        // For now, return null
-        return null;
+        return JsonSchemaValidator::getSchemaField($schema, $fieldName);
     }
 }

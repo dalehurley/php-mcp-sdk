@@ -25,19 +25,19 @@ class StdioServerTransport implements Transport
     private bool $_started = false;
     private ReadableStream $_stdin;
     private WritableStream $_stdout;
-    
+
     /** @var callable(array): void|null */
     private $onmessage = null;
-    
+
     /** @var callable(): void|null */
     private $onclose = null;
-    
+
     /** @var callable(\Throwable): void|null */
     private $onerror = null;
-    
+
     /** @var DeferredCancellation|null */
     private ?DeferredCancellation $deferredCancellation = null;
-    
+
     /**
      * @param ReadableStream|null $stdin Input stream (defaults to STDIN)
      * @param WritableStream|null $stdout Output stream (defaults to STDOUT)
@@ -50,7 +50,7 @@ class StdioServerTransport implements Transport
         $this->_stdout = $stdout ?? getStdout();
         $this->_readBuffer = new ReadBuffer();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -58,7 +58,7 @@ class StdioServerTransport implements Transport
     {
         $this->onmessage = $handler;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -66,7 +66,7 @@ class StdioServerTransport implements Transport
     {
         $this->onclose = $handler;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -74,7 +74,7 @@ class StdioServerTransport implements Transport
     {
         $this->onerror = $handler;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -84,16 +84,16 @@ class StdioServerTransport implements Transport
             if ($this->_started) {
                 throw new \RuntimeException(
                     "StdioServerTransport already started! If using Server class, " .
-                    "note that connect() calls start() automatically."
+                        "note that connect() calls start() automatically."
                 );
             }
-            
+
             $this->_started = true;
-            
+
             // Create cancellation token
             $this->deferredCancellation = new DeferredCancellation();
             $cancellation = $this->deferredCancellation->getCancellation();
-            
+
             // Start reading from stdin in the background
             async(function () use ($cancellation) {
                 try {
@@ -101,7 +101,7 @@ class StdioServerTransport implements Transport
                         $this->_readBuffer->append($chunk);
                         $this->processReadBuffer();
                     }
-                    
+
                     // Stream ended, trigger close
                     if ($this->onclose !== null) {
                         ($this->onclose)();
@@ -116,7 +116,7 @@ class StdioServerTransport implements Transport
             });
         });
     }
-    
+
     /**
      * Process buffered data and emit complete messages
      */
@@ -128,7 +128,7 @@ class StdioServerTransport implements Transport
                 if ($message === null) {
                     break;
                 }
-                
+
                 if ($this->onmessage !== null) {
                     ($this->onmessage)($message->jsonSerialize());
                 }
@@ -139,7 +139,7 @@ class StdioServerTransport implements Transport
             }
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -157,7 +157,7 @@ class StdioServerTransport implements Transport
             }
         });
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -168,19 +168,19 @@ class StdioServerTransport implements Transport
             if ($this->deferredCancellation !== null) {
                 $this->deferredCancellation->cancel();
             }
-            
+
             // Clear the buffer
             $this->_readBuffer->clear();
-            
+
             // Close streams if they support it
             if (method_exists($this->_stdin, 'close')) {
                 $this->_stdin->close();
             }
-            
+
             if (method_exists($this->_stdout, 'close')) {
                 $this->_stdout->close();
             }
-            
+
             // Notify close handler
             if ($this->onclose !== null) {
                 ($this->onclose)();

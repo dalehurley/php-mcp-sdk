@@ -33,6 +33,7 @@ use MCP\Types\Results\CreateMessageResult;
 use MCP\Types\Results\ElicitResult;
 use MCP\Types\Results\ListRootsResult;
 use MCP\Types\Notifications\InitializedNotification;
+use MCP\Types\Notifications\ResourceUpdatedNotification;
 use MCP\Types\JsonRpc\JSONRPCRequest;
 use MCP\Validation\ValidationService;
 use function Amp\async;
@@ -422,7 +423,7 @@ class Server extends Protocol
     public function sendResourceUpdated(array $params): \Amp\Future
     {
         return $this->notification(
-            new Notification('notifications/resources/updated', $params)
+            new ResourceUpdatedNotification($params)
         );
     }
 
@@ -432,7 +433,7 @@ class Server extends Protocol
     public function sendResourceListChanged(): \Amp\Future
     {
         return $this->notification(
-            new Notification('notifications/resources/list_changed')
+            new \MCP\Types\Notifications\ResourceListChangedNotification()
         );
     }
 
@@ -442,7 +443,7 @@ class Server extends Protocol
     public function sendToolListChanged(): \Amp\Future
     {
         return $this->notification(
-            new Notification('notifications/tools/list_changed')
+            new \MCP\Types\Notifications\ToolListChangedNotification()
         );
     }
 
@@ -452,7 +453,7 @@ class Server extends Protocol
     public function sendPromptListChanged(): \Amp\Future
     {
         return $this->notification(
-            new Notification('notifications/prompts/list_changed')
+            new \MCP\Types\Notifications\PromptListChangedNotification()
         );
     }
 }

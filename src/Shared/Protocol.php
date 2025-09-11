@@ -797,23 +797,28 @@ function mergeCapabilities(
     ServerCapabilities|ClientCapabilities $base,
     ServerCapabilities|ClientCapabilities $additional
 ): ServerCapabilities|ClientCapabilities {
-    $result = clone $base;
+    // Convert both to arrays for merging
+    $baseArray = $base instanceof \JsonSerializable ? $base->jsonSerialize() : (array) $base;
+    $additionalArray = $additional instanceof \JsonSerializable ? $additional->jsonSerialize() : (array) $additional;
 
-    foreach (get_object_vars($additional) as $key => $value) {
-        if ($value !== null && is_object($value)) {
-            $baseValue = $result->$key ?? null;
-            if ($baseValue !== null) {
-                $result->$key = (object) array_merge(
-                    (array) $baseValue,
-                    (array) $value
-                );
+    // Merge the arrays, with additional taking precedence for non-null values
+    $merged = $baseArray;
+    foreach ($additionalArray as $key => $value) {
+        if ($value !== null) {
+            if (isset($merged[$key]) && is_array($merged[$key]) && is_array($value)) {
+                // Merge arrays
+                $merged[$key] = array_merge($merged[$key], $value);
             } else {
-                $result->$key = $value;
+                // Replace value
+                $merged[$key] = $value;
             }
-        } else {
-            $result->$key = $value;
         }
     }
 
-    return $result;
+    // Create new instance from merged array
+    if ($base instanceof ServerCapabilities) {
+        return ServerCapabilities::fromArray($merged);
+    } else {
+        return ClientCapabilities::fromArray($merged);
+    }
 }

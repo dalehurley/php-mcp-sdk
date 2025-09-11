@@ -48,25 +48,25 @@ class StdioClientTransport implements Transport
     private ReadBuffer $_readBuffer;
     private StdioServerParameters $_serverParams;
     private bool $_started = false;
-    
+
     /** @var callable(array): void|null */
     private $onmessage = null;
-    
+
     /** @var callable(): void|null */
     private $onclose = null;
-    
+
     /** @var callable(\Throwable): void|null */
     private $onerror = null;
-    
+
     /** @var DeferredCancellation|null */
     private ?DeferredCancellation $deferredCancellation = null;
-    
+
     /**
      * Default environment variables to inherit for security
      */
     private const DEFAULT_INHERITED_ENV_VARS = [
         'HOME',
-        'LOGNAME', 
+        'LOGNAME',
         'PATH',
         'SHELL',
         'TERM',
@@ -76,7 +76,7 @@ class StdioClientTransport implements Transport
         'LC_CTYPE',
         'TZ'
     ];
-    
+
     /**
      * Windows-specific environment variables
      */
@@ -94,13 +94,13 @@ class StdioClientTransport implements Transport
         'USERPROFILE',
         'PROGRAMFILES'
     ];
-    
+
     public function __construct(StdioServerParameters $serverParams)
     {
         $this->_serverParams = $serverParams;
         $this->_readBuffer = new ReadBuffer();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -108,7 +108,7 @@ class StdioClientTransport implements Transport
     {
         $this->onmessage = $handler;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -116,7 +116,7 @@ class StdioClientTransport implements Transport
     {
         $this->onclose = $handler;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -124,17 +124,17 @@ class StdioClientTransport implements Transport
     {
         $this->onerror = $handler;
     }
-    
+
     /**
      * Get default environment variables deemed safe to inherit
      */
     private function getDefaultEnvironment(): array
     {
         $env = [];
-        $varsToInherit = PHP_OS_FAMILY === 'Windows' 
-            ? self::WINDOWS_ENV_VARS 
+        $varsToInherit = PHP_OS_FAMILY === 'Windows'
+            ? self::WINDOWS_ENV_VARS
             : self::DEFAULT_INHERITED_ENV_VARS;
-        
+
         foreach ($varsToInherit as $key) {
             $value = getenv($key);
             if ($value !== false && !str_starts_with($value, '()')) {
@@ -142,10 +142,10 @@ class StdioClientTransport implements Transport
                 $env[$key] = $value;
             }
         }
-        
+
         return $env;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -155,70 +155,70 @@ class StdioClientTransport implements Transport
             if ($this->_started) {
                 throw new \RuntimeException(
                     "StdioClientTransport already started! If using Client class, " .
-                    "note that connect() calls start() automatically."
+                        "note that connect() calls start() automatically."
                 );
             }
-            
+
             $this->_started = true;
-            
+
             // Build command with arguments
             $command = [$this->_serverParams->command];
             if ($this->_serverParams->args !== null) {
                 $command = array_merge($command, $this->_serverParams->args);
             }
-            
+
             // Merge default env with specified env
             $env = array_merge(
                 $this->getDefaultEnvironment(),
                 $this->_serverParams->env ?? []
             );
-            
+
             // Start the process
             $this->_process = Process::start(
                 $command,
                 $this->_serverParams->cwd,
                 $env
             );
-            
+
             // Check if process started successfully
             if (!$this->_process->isRunning()) {
                 throw new \RuntimeException("Failed to start server process");
             }
-            
+
             // Create cancellation token
             $this->deferredCancellation = new DeferredCancellation();
-            
+
             // Set up stdout reading
             $this->readStdout();
-            
+
             // Set up stderr handling if needed
             if ($this->_serverParams->inheritStderr) {
                 $this->handleStderr();
             }
-            
+
             // Monitor process for exit
             async(function () {
                 $exitCode = $this->_process->join(null);
                 $this->_process = null;
-                
+
                 if ($this->onclose !== null) {
                     ($this->onclose)();
                 }
             });
         });
     }
-    
+
     /**
      * Read from process stdout in the background
      */
     private function readStdout(): void
     {
         $cancellation = $this->deferredCancellation->getCancellation();
-        
+
         async(function () use ($cancellation) {
             try {
                 $stdout = $this->_process->getStdout();
-                
+
                 while (($chunk = $stdout->read($cancellation)) !== null) {
                     $this->_readBuffer->append($chunk);
                     $this->processReadBuffer();
@@ -232,7 +232,7 @@ class StdioClientTransport implements Transport
             }
         });
     }
-    
+
     /**
      * Handle stderr output
      */
@@ -241,7 +241,7 @@ class StdioClientTransport implements Transport
         async(function () {
             try {
                 $stderr = $this->_process->getStderr();
-                
+
                 // Read stderr and write to current process stderr
                 while (($chunk = $stderr->read()) !== null) {
                     fwrite(STDERR, $chunk);
@@ -251,7 +251,7 @@ class StdioClientTransport implements Transport
             }
         });
     }
-    
+
     /**
      * Process buffered data and emit complete messages
      */
@@ -263,7 +263,7 @@ class StdioClientTransport implements Transport
                 if ($message === null) {
                     break;
                 }
-                
+
                 if ($this->onmessage !== null) {
                     ($this->onmessage)($message->jsonSerialize());
                 }
@@ -274,7 +274,7 @@ class StdioClientTransport implements Transport
             }
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -284,7 +284,7 @@ class StdioClientTransport implements Transport
             if ($this->_process === null || !$this->_process->isRunning()) {
                 throw new \RuntimeException("Not connected");
             }
-            
+
             try {
                 $json = ReadBuffer::serializeMessage($message);
                 $stdin = $this->_process->getStdin();
@@ -297,7 +297,7 @@ class StdioClientTransport implements Transport
             }
         });
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -308,11 +308,11 @@ class StdioClientTransport implements Transport
             if ($this->deferredCancellation !== null) {
                 $this->deferredCancellation->cancel();
             }
-            
+
             // Terminate the process if still running
             if ($this->_process !== null && $this->_process->isRunning()) {
                 $this->_process->signal(15); // SIGTERM
-                
+
                 // Give process time to exit gracefully
                 $timeout = new \Amp\TimeoutCancellation(5); // 5 seconds
                 try {
@@ -322,17 +322,17 @@ class StdioClientTransport implements Transport
                     $this->_process->signal(9); // SIGKILL
                 }
             }
-            
+
             $this->_process = null;
             $this->_readBuffer->clear();
-            
+
             // Notify close handler
             if ($this->onclose !== null) {
                 ($this->onclose)();
             }
         });
     }
-    
+
     /**
      * Get the process ID of the spawned server
      * 
@@ -342,7 +342,7 @@ class StdioClientTransport implements Transport
     {
         return $this->_process?->getPid();
     }
-    
+
     /**
      * Check if the server process is running
      */

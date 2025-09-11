@@ -44,12 +44,12 @@ $transport = new StdioClientTransport($serverParams);
 async(function () use ($client, $transport) {
     try {
         echo "Connecting to server...\n";
-        
+
         // Connect to the server
         await($client->connect($transport));
-        
+
         echo "Connected! Server info: " . json_encode($client->getServerVersion()) . "\n\n";
-        
+
         // List available tools
         echo "Listing tools...\n";
         $tools = await($client->listTools());
@@ -57,7 +57,7 @@ async(function () use ($client, $transport) {
             echo "- {$tool->getName()}: {$tool->getDescription()}\n";
         }
         echo "\n";
-        
+
         // Call the calculate tool
         echo "Calling calculate tool with '2 + 2'...\n";
         $result = await($client->callTool('calculate', ['expression' => '2 + 2']));
@@ -72,7 +72,7 @@ async(function () use ($client, $transport) {
             }
         }
         echo "\n";
-        
+
         // List resources
         echo "Listing resources...\n";
         $resources = await($client->listResources());
@@ -83,7 +83,7 @@ async(function () use ($client, $transport) {
             }
         }
         echo "\n";
-        
+
         // Read a resource
         echo "Reading server info resource...\n";
         $resourceContent = await($client->readResource('file:///info.txt'));
@@ -93,7 +93,7 @@ async(function () use ($client, $transport) {
             }
         }
         echo "\n";
-        
+
         // List prompts
         echo "Listing prompts...\n";
         $prompts = await($client->listPrompts());
@@ -107,11 +107,11 @@ async(function () use ($client, $transport) {
             }
         }
         echo "\n";
-        
+
         // Get a prompt
         echo "Getting greeting prompt with name='World' and style='enthusiastic'...\n";
         $promptResult = await($client->getPrompt(
-            'greeting', 
+            'greeting',
             ['name' => 'World', 'style' => 'enthusiastic']
         ));
         foreach ($promptResult->getMessages() as $message) {
@@ -119,12 +119,11 @@ async(function () use ($client, $transport) {
             echo "Content: {$message->getContent()->getText()}\n";
         }
         echo "\n";
-        
+
         echo "Closing connection...\n";
         await($client->close());
-        
+
         echo "Done!\n";
-        
     } catch (\Throwable $e) {
         error_log("Client error: " . $e->getMessage());
         error_log($e->getTraceAsString());
