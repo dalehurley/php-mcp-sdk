@@ -25,9 +25,6 @@ class Resource extends BaseMetadata
         array $additionalProperties = []
     ) {
         parent::__construct($name, $title, $_meta, $additionalProperties);
-        $this->uri = $uri;
-        $this->description = $description;
-        $this->mimeType = $mimeType;
     }
 
     /**

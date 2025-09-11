@@ -27,8 +27,8 @@ class Request implements \JsonSerializable
         }
 
         return new static(
-            method: $data['method'],
-            params: $data['params'] ?? null
+            $data['method'],
+            $data['params'] ?? null
         );
     }
 
@@ -88,8 +88,8 @@ class Request implements \JsonSerializable
     public function withParams(array $params): static
     {
         return new static(
-            method: $this->method,
-            params: $params
+            $this->method,
+            $params
         );
     }
 
@@ -105,5 +105,17 @@ class Request implements \JsonSerializable
         }
 
         return $data;
+    }
+
+    /**
+     * Check if a value is a valid request.
+     */
+    public static function isValid(mixed $value): bool
+    {
+        if (!is_array($value)) {
+            return false;
+        }
+
+        return isset($value['method']) && is_string($value['method']);
     }
 }

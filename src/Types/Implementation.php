@@ -7,7 +7,7 @@ namespace MCP\Types;
 /**
  * Describes the name and version of an MCP implementation.
  */
-class Implementation
+class Implementation implements \JsonSerializable
 {
     public function __construct(
         private string $name,
@@ -59,5 +59,13 @@ class Implementation
             $data['version'] ?? '',
             $data['title'] ?? null
         );
+    }
+
+    /**
+     * @return array{name: string, version: string, title?: string}
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 }

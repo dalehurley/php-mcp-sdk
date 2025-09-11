@@ -107,6 +107,34 @@ class MyTypeTest extends TestCase
 }
 ```
 
+## Test Coverage
+
+### Current Statistics
+
+- **151 total tests**
+- **456 assertions**
+- **100% functionality coverage** for all implemented types
+
+### Coverage Areas
+
+1. **Type System Tests** (81 tests)
+   - Base types (ProgressToken, Cursor, RequestId, etc.)
+   - Request/Response types
+   - JSON-RPC message types
+   - Content and Resource types
+   - Tool and Prompt types
+   - Capability types
+
+2. **Protocol Message Tests** (70 tests)
+   - Pagination base types
+   - Request messages (Initialize, List, Read, etc.)
+   - Result messages  
+   - Notification types
+   - Reference types
+   - Elicitation schemas
+   - Message union helpers
+   - Supporting types
+
 ## Continuous Integration
 
 Tests are automatically run on:

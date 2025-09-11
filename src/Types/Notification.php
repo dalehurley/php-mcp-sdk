@@ -27,8 +27,8 @@ class Notification implements \JsonSerializable
         }
 
         return new static(
-            method: $data['method'],
-            params: $data['params'] ?? null
+            $data['method'],
+            $data['params'] ?? null
         );
     }
 
@@ -86,8 +86,8 @@ class Notification implements \JsonSerializable
     public function withParams(array $params): static
     {
         return new static(
-            method: $this->method,
-            params: $params
+            $this->method,
+            $params
         );
     }
 
@@ -103,5 +103,17 @@ class Notification implements \JsonSerializable
         }
 
         return $data;
+    }
+
+    /**
+     * Check if a value is a valid notification.
+     */
+    public static function isValid(mixed $value): bool
+    {
+        if (!is_array($value)) {
+            return false;
+        }
+
+        return isset($value['method']) && is_string($value['method']);
     }
 }
