@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Replaced ReactPHP with Amphp for async operations to ensure compatibility with Laravel and PSR/HTTP-Message v2.0
+- Updated Transport interface to use Amphp Futures instead of ReactPHP Promises
+
 ### Added
 
+- Created Transport interface in `src/Shared/Transport.php` using Amphp for async operations
 - Initial PHP MCP SDK project structure with Composer configuration
 - Core type definitions: `ErrorCode`, `McpError`, and `Implementation`
 - Complete type system conversion from TypeScript SDK:
