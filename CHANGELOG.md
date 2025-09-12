@@ -14,6 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Implemented OAuth 2.1 authentication system (`src/Server/Auth/`, `src/Client/Auth/`):
+  - Complete OAuth 2.1 server implementation with PKCE support
+  - AuthInfo interface and DefaultAuthInfo implementation for token information
+  - OAuthServerProvider interface for pluggable authentication backends
+  - ProxyProvider for forwarding OAuth requests to upstream servers
+  - PSR-15 middleware integration with McpAuthRouter and McpAuthMetadataRouter
+  - OAuth handlers for authorization, token exchange, revocation, and metadata endpoints
+  - BearerAuthMiddleware for protecting resources with access tokens
+  - ClientAuthMiddleware supporting client_secret_post and client_secret_basic
+  - OAuthClient with PKCE implementation for client-side authentication flows
+  - Token storage interfaces with InMemoryTokenStorage and FileTokenStorage implementations
+  - Automatic token refresh and expiration handling
+  - OAuth metadata endpoints for RFC 8414 and RFC 9728 compliance
+  - Integration with McpServer via useAuth() method for seamless authentication
 - Implemented comprehensive transport layer (`src/Server/Transport/`, `src/Client/Transport/`):
   - STDIO Server Transport with message buffering and partial message handling
   - STDIO Client Transport with process management and environment variable security

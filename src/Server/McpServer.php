@@ -6,6 +6,8 @@ namespace MCP\Server;
 
 use MCP\Shared\Transport;
 use MCP\Shared\RequestHandlerExtra;
+use MCP\Server\Auth\AuthInfo;
+use MCP\Server\Auth\OAuthServerProvider;
 use MCP\Types\Implementation;
 use MCP\Types\Tools\Tool;
 use MCP\Types\Tools\ToolAnnotations;
@@ -94,6 +96,11 @@ class McpServer
      */
     private array $_resourceSubscriptionsBySession = [];
 
+    /**
+     * OAuth authentication provider
+     */
+    private ?OAuthServerProvider $authProvider = null;
+
     public function __construct(
         Implementation $serverInfo,
         ?ServerOptions $options = null
@@ -118,6 +125,31 @@ class McpServer
     public function close(): \Amp\Future
     {
         return $this->server->close();
+    }
+
+    /**
+     * Enable OAuth authentication for this server.
+     */
+    public function useAuth(OAuthServerProvider $provider): void
+    {
+        $this->authProvider = $provider;
+
+        // Wrap all request handlers to include auth info
+        $this->server->setRequestHandlerWrapper(function (callable $handler) {
+            return function ($request, RequestHandlerExtra $extra) use ($handler) {
+                // The auth info should already be in the extra object from middleware
+                // Just pass it through to the handler
+                return $handler($request, $extra);
+            };
+        });
+    }
+
+    /**
+     * Get the OAuth authentication provider if set.
+     */
+    public function getAuthProvider(): ?OAuthServerProvider
+    {
+        return $this->authProvider;
     }
 
     /**

@@ -76,6 +76,31 @@ class OAuthMetadata implements \JsonSerializable
         }
     }
 
+    public function getIssuer(): string
+    {
+        return $this->issuer;
+    }
+
+    public function getAuthorizationEndpoint(): string
+    {
+        return $this->authorizationEndpoint;
+    }
+
+    public function getTokenEndpoint(): string
+    {
+        return $this->tokenEndpoint;
+    }
+
+    public function getRegistrationEndpoint(): ?string
+    {
+        return $this->registrationEndpoint;
+    }
+
+    public function getRevocationEndpoint(): ?string
+    {
+        return $this->revocationEndpoint;
+    }
+
     public function jsonSerialize(): array
     {
         $data = array_merge($this->additionalProperties, [
