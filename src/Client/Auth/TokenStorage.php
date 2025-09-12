@@ -31,4 +31,3 @@ interface TokenStorage
      */
     public function clearAllTokens(): void;
 }
-
