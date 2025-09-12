@@ -18,53 +18,13 @@ use Amp\Http\Client\Request;
 use Amp\Http\Client\Response;
 use Amp\ByteStream\BufferedReader;
 use Amp\DeferredCancellation;
+use MCP\Client\Transport\StreamableHttpReconnectionOptions;
+use MCP\Client\Transport\StreamableHttpClientTransportOptions;
+use MCP\Client\Transport\StreamableHttpError;
 use function Amp\async;
 use function Amp\delay;
 
-/**
- * Configuration options for reconnection behavior
- */
-class StreamableHttpReconnectionOptions
-{
-    public function __construct(
-        public readonly int $maxReconnectionDelay = 30000,
-        public readonly int $initialReconnectionDelay = 1000,
-        public readonly float $reconnectionDelayGrowFactor = 1.5,
-        public readonly int $maxRetries = 2
-    ) {}
-}
 
-/**
- * Configuration options for StreamableHttpClientTransport
- */
-class StreamableHttpClientTransportOptions
-{
-    /**
-     * @param array<string, string>|null $headers Additional headers to send with requests
-     * @param string|null $sessionId Session ID for the connection
-     * @param StreamableHttpReconnectionOptions|null $reconnectionOptions Reconnection configuration
-     * @param HttpClient|null $httpClient Custom HTTP client instance
-     */
-    public function __construct(
-        public readonly ?array $headers = null,
-        public readonly ?string $sessionId = null,
-        public readonly ?StreamableHttpReconnectionOptions $reconnectionOptions = null,
-        public readonly ?HttpClient $httpClient = null
-    ) {}
-}
-
-/**
- * Error class for Streamable HTTP transport errors
- */
-class StreamableHttpError extends \RuntimeException
-{
-    public function __construct(
-        public readonly ?int $code,
-        string $message
-    ) {
-        parent::__construct("Streamable HTTP error: $message");
-    }
-}
 
 /**
  * Client transport for Streamable HTTP: this implements the MCP Streamable HTTP transport specification.
@@ -151,7 +111,7 @@ class StreamableHttpClientTransport implements Transport
                 $this->startSseStream();
             } catch (StreamableHttpError $e) {
                 // 405 Method Not Allowed is expected if server doesn't support GET SSE
-                if ($e->code !== 405) {
+                if ($e->getCode() !== 405) {
                     throw $e;
                 }
             }
@@ -216,7 +176,8 @@ class StreamableHttpClientTransport implements Transport
                 $eventData = '';
                 $eventId = null;
 
-                while (($line = $reader->readLine($this->_cancellation?->getCancellation())) !== null) {
+                while (($line = $reader->readUntil("\n", $this->_cancellation?->getCancellation())) !== null) {
+                    $line = rtrim($line, "\r\n");
                     // SSE format: field:value
                     if (empty($line)) {
                         // Empty line indicates end of event

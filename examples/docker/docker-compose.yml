@@ -1,0 +1,254 @@
+version: "3.8"
+
+services:
+  # Simple MCP Server
+  mcp-simple-server:
+    build:
+      context: ../..
+      dockerfile: examples/docker/Dockerfile
+      target: server
+    container_name: mcp-simple-server
+    environment:
+      - MCP_SERVER_TYPE=simple
+    volumes:
+      - ../../examples/server:/app/examples/server:ro
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "php", "-l", "/app/examples/server/simple-server.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Weather MCP Server
+  mcp-weather-server:
+    build:
+      context: ../..
+      dockerfile: examples/docker/Dockerfile
+      target: server
+    container_name: mcp-weather-server
+    environment:
+      - MCP_SERVER_TYPE=weather
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-demo_key}
+    volumes:
+      - ../../examples/server:/app/examples/server:ro
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # Database MCP Server
+  mcp-database-server:
+    build:
+      context: ../..
+      dockerfile: examples/docker/Dockerfile
+      target: server
+    container_name: mcp-database-server
+    environment:
+      - MCP_SERVER_TYPE=database
+    volumes:
+      - ../../examples/server:/app/examples/server:ro
+      - mcp-db-data:/app/data
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # OAuth MCP Server
+  mcp-oauth-server:
+    build:
+      context: ../..
+      dockerfile: examples/docker/Dockerfile
+      target: server
+    container_name: mcp-oauth-server
+    environment:
+      - MCP_SERVER_TYPE=oauth
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID:-demo_client}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET:-demo_secret}
+      - OAUTH_ISSUER=${OAUTH_ISSUER:-https://auth.example.com}
+    volumes:
+      - ../../examples/server:/app/examples/server:ro
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # Resource MCP Server
+  mcp-resource-server:
+    build:
+      context: ../..
+      dockerfile: examples/docker/Dockerfile
+      target: server
+    container_name: mcp-resource-server
+    environment:
+      - MCP_SERVER_TYPE=resource
+    volumes:
+      - ../../examples/server:/app/examples/server:ro
+      - mcp-resource-data:/app/resources
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # MCP Client for testing
+  mcp-client:
+    build:
+      context: ../..
+      dockerfile: examples/docker/Dockerfile
+      target: client
+    container_name: mcp-client
+    environment:
+      - MCP_CLIENT_MODE=interactive
+    volumes:
+      - ../../examples/client:/app/examples/client:ro
+      - ../../examples/utils:/app/examples/utils:ro
+    networks:
+      - mcp-network
+    depends_on:
+      - mcp-simple-server
+      - mcp-weather-server
+      - mcp-database-server
+    stdin_open: true
+    tty: true
+
+  # MCP Monitor
+  mcp-monitor:
+    build:
+      context: ../..
+      dockerfile: examples/docker/Dockerfile
+      target: client
+    container_name: mcp-monitor
+    environment:
+      - MCP_MONITOR_TARGET=mcp-simple-server
+      - MCP_MONITOR_INTERVAL=10
+    volumes:
+      - ../../examples/utils:/app/examples/utils:ro
+      - mcp-monitor-logs:/app/logs
+    networks:
+      - mcp-network
+    depends_on:
+      - mcp-simple-server
+    restart: unless-stopped
+    command:
+      [
+        "php",
+        "examples/utils/monitor.php",
+        "--server=mcp-simple-server:3000",
+        "--dashboard",
+        "--alerts",
+        "--log=/app/logs/monitor.log",
+      ]
+
+  # Laravel MCP Integration
+  laravel-mcp:
+    build:
+      context: ../..
+      dockerfile: examples/docker/Dockerfile
+      target: laravel
+    container_name: laravel-mcp
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - MCP_ENABLED=true
+      - MCP_HTTP_ENABLED=true
+      - MCP_HTTP_PORT=3000
+    ports:
+      - "8080:80"
+      - "3001:3000"
+    volumes:
+      - ../../examples/laravel:/var/www/html:ro
+      - laravel-storage:/var/www/html/storage
+      - laravel-cache:/var/www/html/bootstrap/cache
+    networks:
+      - mcp-network
+    depends_on:
+      - mcp-simple-server
+      - mcp-weather-server
+    restart: unless-stopped
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-redis
+    volumes:
+      - redis-data:/data
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # PostgreSQL for Laravel (optional)
+  postgres:
+    image: postgres:15-alpine
+    container_name: mcp-postgres
+    environment:
+      - POSTGRES_DB=laravel_mcp
+      - POSTGRES_USER=laravel
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-secret}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    profiles:
+      - with-postgres
+
+  # Nginx reverse proxy
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: mcp-nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - nginx-certs:/etc/nginx/certs:ro
+    networks:
+      - mcp-network
+    depends_on:
+      - laravel-mcp
+    restart: unless-stopped
+    profiles:
+      - with-proxy
+
+  # Development tools container
+  dev-tools:
+    build:
+      context: ../..
+      dockerfile: examples/docker/Dockerfile
+      target: development
+    container_name: mcp-dev-tools
+    volumes:
+      - ../..:/app
+      - composer-cache:/root/.composer/cache
+    networks:
+      - mcp-network
+    stdin_open: true
+    tty: true
+    profiles:
+      - development
+
+volumes:
+  mcp-db-data:
+    driver: local
+  mcp-resource-data:
+    driver: local
+  mcp-monitor-logs:
+    driver: local
+  laravel-storage:
+    driver: local
+  laravel-cache:
+    driver: local
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  nginx-certs:
+    driver: local
+  composer-cache:
+    driver: local
+
+networks:
+  mcp-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

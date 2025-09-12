@@ -27,6 +27,11 @@ use MCP\Types\Requests\PingRequest;
 use MCP\Types\Result;
 use MCP\Types\Capabilities\ServerCapabilities;
 use MCP\Types\Capabilities\ClientCapabilities;
+use MCP\Shared\ProtocolOptions;
+use MCP\Shared\RequestOptions;
+use MCP\Shared\NotificationOptions;
+use MCP\Shared\RequestHandlerExtra;
+use MCP\Shared\TimeoutInfo;
 use MCP\Validation\ValidationService;
 use function Amp\async;
 use function Amp\delay;
@@ -36,90 +41,14 @@ use function Amp\delay;
  */
 // PHP doesn't support type aliases, so we'll use callable directly
 
-/**
- * Additional initialization options.
- */
-class ProtocolOptions
-{
-    /**
-     * @param array<string> $debouncedNotificationMethods
-     */
-    public function __construct(
-        public readonly bool $enforceStrictCapabilities = false,
-        public readonly array $debouncedNotificationMethods = []
-    ) {}
-}
 
 /**
  * The default request timeout, in milliseconds.
  */
 const DEFAULT_REQUEST_TIMEOUT_MSEC = 60000;
 
-/**
- * Options that can be given per request.
- */
-class RequestOptions
-{
-    public function __construct(
-        public readonly mixed $onprogress = null,
-        public readonly ?\Revolt\EventLoop\Suspension $signal = null,
-        public readonly ?int $timeout = null,
-        public readonly bool $resetTimeoutOnProgress = false,
-        public readonly ?int $maxTotalTimeout = null,
-        public readonly ?RequestId $relatedRequestId = null,
-        public readonly ?string $resumptionToken = null,
-        public readonly mixed $onresumptiontoken = null
-    ) {}
-}
 
-/**
- * Options that can be given per notification.
- */
-class NotificationOptions
-{
-    public function __construct(
-        public readonly ?RequestId $relatedRequestId = null
-    ) {}
-}
 
-/**
- * Extra data given to request handlers.
- * 
- * @template SendRequestT of Request
- * @template SendNotificationT of Notification
- */
-class RequestHandlerExtra
-{
-    /**
-     * @param callable(SendNotificationT): Future<void> $sendNotification
-     * @param callable(SendRequestT, ValidationService, RequestOptions|null): Future $sendRequest
-     */
-    public function __construct(
-        public readonly \Revolt\EventLoop\Suspension $signal,
-        public readonly mixed $authInfo,
-        public readonly ?string $sessionId,
-        public readonly ?RequestMeta $_meta,
-        public readonly RequestId $requestId,
-        public readonly ?array $requestInfo,
-        public $sendNotification,
-        public $sendRequest
-    ) {}
-}
-
-/**
- * Information about a request's timeout state
- */
-class TimeoutInfo
-{
-    public function __construct(
-        public string $timeoutId,
-        public int $startTime,
-        public int $timeout,
-        public ?int $maxTotalTimeout,
-        public bool $resetTimeoutOnProgress,
-        public \Closure $onTimeout
-    ) {}
-}
 
 /**
  * Implements MCP protocol framing on top of a pluggable transport, including

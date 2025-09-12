@@ -84,38 +84,45 @@ class Client extends Protocol
      */
     private function setupDefaultServerRequestHandlers(): void
     {
-        // Default handler for sampling requests
-        $this->setRequestHandler(
-            CreateMessageRequest::class,
-            function (CreateMessageRequest $request) {
-                throw new McpError(
-                    ErrorCode::MethodNotFound,
-                    "Sampling not implemented. Override the CreateMessageRequest handler to provide sampling functionality."
-                );
-            }
-        );
+        // Only set up handlers for capabilities that are supported
+        if ($this->capabilities->hasSampling()) {
+            // Default handler for sampling requests
+            $this->setRequestHandler(
+                CreateMessageRequest::class,
+                function (CreateMessageRequest $request) {
+                    throw new McpError(
+                        ErrorCode::MethodNotFound,
+                        "Sampling not implemented. Override the CreateMessageRequest handler to provide sampling functionality."
+                    );
+                }
+            );
+        }
 
-        // Default handler for elicitation requests  
-        $this->setRequestHandler(
-            ElicitRequest::class,
-            function (ElicitRequest $request) {
-                throw new McpError(
-                    ErrorCode::MethodNotFound,
-                    "Elicitation not implemented. Override the ElicitRequest handler to provide elicitation functionality."
-                );
-            }
-        );
+        if ($this->capabilities->hasElicitation()) {
+            // Default handler for elicitation requests  
+            $this->setRequestHandler(
+                ElicitRequest::class,
+                function (ElicitRequest $request) {
+                    throw new McpError(
+                        ErrorCode::MethodNotFound,
+                        "Elicitation not implemented. Override the ElicitRequest handler to provide elicitation functionality."
+                    );
+                }
+            );
+        }
 
-        // Default handler for roots list requests
-        $this->setRequestHandler(
-            ListRootsRequest::class,
-            function (ListRootsRequest $request) {
-                throw new McpError(
-                    ErrorCode::MethodNotFound,
-                    "Roots listing not implemented. Override the ListRootsRequest handler to provide roots functionality."
-                );
-            }
-        );
+        if ($this->capabilities->hasRoots()) {
+            // Default handler for roots list requests
+            $this->setRequestHandler(
+                ListRootsRequest::class,
+                function (ListRootsRequest $request) {
+                    throw new McpError(
+                        ErrorCode::MethodNotFound,
+                        "Roots listing not implemented. Override the ListRootsRequest handler to provide roots functionality."
+                    );
+                }
+            );
+        }
     }
 
     /**

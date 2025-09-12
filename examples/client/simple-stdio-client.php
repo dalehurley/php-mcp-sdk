@@ -14,6 +14,12 @@
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+// Load required files to ensure all classes are available
+require_once __DIR__ . '/../../src/Shared/Protocol.php';
+require_once __DIR__ . '/../../src/Client/ClientOptions.php';
+require_once __DIR__ . '/../../src/Client/Client.php';
+require_once __DIR__ . '/../../src/Client/Transport/StdioClientTransport.php';
+
 use MCP\Client\Client;
 use MCP\Client\ClientOptions;
 use MCP\Client\Transport\StdioClientTransport;
@@ -46,13 +52,13 @@ async(function () use ($client, $transport) {
         echo "Connecting to server...\n";
 
         // Connect to the server
-        await($client->connect($transport));
+        $client->connect($transport)->await();
 
         echo "Connected! Server info: " . json_encode($client->getServerVersion()) . "\n\n";
 
         // List available tools
         echo "Listing tools...\n";
-        $tools = await($client->listTools());
+        $tools = $client->listTools()->await();
         foreach ($tools->getTools() as $tool) {
             echo "- {$tool->getName()}: {$tool->getDescription()}\n";
         }
@@ -75,7 +81,7 @@ async(function () use ($client, $transport) {
 
         // List resources
         echo "Listing resources...\n";
-        $resources = await($client->listResources());
+        $resources = $client->listResources()->await();
         foreach ($resources->getResources() as $resource) {
             echo "- {$resource->getName()}: {$resource->getUri()}\n";
             if ($resource->getDescription()) {
@@ -96,7 +102,7 @@ async(function () use ($client, $transport) {
 
         // List prompts
         echo "Listing prompts...\n";
-        $prompts = await($client->listPrompts());
+        $prompts = $client->listPrompts()->await();
         foreach ($prompts->getPrompts() as $prompt) {
             echo "- {$prompt->getName()}: {$prompt->getDescription()}\n";
             if ($prompt->hasArguments()) {
@@ -121,7 +127,7 @@ async(function () use ($client, $transport) {
         echo "\n";
 
         echo "Closing connection...\n";
-        await($client->close());
+        $client->close()->await();
 
         echo "Done!\n";
     } catch (\Throwable $e) {

@@ -13,24 +13,9 @@ use Amp\Http\Client\Request;
 use Amp\Http\Client\Response;
 use Amp\ByteStream\BufferedReader;
 use Amp\DeferredCancellation;
+use MCP\Client\Transport\SseClientTransportOptions;
 use function Amp\async;
 
-/**
- * Configuration options for SSE client transport
- * 
- * @deprecated Use StreamableHttpClientTransportOptions instead
- */
-class SseClientTransportOptions
-{
-    /**
-     * @param array<string, string>|null $headers Additional headers to send with requests
-     * @param HttpClient|null $httpClient Custom HTTP client instance
-     */
-    public function __construct(
-        public readonly ?array $headers = null,
-        public readonly ?HttpClient $httpClient = null
-    ) {}
-}
 
 /**
  * Client transport for SSE: this will connect to a server using HTTP GET
@@ -167,7 +152,8 @@ class SseClientTransport implements Transport
                 $eventType = null;
                 $eventData = '';
 
-                while (($line = $reader->readLine($this->_cancellation?->getCancellation())) !== null) {
+                while (($line = $reader->readUntil("\n", $this->_cancellation?->getCancellation())) !== null) {
+                    $line = rtrim($line, "\r\n");
                     if (empty($line)) {
                         // Empty line indicates end of event
                         if ($eventType !== null && !empty($eventData)) {

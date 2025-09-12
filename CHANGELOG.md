@@ -12,8 +12,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced ReactPHP with Amphp for async operations to ensure compatibility with Laravel and PSR/HTTP-Message v2.0
 - Updated Transport interface to use Amphp Futures instead of ReactPHP Promises
 
+### Fixed
+
+- Fixed async function syntax issues in client examples (parallel-tools, oauth, http, multiple-servers)
+- Resolved PHP syntax errors in example files
+- Corrected Amphp closure syntax for proper async/await handling
+- Fixed notification class usage in resource server examples
+- Fixed ServerOptions class import issues in all server examples by adding proper use statements and manual require statements for autoloading compatibility
+- Fixed Client capability assertion issues by only setting up default handlers for capabilities that are actually supported
+- Fixed await() function calls in all client examples - replaced `await($future)` with `$future->await()` syntax
+- Fixed string interpolation deprecation warning in weather-server.php (changed `${var}` to `{$var}`)
+- Added manual require statements to all client examples to work around PSR-4 autoloading issues
+- Fixed import statements in client examples (removed non-existent `Amp\await` and `React\Promise\all` functions)
+- Fixed PSR-4 autoloading compliance by extracting classes from multi-class files:
+  - Moved `ProtocolOptions` to `src/Shared/ProtocolOptions.php`
+  - Moved `RequestOptions` to `src/Shared/RequestOptions.php`
+  - Moved `NotificationOptions` to `src/Shared/NotificationOptions.php`
+  - Moved `ServerOptions` to `src/Server/ServerOptions.php`
+  - Moved `ToolCallback` to `src/Server/ToolCallback.php`
+  - Moved `RegisteredTool` to `src/Server/RegisteredTool.php`
+  - Moved `ReadResourceCallback` to `src/Server/ReadResourceCallback.php`
+  - Moved `RegisteredResource` to `src/Server/RegisteredResource.php`
+  - Moved `ReadResourceTemplateCallback` to `src/Server/ReadResourceTemplateCallback.php`
+  - Moved `RegisteredResourceTemplate` to `src/Server/RegisteredResourceTemplate.php`
+  - Moved `PromptCallback` to `src/Server/PromptCallback.php`
+  - Moved `RegisteredPrompt` to `src/Server/RegisteredPrompt.php`
+- Fixed syntax errors in utility files:
+  - Corrected invalid `async function` syntax in `examples/utils/inspector.php`
+  - Corrected invalid `async function` syntax in `examples/utils/monitor.php`
+  - Added proper `\Amp\async()` calls and `Future` return types
+
 ### Added
 
+- Comprehensive examples demonstrating PHP MCP SDK usage (`examples/`):
+  - **Server Examples**: 5 complete server implementations showcasing different MCP patterns
+    - `simple-server.php`: Basic MCP server with calculations, resources, and prompts
+    - `weather-server.php`: External API integration with caching and rate limiting
+    - `sqlite-server.php`: Database operations with safe query execution and schema inspection
+    - `oauth-server.php`: Authentication and authorization with scope-based access control
+    - `resource-server.php`: Dynamic resource management with subscriptions and notifications
+  - **Client Examples**: 5 advanced client implementations for different use cases
+    - `simple-stdio-client.php`: Basic client operations and server interaction patterns
+    - `parallel-tools-client.php`: Concurrent tool execution with performance comparison
+    - `oauth-client.php`: OAuth 2.0 authentication flow with token management
+    - `http-client.php`: HTTP transport with SSE, session management, and connection recovery
+    - `multiple-servers-client.php`: Multi-server coordination and cross-server operations
+  - **Laravel Integration**: Complete Laravel/Inertia.js integration with modern web UI
+    - `ExampleMcpServiceProvider.php`: Laravel service provider with database, cache, and Artisan tools
+    - `McpDemoController.php`: Inertia.js controller with real-time monitoring and interactive testing
+    - `Demo.tsx`: React component providing dashboard-style interface with live metrics
+    - `mcp-config.php`: Comprehensive configuration for all MCP features in Laravel
+  - **Utility Tools**: Professional server inspection and monitoring utilities
+    - `inspector.php`: Comprehensive server analysis with interactive mode, reporting, and testing
+    - `monitor.php`: Real-time server monitoring with dashboard display, alerts, and performance tracking
+  - **Docker Configuration**: Production-ready containerization with multi-stage builds
+    - Multi-stage Dockerfile supporting development, server, client, and Laravel deployments
+    - Docker Compose configuration with 8+ services including Redis, PostgreSQL, and Nginx proxy
+    - Environment-specific entrypoint scripts with health checks and graceful shutdown
+    - Development tools container with full SDK access and debugging capabilities
+  - **Documentation**: Comprehensive guides and usage patterns
+    - Complete README with quick start, configuration, troubleshooting, and learning path
+    - Usage examples for all patterns: basic server-client, Laravel integration, monitoring
+    - Docker deployment guides with individual and orchestrated service management
+    - Performance tips, security considerations, and best practices
 - Implemented OAuth 2.1 authentication system (`src/Server/Auth/`, `src/Client/Auth/`):
   - Complete OAuth 2.1 server implementation with PKCE support
   - AuthInfo interface and DefaultAuthInfo implementation for token information
