@@ -1,0 +1,73 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use MCP\Laravel\Prompts\BasePrompt;
+
+class {{ class }} extends BasePrompt
+{
+    public function name(): string
+    {
+        return '{{ promptName }}';
+    }
+
+    public function description(): string
+    {
+        return 'Description for {{ promptName }} prompt';
+    }
+
+    public function arguments(): array
+    {
+        return [
+            [
+                'name' => 'input',
+                'description' => 'Input for the prompt',
+                'required' => true,
+            ],
+            [
+                'name' => 'context',
+                'description' => 'Additional context (optional)',
+                'required' => false,
+            ],
+        ];
+    }
+
+    public function handle(array $params): array
+    {
+        $input = $params['input'];
+        $context = $params['context'] ?? '';
+
+        // Build your prompt here
+        $prompt = "Please process the following input";
+        
+        if ($context) {
+            $prompt .= " with this context: {$context}";
+        }
+        
+        $prompt .= ":\n\n{$input}";
+
+        return [
+            'messages' => [
+                $this->createUserMessage($prompt),
+            ],
+        ];
+    }
+
+    /**
+     * Enable caching for this prompt.
+     */
+    public function cacheable(): bool
+    {
+        return false; // Usually prompts are not cached as they're dynamic
+    }
+
+    /**
+     * Require authentication for this prompt.
+     */
+    public function requiresAuth(): bool
+    {
+        return false;
+    }
+}

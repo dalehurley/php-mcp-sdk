@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Laravel Package Integration** (`laravel/`): Complete Laravel package for seamless MCP integration:
+
+  - **Service Provider**: Full Laravel service provider (`McpServiceProvider`) with auto-discovery for tools, resources, and prompts
+  - **Configuration**: Comprehensive configuration system (`config/mcp.php`) with environment variable support for all aspects
+  - **Authentication**: Complete OAuth 2.1 implementation with PKCE support:
+    - `McpOAuthController` for authorization, token, and revocation endpoints
+    - `McpAuth` middleware with token validation and scope checking
+    - Database migrations for authorization codes, access tokens, refresh tokens, and sessions
+    - Support for cache, database, and Redis token storage
+  - **HTTP Transport**: Full HTTP transport with Session management, SSE streaming, and security features via `McpController`
+  - **Dashboard**: Web-based dashboard with monitoring and testing capabilities:
+    - `McpDashboardController` with real-time statistics, logs, and component testing
+    - Inertia.js/React components for modern UI experience
+    - Blade components with Alpine.js fallback for non-SPA applications
+  - **Artisan Commands**: Complete command suite for development workflow:
+    - `mcp:server` - Start MCP server with STDIO or HTTP transport
+    - `mcp:install` - Install package scaffolding with examples
+    - `mcp:make-tool`, `mcp:make-resource`, `mcp:make-prompt` - Code generators with stubs
+  - **Base Classes**: Rich base classes with advanced features:
+    - `BaseTool` with caching, validation, authentication, and async support
+    - `BaseResource` with URI templates, subscriptions, caching, and validation
+    - `BasePrompt` with argument validation, message generation, and caching
+  - **Built-in Tools**: Production-ready Laravel integration tools:
+    - `CacheTool` - Complete cache management (get, put, forget, flush, many operations)
+    - `DatabaseTool` - Safe database operations with query validation and schema inspection
+    - `ArtisanTool` - Secure Artisan command execution with allowlist/blocklist
+  - **Laravel Facade**: `Mcp::` facade for easy access to server and client instances with mock responses
+  - **Routes**: Comprehensive routing with middleware, rate limiting, CORS, and OAuth endpoints
+  - **Testing**: Complete test suite with Orchestra Testbench integration covering all components
+  - **Production Features**: Caching, logging, queue integration, performance monitoring, and health checks
+  - **Auto-discovery**: Intelligent component discovery system for Laravel applications
+  - **Documentation**: Complete stubs, examples, and usage patterns for Laravel developers
+
 - Comprehensive MCP specification compliance checklist (`ai-prompts/14-mcp-specification-compliance-checklist.md`):
 
   - Complete verification of PHP MCP SDK against MCP specification 2025-06-18
@@ -44,6 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed missing `ServerOptions` require statements in all server examples (sqlite-server, weather-server, resource-server, oauth-server) that were causing "Class not found" fatal errors
+- Enhanced `build.sh` script with timeout (5 minutes) and error handling for cursor-agent execution to prevent hanging processes
 - Fixed async function syntax issues in client examples (parallel-tools, oauth, http, multiple-servers)
 - Fixed Protocol request handler Future handling - handlers returning Futures are now properly awaited before sending responses
 - Fixed test async timing issues by replacing incorrect delay() usage with proper \Amp\delay() calls

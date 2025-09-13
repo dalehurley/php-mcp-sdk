@@ -1,0 +1,74 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use MCP\Laravel\Tools\BaseTool;
+
+class {{ class }} extends BaseTool
+{
+    public function name(): string
+    {
+        return '{{ toolName }}';
+    }
+
+    public function description(): string
+    {
+        return 'Description for {{ toolName }} tool';
+    }
+
+    public function inputSchema(): array
+    {
+        return [
+            'type' => 'object',
+            'properties' => [
+                // Define your input parameters here
+                'input' => [
+                    'type' => 'string',
+                    'description' => 'Input parameter description',
+                ],
+            ],
+            'required' => ['input'],
+        ];
+    }
+
+    public function handle(array $params): array
+    {
+        // Implement your tool logic here
+        $input = $params['input'];
+
+        return [
+            'content' => [
+                [
+                    'type' => 'text',
+                    'text' => "Processed: {$input}",
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Enable caching for this tool.
+     */
+    public function cacheable(): bool
+    {
+        return false; // Set to true if results should be cached
+    }
+
+    /**
+     * Require authentication for this tool.
+     */
+    public function requiresAuth(): bool
+    {
+        return false; // Set to true if authentication is required
+    }
+
+    /**
+     * Enable asynchronous execution.
+     */
+    public function async(): bool
+    {
+        return false; // Set to true for async execution
+    }
+}

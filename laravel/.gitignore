@@ -1,0 +1,12 @@
+/vendor/
+/node_modules/
+composer.lock
+package-lock.json
+yarn.lock
+.env
+.env.backup
+.phpunit.result.cache
+coverage/
+coverage.xml
+.DS_Store
+Thumbs.db

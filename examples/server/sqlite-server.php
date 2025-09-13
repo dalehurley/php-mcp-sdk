@@ -18,6 +18,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../src/Shared/Protocol.php';
 require_once __DIR__ . '/../../src/Server/RegisteredItems.php';
 require_once __DIR__ . '/../../src/Server/ResourceTemplate.php';
+require_once __DIR__ . '/../../src/Server/ServerOptions.php';
 require_once __DIR__ . '/../../src/Server/Server.php';
 
 use MCP\Server\McpServer;

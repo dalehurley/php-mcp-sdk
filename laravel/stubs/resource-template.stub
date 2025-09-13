@@ -1,0 +1,83 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use MCP\Laravel\Resources\BaseResource;
+use MCP\Shared\UriTemplate;
+
+class {{ class }} extends BaseResource
+{
+    public function uri(): string
+    {
+        return '{{ resourceName }}://example/{id}'; // URI template with variables
+    }
+
+    public function name(): string
+    {
+        return '{{ resourceName }}';
+    }
+
+    public function description(): string
+    {
+        return 'Templated resource for {{ resourceName }}';
+    }
+
+    public function mimeType(): ?string
+    {
+        return 'application/json';
+    }
+
+    public function read(string $uri): array
+    {
+        // Extract variables from the URI
+        $template = new UriTemplate($this->uriTemplate());
+        $variables = $template->match($uri);
+
+        if (!$variables) {
+            throw new \InvalidArgumentException("Invalid URI: {$uri}");
+        }
+
+        $id = $variables['id'] ?? null;
+
+        // Implement your templated resource logic here
+        return [
+            'contents' => [
+                [
+                    'uri' => $uri,
+                    'mimeType' => $this->mimeType(),
+                    'text' => json_encode([
+                        'id' => $id,
+                        'type' => '{{ resourceName }}',
+                        'data' => 'Resource data for ID: ' . $id,
+                    ], JSON_PRETTY_PRINT),
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Enable caching for this resource template.
+     */
+    public function cacheable(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Enable subscriptions for this resource template.
+     */
+    public function subscribable(): bool
+    {
+        return true; // Templates often support subscriptions
+    }
+
+    /**
+     * Require authentication for this resource template.
+     */
+    public function requiresAuth(): bool
+    {
+        return false;
+    }
+}
