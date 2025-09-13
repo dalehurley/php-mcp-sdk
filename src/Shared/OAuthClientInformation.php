@@ -54,4 +54,17 @@ class OAuthClientInformation implements \JsonSerializable
 
         return $data;
     }
+
+    /**
+     * Create instance from array data.
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            clientId: $data['client_id'],
+            clientSecret: $data['client_secret'] ?? null,
+            clientIdIssuedAt: $data['client_id_issued_at'] ?? null,
+            clientSecretExpiresAt: $data['client_secret_expires_at'] ?? null
+        );
+    }
 }

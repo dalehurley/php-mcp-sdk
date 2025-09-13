@@ -119,4 +119,52 @@ class OAuthProtectedResourceMetadata implements \JsonSerializable
 
         return $data;
     }
+
+    /**
+     * Create instance from array data.
+     */
+    public static function fromArray(array $data): self
+    {
+        $additionalProperties = $data;
+
+        // Remove known properties from additional properties
+        $knownProperties = [
+            'resource',
+            'authorization_servers',
+            'jwks_uri',
+            'scopes_supported',
+            'bearer_methods_supported',
+            'resource_signing_alg_values_supported',
+            'resource_name',
+            'resource_documentation',
+            'resource_policy_uri',
+            'resource_tos_uri',
+            'tls_client_certificate_bound_access_tokens',
+            'authorization_details_types_supported',
+            'dpop_signing_alg_values_supported',
+            'dpop_bound_access_tokens_required'
+        ];
+
+        foreach ($knownProperties as $property) {
+            unset($additionalProperties[$property]);
+        }
+
+        return new self(
+            resource: $data['resource'],
+            authorizationServers: $data['authorization_servers'] ?? null,
+            jwksUri: $data['jwks_uri'] ?? null,
+            scopesSupported: $data['scopes_supported'] ?? null,
+            bearerMethodsSupported: $data['bearer_methods_supported'] ?? null,
+            resourceSigningAlgValuesSupported: $data['resource_signing_alg_values_supported'] ?? null,
+            resourceName: $data['resource_name'] ?? null,
+            resourceDocumentation: $data['resource_documentation'] ?? null,
+            resourcePolicyUri: $data['resource_policy_uri'] ?? null,
+            resourceTosUri: $data['resource_tos_uri'] ?? null,
+            tlsClientCertificateBoundAccessTokens: $data['tls_client_certificate_bound_access_tokens'] ?? null,
+            authorizationDetailsTypesSupported: $data['authorization_details_types_supported'] ?? null,
+            dpopSigningAlgValuesSupported: $data['dpop_signing_alg_values_supported'] ?? null,
+            dpopBoundAccessTokensRequired: $data['dpop_bound_access_tokens_required'] ?? null,
+            additionalProperties: $additionalProperties
+        );
+    }
 }

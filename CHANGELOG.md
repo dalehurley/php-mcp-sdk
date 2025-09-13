@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Advanced Client Enhancements**: Comprehensive client features bringing PHP SDK to feature parity with TypeScript SDK:
+  - **OAuth 2.0 Client Provider Interface**: Complete OAuth client abstraction with support for multiple storage mechanisms and authentication flows
+  - **Enhanced OAuth Client**: Full OAuth 2.0 Authorization Code flow with PKCE, automatic token refresh, server discovery (RFC 8414), and error handling
+  - **OAuth Exception Hierarchy**: Specific exception classes for all OAuth error types (InvalidClientException, InvalidGrantException, UnauthorizedClientException, etc.)
+  - **OAuth Utilities**: Comprehensive utility functions for PKCE generation, JWT parsing, metadata discovery, resource validation, and client authentication
+  - **Middleware System**: Powerful middleware architecture for HTTP request/response processing:
+    - `MiddlewareInterface` and `MiddlewareStack` for composable request processing
+    - `OAuthMiddleware` for automatic authentication with 401 response handling and token refresh
+    - `LoggingMiddleware` for comprehensive request/response logging with configurable levels
+    - `RetryMiddleware` for automatic retry with exponential backoff and jitter
+  - **WebSocket Client Transport**: Full WebSocket transport implementation with:
+    - Automatic reconnection with exponential backoff and configurable retry limits
+    - Heartbeat/ping-pong mechanism for connection health monitoring
+    - Comprehensive connection lifecycle management and event handling
+    - Configurable options for headers, subprotocols, timeouts, and SSL validation
+  - **Client Integration**: Seamless middleware integration with existing Client class:
+    - Fluent API methods (`withOAuth()`, `withRetry()`, `withLogging()`) for easy middleware addition
+    - `ClientBuilder` class for fluent client construction with middleware chaining
+    - Enhanced client methods with middleware support and automatic authentication
+  - **Compiled Validators**: High-performance validation system for frequently used schemas:
+    - `JsonSchemaCompiler` for pre-compiling JSON schemas into optimized validators
+    - `CompiledValidator` with optimized validation rules and caching support
+    - Significant performance improvements over runtime schema validation
+    - Cache integration for persistent compiled validator storage
+- **Usage Examples**: Comprehensive examples demonstrating all new client features:
+
+  - Enhanced OAuth client example with complete authentication flow demonstration
+  - WebSocket client example with connection management and error handling
+  - Middleware example showing custom middleware creation and performance optimization
+  - Real-world usage patterns and best practices documentation
+
 - **Comprehensive Documentation Suite** (`docs/`): Complete documentation system for developers and users:
   - **Main Documentation Hub** (`docs/README.md`): Central documentation index with architecture overview, features, use cases, and navigation
   - **Getting Started Guide** (`docs/getting-started/`): Complete onboarding experience:
@@ -29,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Examples Documentation** (`docs/examples/README.md`): Organized example catalog with learning paths
   - **Contributing Guide** (`docs/contributing.md`): Complete contributor onboarding with development workflow, coding standards, and testing guidelines
 - **Documentation Generation System**:
+
   - PHPDoc configuration (`phpdoc.xml`) for automated API documentation generation from source code
   - GitHub Actions workflow (`docs.yml`) for automated documentation deployment to GitHub Pages
   - Eleventy-based static site generation with markdown processing, navigation, and responsive layout

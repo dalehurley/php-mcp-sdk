@@ -49,7 +49,9 @@
   "suggest": {
     "amphp/websocket-client": "For WebSocket client support",
     "amphp/http-server-sse": "For Server-Sent Events support",
-    "league/oauth2-client": "For OAuth 2.0 client support"
+    "league/oauth2-client": "For OAuth 2.0 client support",
+    "ratchet/pawl": "Alternative WebSocket client",
+    "firebase/php-jwt": "For JWT token parsing and validation"
   },
   "autoload": {
     "psr-4": {

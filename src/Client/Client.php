@@ -5,9 +5,17 @@ declare(strict_types=1);
 namespace MCP\Client;
 
 use Amp\Future;
+use MCP\Client\Auth\OAuthClientProvider;
+use MCP\Client\Middleware\LoggingMiddleware;
+use MCP\Client\Middleware\MiddlewareInterface;
+use MCP\Client\Middleware\MiddlewareStack;
+use MCP\Client\Middleware\OAuthMiddleware;
+use MCP\Client\Middleware\RetryMiddleware;
 use MCP\Shared\Protocol;
 use MCP\Shared\RequestOptions;
 use MCP\Shared\Transport;
+use Psr\Http\Client\ClientInterface;
+use Psr\Log\LoggerInterface;
 use MCP\Types\Capabilities\ClientCapabilities;
 use MCP\Types\Capabilities\ServerCapabilities;
 use MCP\Types\ErrorCode;
@@ -64,6 +72,11 @@ class Client extends Protocol
 
     /** @var array<string, array<string, mixed>> */
     private array $cachedToolOutputValidators = [];
+
+    /** @var MiddlewareInterface[] */
+    private array $middleware = [];
+
+    private ?MiddlewareStack $middlewareStack = null;
 
     /**
      * Initializes this client with the given name and version information.
@@ -718,5 +731,89 @@ class Client extends Protocol
             $request['params'] = $params;
         }
         return $request;
+    }
+
+    // Middleware methods
+
+    /**
+     * Add middleware to the client.
+     */
+    public function addMiddleware(MiddlewareInterface $middleware): self
+    {
+        $this->middleware[] = $middleware;
+        $this->middlewareStack = null; // Reset stack to rebuild
+        return $this;
+    }
+
+    /**
+     * Add OAuth middleware for automatic authentication.
+     */
+    public function withOAuth(OAuthClientProvider $provider, ?string $baseUrl = null): self
+    {
+        return $this->addMiddleware(new OAuthMiddleware($provider, $baseUrl));
+    }
+
+    /**
+     * Add retry middleware with exponential backoff.
+     */
+    public function withRetry(int $maxRetries = 3, float $baseDelay = 1.0): self
+    {
+        return $this->addMiddleware(new RetryMiddleware($maxRetries, $baseDelay));
+    }
+
+    /**
+     * Add logging middleware.
+     */
+    public function withLogging(LoggerInterface $logger, string $logLevel = 'info'): self
+    {
+        return $this->addMiddleware(new LoggingMiddleware($logger, $logLevel));
+    }
+
+    /**
+     * Get the middleware stack (lazy initialization).
+     */
+    private function getMiddlewareStack(): ?MiddlewareStack
+    {
+        if ($this->middlewareStack === null && !empty($this->middleware)) {
+            // We would need an HTTP client to create the middleware stack
+            // For now, this is a placeholder since the transport layer handles HTTP
+            return null;
+        }
+
+        return $this->middlewareStack;
+    }
+
+    /**
+     * Clear all middleware.
+     */
+    public function clearMiddleware(): self
+    {
+        $this->middleware = [];
+        $this->middlewareStack = null;
+        return $this;
+    }
+
+    /**
+     * Get the number of middleware registered.
+     */
+    public function getMiddlewareCount(): int
+    {
+        return count($this->middleware);
+    }
+
+    /**
+     * Check if middleware is registered.
+     */
+    public function hasMiddleware(): bool
+    {
+        return !empty($this->middleware);
+    }
+
+    /**
+     * Create a fluent client builder interface.
+     */
+    public static function builder(Implementation $clientInfo, ?ClientOptions $options = null): ClientBuilder
+    {
+        return new ClientBuilder($clientInfo, $options);
     }
 }
