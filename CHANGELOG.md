@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Comprehensive Documentation Suite** (`docs/`): Complete documentation system for developers and users:
+  - **Main Documentation Hub** (`docs/README.md`): Central documentation index with architecture overview, features, use cases, and navigation
+  - **Getting Started Guide** (`docs/getting-started/`): Complete onboarding experience:
+    - Installation guide with system requirements, troubleshooting, and optimization tips
+    - Quick Start tutorial with working weather server/client examples and MCP Inspector integration
+    - Core Concepts guide explaining MCP architecture, capabilities, protocol flow, security, async patterns, and design patterns
+  - **API Reference Documentation** (`docs/api/`): Complete API documentation for all public interfaces:
+    - Server API reference with McpServer class, tool/resource/prompt registration, authentication, logging, and sampling
+    - Client API reference with connection management, tool/resource/prompt operations, error handling, and best practices
+    - Transport APIs documentation (planned) for STDIO, HTTP, and WebSocket implementations
+    - Types & Schemas reference (planned) for complete type system documentation
+  - **Migration Guide** (`docs/migration/from-typescript.md`): Comprehensive guide for TypeScript developers:
+    - Architecture comparison and key differences between TypeScript and PHP implementations
+    - API migration examples with side-by-side code comparisons for servers, clients, and tools
+    - Async programming patterns: converting async/await to yield with Amphp
+    - Type system differences: interfaces to classes, error handling, and validation patterns
+    - Common migration issues, troubleshooting guide, and best practices checklist
+  - **Examples Documentation** (`docs/examples/README.md`): Organized example catalog with learning paths
+  - **Contributing Guide** (`docs/contributing.md`): Complete contributor onboarding with development workflow, coding standards, and testing guidelines
+- **Documentation Generation System**:
+  - PHPDoc configuration (`phpdoc.xml`) for automated API documentation generation from source code
+  - GitHub Actions workflow (`docs.yml`) for automated documentation deployment to GitHub Pages
+  - Eleventy-based static site generation with markdown processing, navigation, and responsive layout
+  - Multi-stage documentation build process with PHP dependency analysis and Node.js tooling
+
 - **Laravel Package Integration** (`laravel/`): Complete Laravel package for seamless MCP integration:
 
   - **Service Provider**: Full Laravel service provider (`McpServiceProvider`) with auto-discovery for tools, resources, and prompts

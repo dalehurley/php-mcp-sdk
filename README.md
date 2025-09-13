@@ -1,42 +1,62 @@
 # PHP MCP SDK
 
-PHP implementation of the Model Context Protocol (MCP), enabling seamless integration between LLM applications and external data sources/tools.
+[![Latest Version](https://img.shields.io/packagist/v/dalehurley/php-mcp-sdk.svg?style=flat-square)](https://packagist.org/packages/dalehurley/php-mcp-sdk)
+[![PHP Version](https://img.shields.io/packagist/php-v/dalehurley/php-mcp-sdk.svg?style=flat-square)](https://packagist.org/packages/dalehurley/php-mcp-sdk)
+[![Total Downloads](https://img.shields.io/packagist/dt/dalehurley/php-mcp-sdk.svg?style=flat-square)](https://packagist.org/packages/dalehurley/php-mcp-sdk)
+[![License](https://img.shields.io/packagist/l/dalehurley/php-mcp-sdk.svg?style=flat-square)](https://packagist.org/packages/dalehurley/php-mcp-sdk)
+[![Tests](https://github.com/dalehurley/php-mcp-sdk/workflows/Tests/badge.svg)](https://github.com/dalehurley/php-mcp-sdk/actions)
 
-## Features
+PHP implementation of the Model Context Protocol (MCP), enabling seamless integration between LLM applications and external data sources and tools.
 
-- 🚀 **Full MCP Protocol Support** - Implements the complete MCP specification
-- 🔧 **Type-Safe** - Leverages PHP 8+ type system for robust code
-- ⚡ **Async Operations** - Built on ReactPHP for non-blocking I/O
-- 🔌 **Multiple Transports** - Stdio, HTTP Streaming, and WebSocket support
-- 🔐 **OAuth 2.0 Authentication** - Complete auth flow with PKCE support
-- 🏗️ **Laravel Integration** - First-class Laravel and InertiaJS support
-- 📦 **PSR Compliant** - Follows PSR standards for interoperability
+## ✨ Features
 
-## Requirements
+- 🚀 **Complete MCP Protocol Support** - Full implementation of the MCP specification
+- 🔧 **Type-Safe** - Leverages PHP 8.1+ type system with enums, union types, and strict typing  
+- ⚡ **Async First** - Built on Amphp for non-blocking I/O operations
+- 🔌 **Multiple Transports** - STDIO, HTTP Streaming, and WebSocket (coming soon)
+- 🔐 **OAuth 2.0 Ready** - Built-in authentication with PKCE support
+- 🏗️ **Framework Integration** - First-class Laravel package with Artisan commands
+- 📦 **PSR Compliant** - Follows PSR-4, PSR-7, PSR-12, and PSR-15 standards
+- 🛡️ **Production Ready** - Comprehensive error handling, logging, and monitoring
 
-- PHP 8.0 or higher
-- Composer
-- ext-json
-- ext-mbstring
+## 📋 Requirements
 
-## Installation
+- **PHP 8.1+** - Leverages modern PHP features
+- **Composer** - For dependency management  
+- **ext-json** - JSON processing
+- **ext-mbstring** - String handling
+
+## 🚀 Installation
+
+### Via Composer
 
 ```bash
-composer require mcp/php-sdk
+composer require dalehurley/php-mcp-sdk
 ```
 
-## Quick Start
+### Development Version
+
+```bash
+composer require dalehurley/php-mcp-sdk:dev-main
+```
+
+## ⚡ Quick Start
 
 ### Creating an MCP Server
 
 ```php
+#!/usr/bin/env php
+<?php
+require_once __DIR__ . '/vendor/autoload.php';
+
 use MCP\Server\McpServer;
 use MCP\Server\Transport\StdioServerTransport;
 use MCP\Types\Implementation;
+use Amp\Loop;
 
 // Create server instance
 $server = new McpServer(
-    new Implementation('my-server', '1.0.0')
+    new Implementation('weather-server', '1.0.0', 'Simple Weather Server')
 );
 
 // Register a tool
@@ -44,61 +64,114 @@ $server->registerTool(
     'get-weather',
     [
         'title' => 'Get Weather',
-        'description' => 'Get weather for a location',
+        'description' => 'Get current weather for a location',
         'inputSchema' => [
             'type' => 'object',
             'properties' => [
-                'location' => ['type' => 'string']
+                'location' => [
+                    'type' => 'string',
+                    'description' => 'City name or coordinates'
+                ]
             ],
             'required' => ['location']
         ]
     ],
-    function (array $params) {
+    function (array $params): array {
+        // In a real implementation, you'd call a weather API
+        $weather = [
+            'temperature' => rand(15, 30) . '°C',
+            'condition' => ['sunny', 'cloudy', 'rainy'][rand(0, 2)],
+            'humidity' => rand(40, 80) . '%'
+        ];
+
         return [
             'content' => [[
                 'type' => 'text',
-                'text' => "The weather in {$params['location']} is sunny!"
+                'text' => "Weather in {$params['location']}: " . 
+                         "{$weather['temperature']}, {$weather['condition']}, " .
+                         "Humidity: {$weather['humidity']}"
             ]]
         ];
     }
 );
 
-// Start server
+// Start server with STDIO transport
 $transport = new StdioServerTransport();
-$server->connect($transport)->then(function() {
-    echo "MCP Server running...\n";
+Amp\async(function() use ($server, $transport) {
+    yield $server->connect($transport);
+    error_log("Weather server started and listening...");
 });
+
+Loop::run();
 ```
 
 ### Creating an MCP Client
 
 ```php
+#!/usr/bin/env php  
+<?php
+require_once __DIR__ . '/vendor/autoload.php';
+
 use MCP\Client\Client;
 use MCP\Client\Transport\StdioClientTransport;
 use MCP\Types\Implementation;
+use Amp\Loop;
 
 // Create client
 $client = new Client(
-    new Implementation('my-client', '1.0.0')
+    new Implementation('weather-client', '1.0.0')
 );
 
-// Connect to server
+// Connect to weather server
 $transport = new StdioClientTransport([
-    'command' => 'node',
-    'args' => ['server.js']
+    'command' => 'php',
+    'args' => [__DIR__ . '/weather-server.php']
 ]);
 
-$client->connect($transport)->then(function() use ($client) {
-    // List available tools
-    return $client->listTools();
-})->then(function($tools) use ($client) {
-    // Call a tool
-    return $client->callTool('get-weather', [
-        'location' => 'San Francisco'
-    ]);
-})->then(function($result) {
-    echo "Result: " . json_encode($result) . "\n";
+Amp\async(function() use ($client, $transport) {
+    try {
+        // Connect to server
+        yield $client->connect($transport);
+        echo "✅ Connected to weather server\n";
+
+        // List available tools
+        $result = yield $client->listTools();
+        echo "📋 Available tools:\n";
+        foreach ($result['tools'] as $tool) {
+            echo "  - {$tool['name']}: {$tool['description']}\n";
+        }
+
+        // Call the weather tool
+        $result = yield $client->callTool('get-weather', [
+            'location' => 'London, UK'
+        ]);
+
+        echo "\n🌤️  Weather result:\n";
+        echo $result['content'][0]['text'] . "\n";
+
+        yield $client->close();
+        
+    } catch (\Exception $error) {
+        echo "❌ Error: " . $error->getMessage() . "\n";
+    } finally {
+        Loop::stop();
+    }
 });
+
+Loop::run();
+```
+
+### Test Your Implementation
+
+```bash
+# Make the server executable
+chmod +x weather-server.php
+
+# Test with the MCP Inspector (Node.js required)
+npx @modelcontextprotocol/inspector ./weather-server.php
+
+# Or run the client directly
+php weather-client.php
 ```
 
 ## Laravel Integration
@@ -145,14 +218,31 @@ export default function Dashboard() {
 }
 ```
 
-## Documentation
+## 📚 Documentation
 
-- [Server Implementation Guide](docs/server.md)
-- [Client Implementation Guide](docs/client.md)
-- [Transport Layers](docs/transports.md)
-- [Authentication](docs/auth.md)
-- [Laravel Integration](docs/laravel.md)
-- [Type System](docs/types.md)
+Comprehensive documentation is available in the [docs/](docs/) directory:
+
+### Getting Started
+- [📖 Complete Documentation](docs/README.md) - Start here for full overview
+- [⚡ Quick Start Guide](docs/getting-started/quick-start.md) - Get up and running fast
+- [💡 Core Concepts](docs/getting-started/concepts.md) - Understand MCP fundamentals
+
+### Implementation Guides  
+- [🖥️ Creating Servers](docs/guides/creating-servers.md) - Build MCP servers
+- [📱 Creating Clients](docs/guides/creating-clients.md) - Build MCP clients
+- [🔐 Authentication](docs/guides/authentication.md) - OAuth 2.0 and security
+- [🔌 Transports](docs/guides/transports.md) - STDIO, HTTP, WebSocket
+- [🏗️ Laravel Integration](docs/guides/laravel-integration.md) - Framework integration
+
+### API Reference
+- [🔧 Server API](docs/api/server.md) - Complete server API
+- [📡 Client API](docs/api/client.md) - Complete client API  
+- [📋 Types & Schemas](docs/api/types.md) - Type system reference
+- [🚀 Transport APIs](docs/api/transports.md) - Transport layer APIs
+
+### Examples & Migration
+- [💻 Code Examples](docs/examples/README.md) - Working examples
+- [🔄 TypeScript Migration](docs/migration/from-typescript.md) - Migration guide
 
 ## Testing
 

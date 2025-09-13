@@ -9,7 +9,7 @@
       "email": "your.email@example.com"
     }
   ],
-  "homepage": "https://github.com/yourusername/php-mcp-sdk",
+  "homepage": "https://github.com/dalehurley/php-mcp-sdk",
   "keywords": [
     "mcp",
     "model-context-protocol",

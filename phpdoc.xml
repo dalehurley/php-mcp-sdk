@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpdocumentor
+    configVersion="3"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://www.phpdoc.org"
+    xsi:schemaLocation="https://www.phpdoc.org https://docs.phpdoc.org/latest/phpdoc.xsd"
+>
+    <title>PHP MCP SDK API Documentation</title>
+    <description>Complete API reference for the PHP Model Context Protocol SDK</description>
+    
+    <paths>
+        <output>docs/api/generated</output>
+        <cache>build/phpdoc-cache</cache>
+    </paths>
+    
+    <version number="1.0.0">
+        <api>
+            <source dsn=".">
+                <path>src</path>
+            </source>
+            <output>docs/api/generated</output>
+            <ignore-tags>
+                <ignore-tag>internal</ignore-tag>
+                <ignore-tag>todo</ignore-tag>
+            </ignore-tags>
+            <include-source>true</include-source>
+            <visibility>public,protected,private</visibility>
+            <default-package-name>MCP</default-package-name>
+        </api>
+    </version>
+    
+    <template name="default">
+        <parameter name="guides">
+            <folder>docs/guides</folder>
+        </parameter>
+    </template>
+    
+    <settings>
+        <setting name="graphs.enabled" value="true" />
+        <setting name="graphs.format" value="svg" />
+        <setting name="markers.todos.enabled" value="true" />
+        <setting name="markers.fixmes.enabled" value="true" />
+    </settings>
+</phpdocumentor>

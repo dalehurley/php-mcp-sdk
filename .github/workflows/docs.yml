@@ -1,0 +1,235 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          extensions: json, mbstring, openssl
+          coverage: none
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-dev --prefer-dist --no-progress --no-interaction
+
+      - name: Install PHPDoc
+        run: |
+          curl -L https://github.com/phpDocumentor/phpDocumentor/releases/latest/download/phpDocumentor.phar -o phpdoc
+          chmod +x phpdoc
+          sudo mv phpdoc /usr/local/bin/
+
+      - name: Generate API Documentation
+        run: |
+          mkdir -p docs/api/generated
+          phpdoc --config=phpdoc.xml --force
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install documentation dependencies
+        run: |
+          npm install -g @11ty/eleventy
+          npm install -g markdown-it markdown-it-anchor markdown-it-table-of-contents
+
+      - name: Create Eleventy config
+        run: |
+          cat > .eleventy.js << 'EOF'
+          const markdownIt = require("markdown-it");
+          const markdownItAnchor = require("markdown-it-anchor");
+          const markdownItTOC = require("markdown-it-table-of-contents");
+
+          module.exports = function(eleventyConfig) {
+            // Copy static files
+            eleventyConfig.addPassthroughCopy("docs/**/*.{png,jpg,jpeg,gif,svg}");
+            eleventyConfig.addPassthroughCopy("docs/api/generated/**/*");
+            
+            // Configure Markdown
+            let markdownLib = markdownIt({
+              html: true,
+              breaks: true,
+              linkify: true
+            })
+            .use(markdownItAnchor, {
+              permalink: markdownItAnchor.permalink.ariaHidden({
+                placement: "after",
+                class: "direct-link",
+                symbol: "#",
+              }),
+            })
+            .use(markdownItTOC, {
+              includeLevel: [2, 3, 4],
+              marker: "[[toc]]"
+            });
+            
+            eleventyConfig.setLibrary("md", markdownLib);
+            
+            // Template formats
+            eleventyConfig.setTemplateFormats(["md", "njk", "html", "liquid"]);
+            
+            return {
+              dir: {
+                input: "docs",
+                output: "_site",
+                includes: "_includes",
+                layouts: "_layouts"
+              },
+              pathPrefix: "/php-mcp-sdk/",
+              markdownTemplateEngine: "njk",
+              htmlTemplateEngine: "njk",
+              dataTemplateEngine: "njk"
+            };
+          };
+          EOF
+
+      - name: Create documentation layout
+        run: |
+          mkdir -p docs/_layouts
+          cat > docs/_layouts/base.njk << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>{% if title %}{{ title }} - {% endif %}PHP MCP SDK Documentation</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.4.0/github-markdown-light.min.css">
+            <style>
+              body {
+                box-sizing: border-box;
+                min-width: 200px;
+                max-width: 980px;
+                margin: 0 auto;
+                padding: 45px;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+              }
+              .markdown-body {
+                box-sizing: border-box;
+                min-width: 200px;
+                max-width: 980px;
+                margin: 0 auto;
+                padding: 0;
+              }
+              .nav {
+                background: #f6f8fa;
+                border: 1px solid #d1d9e0;
+                border-radius: 6px;
+                padding: 16px;
+                margin-bottom: 24px;
+              }
+              .nav h3 {
+                margin-top: 0;
+                margin-bottom: 12px;
+              }
+              .nav ul {
+                margin: 0;
+                padding-left: 20px;
+              }
+              .nav li {
+                margin-bottom: 4px;
+              }
+              .direct-link {
+                text-decoration: none;
+                margin-left: 8px;
+                opacity: 0;
+                transition: opacity 0.2s;
+              }
+              h1:hover .direct-link,
+              h2:hover .direct-link,
+              h3:hover .direct-link,
+              h4:hover .direct-link {
+                opacity: 1;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="markdown-body">
+              <nav class="nav">
+                <h3>📚 PHP MCP SDK Documentation</h3>
+                <ul>
+                  <li><a href="/">Home</a></li>
+                  <li><a href="/getting-started/installation/">Installation</a></li>
+                  <li><a href="/getting-started/quick-start/">Quick Start</a></li>
+                  <li><a href="/api/server/">Server API</a></li>
+                  <li><a href="/api/client/">Client API</a></li>
+                  <li><a href="/api/generated/">Generated API Docs</a></li>
+                  <li><a href="/migration/from-typescript/">TypeScript Migration</a></li>
+                </ul>
+              </nav>
+              
+              {{ content | safe }}
+            </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Add frontmatter to documentation files
+        run: |
+          # Add layout frontmatter to all markdown files
+          find docs -name "*.md" -type f | while read -r file; do
+            if ! head -1 "$file" | grep -q "^---$"; then
+              temp_file=$(mktemp)
+              echo "---" > "$temp_file"
+              echo "layout: base.njk" >> "$temp_file"
+              echo "---" >> "$temp_file"
+              echo "" >> "$temp_file"
+              cat "$file" >> "$temp_file"
+              mv "$temp_file" "$file"
+            fi
+          done
+
+      - name: Build documentation site
+        run: eleventy --input=docs --output=_site
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
