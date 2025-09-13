@@ -7,14 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Comprehensive MCP specification compliance checklist (`ai-prompts/14-mcp-specification-compliance-checklist.md`):
+
+  - Complete verification of PHP MCP SDK against MCP specification 2025-06-18
+  - Detailed evidence mapping from specification requirements to implementation
+  - 85.5% compliance rate with 47/55 requirements fully implemented
+  - Identified 8 remaining requirements for future implementation
+  - Priority-based roadmap for completing full MCP compliance
+  - Verification covers: JSON-RPC 2.0, versioning, OAuth 2.1, server/client features, transports, error handling
+
+- **AUDIT**: Comprehensive codebase audit completed (2024-12-19)
+
+  - Identified 375 PSR-12 coding standards violations (340 auto-fixable)
+  - Found 89 static analysis errors requiring manual fixes
+  - Documented feature parity gaps with TypeScript SDK
+  - Created detailed action plans for all identified issues
+  - Established test coverage baseline (~26%) and improvement roadmap
+
+- Comprehensive test suite with 250+ new tests covering all major components (405 total test methods across 46 test files)
+- Factory tests for TypeFactoryService, JSONRPCMessageFactory, ToolFactory, and ResultFactory
+- Validation tests for ValidationService, TypeValidator, and ValidationException
+- Transport layer tests for Stdio and StreamableHttp transports (both client and server)
+- Integration tests for end-to-end protocol compliance and full client-server interactions
+- Performance tests for load testing, memory usage, and throughput benchmarks
+- Test utilities including InMemoryTransport and TestFixtures for easier testing
+- Protocol compliance tests ensuring JSON-RPC 2.0 and MCP specification adherence
+
 ### Changed
 
 - Replaced ReactPHP with Amphp for async operations to ensure compatibility with Laravel and PSR/HTTP-Message v2.0
 - Updated Transport interface to use Amphp Futures instead of ReactPHP Promises
+- Updated test writing guide (`ai-prompts/08-write-tests.md`) to reflect current package structure and Amphp usage
+- Enhanced test coverage from basic validation to comprehensive integration and performance testing
 
 ### Fixed
 
 - Fixed async function syntax issues in client examples (parallel-tools, oauth, http, multiple-servers)
+- Fixed Protocol request handler Future handling - handlers returning Futures are now properly awaited before sending responses
+- Fixed test async timing issues by replacing incorrect delay() usage with proper \Amp\delay() calls
 - Resolved PHP syntax errors in example files
 - Corrected Amphp closure syntax for proper async/await handling
 - Fixed notification class usage in resource server examples
@@ -44,6 +76,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Updated test writing guide (`ai-prompts/08-write-tests.md`) with comprehensive testing strategies:
+  - Updated test structure to match current package organization (151 tests, 456 assertions)
+  - Added test examples for new components: Factories, Validation, Auth systems
+  - Added Laravel integration test patterns for service providers, controllers, and Artisan commands
+  - Added comprehensive transport layer test examples (STDIO, HTTP, SSE)
+  - Updated all test examples to use Amphp instead of ReactPHP
+  - Added performance testing guidelines and memory usage benchmarks
+  - Added InMemoryTransport test utility and test fixture classes
+  - Provided implementation priority guide focusing on untested components
 - Comprehensive examples demonstrating PHP MCP SDK usage (`examples/`):
   - **Server Examples**: 5 complete server implementations showcasing different MCP patterns
     - `simple-server.php`: Basic MCP server with calculations, resources, and prompts

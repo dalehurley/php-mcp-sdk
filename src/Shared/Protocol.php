@@ -328,13 +328,18 @@ abstract class Protocol extends EventEmitter
             try {
                 $result = $handler($request, $fullExtra);
 
+                // If the handler returned a Future, await it
+                if ($result instanceof \Amp\Future) {
+                    $result = $result->await();
+                }
+
                 // If the suspension is resumed, the request was cancelled
                 if (false) { // Placeholder for suspension check
                     return;
                 }
 
                 $capturedTransport?->send([
-                    'result' => $result,
+                    'result' => $result instanceof \JsonSerializable ? $result->jsonSerialize() : $result,
                     'jsonrpc' => '2.0',
                     'id' => $request->getId()->jsonSerialize(),
                 ])->await();

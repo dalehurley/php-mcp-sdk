@@ -28,6 +28,7 @@ use MCP\Shared\RequestHandlerExtra;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use function Amp\async;
+use function Amp\delay;
 
 /**
  * Mock transport for testing
@@ -157,6 +158,9 @@ class IntegrationTest extends TestCase
 
         $this->transport->simulateMessage($initRequest);
 
+        // Wait for async processing to complete
+        \Amp\delay(10);
+
         // Check that server responded with initialize result
         $messages = $this->transport->getSentMessages();
         $this->assertCount(1, $messages);
@@ -220,6 +224,9 @@ class IntegrationTest extends TestCase
 
         $this->transport->simulateMessage($listToolsRequest);
 
+        // Wait for async processing to complete
+        \Amp\delay(10);
+
         $messages = $this->transport->getSentMessages();
         $this->assertCount(1, $messages);
 
@@ -249,6 +256,9 @@ class IntegrationTest extends TestCase
         ];
 
         $this->transport->simulateMessage($callToolRequest);
+
+        // Wait for async processing to complete
+        \Amp\delay(10);
 
         $messages = $this->transport->getSentMessages();
         $this->assertCount(1, $messages);
@@ -288,6 +298,9 @@ class IntegrationTest extends TestCase
 
         $this->transport->simulateMessage($listResourcesRequest);
 
+        // Wait for async processing to complete
+        \Amp\delay(10);
+
         $messages = $this->transport->getSentMessages();
         $this->assertCount(1, $messages);
 
@@ -314,6 +327,9 @@ class IntegrationTest extends TestCase
         ];
 
         $this->transport->simulateMessage($readResourceRequest);
+
+        // Wait for async processing to complete
+        \Amp\delay(10);
 
         $messages = $this->transport->getSentMessages();
         $this->assertCount(1, $messages);
@@ -362,6 +378,9 @@ class IntegrationTest extends TestCase
 
         $this->transport->simulateMessage($listPromptsRequest);
 
+        // Wait for async processing to complete
+        \Amp\delay(10);
+
         $messages = $this->transport->getSentMessages();
         $this->assertCount(1, $messages);
 
@@ -392,6 +411,9 @@ class IntegrationTest extends TestCase
 
         $this->transport->simulateMessage($getPromptRequest);
 
+        // Wait for async processing to complete
+        \Amp\delay(10);
+
         $messages = $this->transport->getSentMessages();
         $this->assertCount(1, $messages);
 
@@ -421,6 +443,9 @@ class IntegrationTest extends TestCase
         ];
 
         $this->transport->simulateMessage($callToolRequest);
+
+        // Wait for async processing to complete
+        \Amp\delay(10);
 
         $messages = $this->transport->getSentMessages();
         $this->assertCount(1, $messages);
@@ -471,6 +496,9 @@ class IntegrationTest extends TestCase
 
         $this->transport->simulateMessage($callToolRequest);
 
+        // Wait for async processing to complete
+        \Amp\delay(10);
+
         $messages = $this->transport->getSentMessages();
         $this->assertCount(1, $messages);
 
@@ -508,6 +536,9 @@ class IntegrationTest extends TestCase
 
         $this->transport->simulateMessage($listToolsRequest);
 
+        // Wait for async processing to complete
+        \Amp\delay(10);
+
         $messages = $this->transport->getSentMessages();
         $response = $messages[0];
         $this->assertCount(0, $response['result']['tools'] ?? []);
@@ -525,6 +556,9 @@ class IntegrationTest extends TestCase
         ];
 
         $this->transport->simulateMessage($callToolRequest);
+
+        // Wait for async processing to complete
+        \Amp\delay(10);
 
         $messages = $this->transport->getSentMessages();
         $response = $messages[0];

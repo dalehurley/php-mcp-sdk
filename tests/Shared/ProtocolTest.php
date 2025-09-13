@@ -146,6 +146,18 @@ class ProtocolTest extends TestCase
         $this->protocol = new TestProtocol();
     }
 
+    protected function tearDown(): void
+    {
+        // Properly close the protocol to avoid unhandled futures
+        if ($this->protocol->getTransport()) {
+            try {
+                $this->protocol->close()->await();
+            } catch (\Throwable $e) {
+                // Ignore errors during cleanup
+            }
+        }
+    }
+
     public function testConnect(): void
     {
         $future = $this->protocol->connect($this->transport);
@@ -186,7 +198,7 @@ class ProtocolTest extends TestCase
         ]);
 
         // Give async handler time to process
-        delay(0.01);
+        \Amp\delay(10);
 
         // Should automatically respond with pong
         $this->assertCount(1, $this->transport->sentMessages);
@@ -208,7 +220,7 @@ class ProtocolTest extends TestCase
             $future = $this->protocol->request($request, $validationService);
 
             // Wait for request to be sent
-            delay(0.01);
+            \Amp\delay(10);
 
             // Simulate response
             $this->transport->simulateMessage([
@@ -261,7 +273,7 @@ class ProtocolTest extends TestCase
             $future = $this->protocol->request($request, $validationService, $options);
 
             // Wait for request to be sent
-            delay(0.01);
+            \Amp\delay(10);
 
             // Simulate progress notification
             $this->transport->simulateMessage([
@@ -275,7 +287,7 @@ class ProtocolTest extends TestCase
                 ]
             ]);
 
-            delay(0.01);
+            \Amp\delay(10);
 
             // Simulate completion
             $this->transport->simulateMessage([
@@ -325,7 +337,7 @@ class ProtocolTest extends TestCase
         $protocol->notification($notification)->await();
 
         // Give time for debouncing
-        delay(0.02);
+        \Amp\delay(20);
 
         // Should only send one
         $this->assertCount(1, $this->transport->sentMessages);
@@ -352,7 +364,7 @@ class ProtocolTest extends TestCase
             'params' => []
         ]);
 
-        delay(0.01);
+        \Amp\delay(10);
 
         $this->assertTrue($handlerCalled);
         $this->assertCount(1, $this->transport->sentMessages);
@@ -383,7 +395,7 @@ class ProtocolTest extends TestCase
             ]
         ]);
 
-        delay(0.01);
+        \Amp\delay(10);
 
         $this->assertNotNull($received);
         $this->assertEquals('User cancelled', $received->getReason());
@@ -416,7 +428,7 @@ class ProtocolTest extends TestCase
             $future = $this->protocol->request($request, $validationService);
 
             // Wait for request to be sent
-            delay(0.01);
+            \Amp\delay(10);
 
             // Simulate cancellation notification
             $this->transport->simulateMessage([
@@ -452,7 +464,7 @@ class ProtocolTest extends TestCase
             $future = $this->protocol->request($request, $validationService);
 
             // Wait for request to be sent
-            delay(0.01);
+            \Amp\delay(10);
 
             // Simulate connection close
             $this->transport->simulateClose();
@@ -475,7 +487,7 @@ class ProtocolTest extends TestCase
             'params' => []
         ]);
 
-        delay(0.01);
+        \Amp\delay(10);
 
         $this->assertCount(1, $this->transport->sentMessages);
         $response = $this->transport->sentMessages[0];
