@@ -23,7 +23,8 @@ final class AuthorizeHandler
     public function __construct(
         private readonly OAuthServerProvider $provider,
         private readonly ?ResponseFactoryInterface $responseFactory = null
-    ) {}
+    ) {
+    }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
@@ -232,13 +233,17 @@ final class AuthorizeHandler
 
     private function createStream(string $content)
     {
-        return new class($content) {
-            public function __construct(private string $content) {}
+        return new class ($content) {
+            public function __construct(private string $content)
+            {
+            }
             public function __toString(): string
             {
                 return $this->content;
             }
-            public function close(): void {}
+            public function close(): void
+            {
+            }
             public function detach()
             {
                 return null;
@@ -259,8 +264,12 @@ final class AuthorizeHandler
             {
                 return false;
             }
-            public function seek($offset, $whence = SEEK_SET): void {}
-            public function rewind(): void {}
+            public function seek($offset, $whence = SEEK_SET): void
+            {
+            }
+            public function rewind(): void
+            {
+            }
             public function isWritable(): bool
             {
                 return false;

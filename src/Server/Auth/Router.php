@@ -31,7 +31,8 @@ final readonly class AuthRouterOptions
         public ?string $serviceDocumentationUrl = null,
         public array $scopesSupported = [],
         public ?string $resourceName = null
-    ) {}
+    ) {
+    }
 }
 
 /**
@@ -48,7 +49,8 @@ final readonly class AuthMetadataOptions
         public ?string $serviceDocumentationUrl = null,
         public array $scopesSupported = [],
         public ?string $resourceName = null
-    ) {}
+    ) {
+    }
 }
 
 /**

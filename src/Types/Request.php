@@ -26,6 +26,7 @@ class Request implements \JsonSerializable
             throw new \InvalidArgumentException('Request must have a method property');
         }
 
+        /** @phpstan-ignore-next-line */
         return new static(
             $data['method'],
             $data['params'] ?? null
@@ -87,6 +88,7 @@ class Request implements \JsonSerializable
      */
     public function withParams(array $params): static
     {
+        /** @phpstan-ignore-next-line */
         return new static(
             $this->method,
             $params

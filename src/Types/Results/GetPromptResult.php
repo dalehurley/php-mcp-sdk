@@ -75,7 +75,7 @@ final class GetPromptResult extends Result
     public function jsonSerialize(): array
     {
         $data = parent::jsonSerialize();
-        
+
         $data['messages'] = array_map(
             fn(PromptMessage $message) => $message->jsonSerialize(),
             $this->messages

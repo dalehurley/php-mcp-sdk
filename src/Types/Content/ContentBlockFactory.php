@@ -12,7 +12,9 @@ final class ContentBlockFactory
     /**
      * Private constructor to prevent instantiation.
      */
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * Create a ContentBlock from an array of data.

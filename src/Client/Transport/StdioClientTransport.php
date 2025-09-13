@@ -15,12 +15,12 @@ use Amp\DeferredFuture;
 use Amp\Cancellation;
 use Amp\TimeoutCancellation;
 use Amp\DeferredCancellation;
+
 use function Amp\async;
 use function Amp\ByteStream\buffer;
 
-
 /**
- * Client transport for stdio: this will connect to a server by spawning a 
+ * Client transport for stdio: this will connect to a server by spawning a
  * process and communicating with it over stdin/stdout.
  */
 class StdioClientTransport implements Transport
@@ -316,7 +316,7 @@ class StdioClientTransport implements Transport
 
     /**
      * Get the process ID of the spawned server
-     * 
+     *
      * @return int|null The PID or null if process not started
      */
     public function getPid(): ?int

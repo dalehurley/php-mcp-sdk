@@ -26,7 +26,8 @@ class RegisteredResource
         public bool $enabled = true,
         private ?\Closure $onUpdate = null,
         private ?\Closure $onRemove = null
-    ) {}
+    ) {
+    }
 
     /**
      * Enable the resource
@@ -48,7 +49,7 @@ class RegisteredResource
 
     /**
      * Update resource properties
-     * 
+     *
      * @param array{
      *   name?: string,
      *   title?: string,
@@ -87,7 +88,7 @@ class RegisteredResource
 
     /**
      * Remove the resource
-     * 
+     *
      * @param callable $onRemove Callback to handle removal
      */
     public function remove(): void

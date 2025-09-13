@@ -6,7 +6,7 @@ namespace MCP\Server\Transport;
 
 /**
  * Configuration options for SSE server transport
- * 
+ *
  * @deprecated Use StreamableHttpServerTransport instead
  * @internal This class will be removed in a future version
  */
@@ -21,5 +21,6 @@ class SseServerTransportOptions
         public readonly ?array $allowedHosts = null,
         public readonly ?array $allowedOrigins = null,
         public readonly bool $enableDnsRebindingProtection = false
-    ) {}
+    ) {
+    }
 }

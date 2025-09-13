@@ -13,7 +13,7 @@ use Amp\Future;
 
 /**
  * Extra data given to request handlers.
- * 
+ *
  * @template SendRequestT of Request
  * @template SendNotificationT of Notification
  */
@@ -32,5 +32,6 @@ class RequestHandlerExtra
         public readonly ?array $requestInfo,
         public $sendNotification,
         public $sendRequest
-    ) {}
+    ) {
+    }
 }

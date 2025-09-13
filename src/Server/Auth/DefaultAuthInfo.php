@@ -20,7 +20,8 @@ final readonly class DefaultAuthInfo implements AuthInfo
         private ?int $expiresAt = null,
         private ?string $resource = null,
         private array $extra = []
-    ) {}
+    ) {
+    }
 
     public function getToken(): string
     {

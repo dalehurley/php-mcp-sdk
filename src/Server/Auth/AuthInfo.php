@@ -21,7 +21,7 @@ interface AuthInfo
 
     /**
      * Scopes associated with this token.
-     * 
+     *
      * @return string[]
      */
     public function getScopes(): array;
@@ -40,7 +40,7 @@ interface AuthInfo
     /**
      * Additional data associated with the token.
      * This field should be used for any additional data that needs to be attached to the auth info.
-     * 
+     *
      * @return array<string, mixed>
      */
     public function getExtra(): array;

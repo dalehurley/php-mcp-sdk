@@ -15,7 +15,8 @@ final class PromptReference implements \JsonSerializable
     public function __construct(
         private readonly string $name,
         private readonly array $additional = []
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

@@ -10,7 +10,7 @@ use MCP\Validation\ValidationService;
 /**
  * Abstract base class for type factories.
  *
- * @template T
+ * @template T of object
  * @implements TypeFactory<T>
  */
 abstract class AbstractTypeFactory implements TypeFactory

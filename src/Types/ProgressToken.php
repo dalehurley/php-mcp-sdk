@@ -15,7 +15,8 @@ final class ProgressToken implements \JsonSerializable
      */
     public function __construct(
         private readonly string|int $value
-    ) {}
+    ) {
+    }
 
     /**
      * Create from a string value.

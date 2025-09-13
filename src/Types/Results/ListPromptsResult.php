@@ -76,7 +76,7 @@ final class ListPromptsResult extends PaginatedResult
             fn(Prompt $prompt) => $prompt->jsonSerialize(),
             $this->prompts
         );
-        
+
         return $data;
     }
 }

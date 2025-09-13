@@ -21,7 +21,8 @@ final class RegisterHandler
     public function __construct(
         private readonly OAuthRegisteredClientsStore $clientsStore,
         private readonly ?ResponseFactoryInterface $responseFactory = null
-    ) {}
+    ) {
+    }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
@@ -219,13 +220,17 @@ final class RegisterHandler
 
     private function createStream(string $content)
     {
-        return new class($content) {
-            public function __construct(private string $content) {}
+        return new class ($content) {
+            public function __construct(private string $content)
+            {
+            }
             public function __toString(): string
             {
                 return $this->content;
             }
-            public function close(): void {}
+            public function close(): void
+            {
+            }
             public function detach()
             {
                 return null;
@@ -246,8 +251,12 @@ final class RegisterHandler
             {
                 return false;
             }
-            public function seek($offset, $whence = SEEK_SET): void {}
-            public function rewind(): void {}
+            public function seek($offset, $whence = SEEK_SET): void
+            {
+            }
+            public function rewind(): void
+            {
+            }
             public function isWritable(): bool
             {
                 return false;

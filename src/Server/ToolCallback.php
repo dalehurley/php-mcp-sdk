@@ -11,7 +11,7 @@ use MCP\Types\ServerNotification;
 
 /**
  * Callback for a tool handler.
- * 
+ *
  * @template Args
  * @param Args $args The parsed and validated arguments (if schema provided)
  * @param RequestHandlerExtra<ServerRequest, ServerNotification> $extra

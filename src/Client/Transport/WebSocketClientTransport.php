@@ -20,7 +20,7 @@ use function Amp\delay;
 
 /**
  * WebSocket client transport with automatic reconnection and heartbeat support.
- * 
+ *
  * This transport implements the MCP transport interface over WebSocket connections,
  * providing features like automatic reconnection, heartbeat/ping-pong, and proper
  * connection lifecycle management.
@@ -46,7 +46,7 @@ class WebSocketClientTransport extends EventEmitter implements Transport
 
     public function __construct(
         private readonly string $url,
-        private readonly WebSocketOptions $options = new WebSocketOptions(),
+        private readonly WebSocketClientTransportOptions $options = new WebSocketClientTransportOptions(),
         private readonly LoggerInterface $logger = new NullLogger()
     ) {
         // EventEmitter doesn't have a constructor, so we don't call parent::__construct()
@@ -55,15 +55,7 @@ class WebSocketClientTransport extends EventEmitter implements Transport
     public function start(): Future
     {
         return async(function () {
-            if ($this->isConnected || $this->isConnecting) {
-                return;
-            }
-
-            $this->shouldReconnect = true;
-            $this->reconnectAttempts = 0;
-            $this->cancellation = new DeferredCancellation();
-
-            return $this->connect()->await();
+            throw new \RuntimeException('WebSocket transport not yet implemented');
         });
     }
 
@@ -353,7 +345,7 @@ class WebSocketClientTransport extends EventEmitter implements Transport
             while ($this->isConnected && $this->shouldReconnect) {
                 try {
                     delay($this->options->pingInterval);
-                    
+
                     if ($this->isConnected && $this->connection) {
                         // Send ping frame (implementation would depend on WebSocket library)
                         $this->logger->debug('Sending WebSocket ping');
@@ -365,7 +357,7 @@ class WebSocketClientTransport extends EventEmitter implements Transport
                 }
             }
         });
-        
+
         // Prevent unused variable warning
         if ($this->heartbeatTask) {
             // Task is running in background
@@ -401,7 +393,7 @@ class WebSocketClientTransport extends EventEmitter implements Transport
     /**
      * Get connection options.
      */
-    public function getOptions(): WebSocketOptions
+    public function getOptions(): WebSocketClientTransportOptions
     {
         return $this->options;
     }

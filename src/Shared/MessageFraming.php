@@ -23,7 +23,7 @@ class MessageFraming
 
     /**
      * Serialize a JSON-RPC message for transmission over newline-delimited JSON transport
-     * 
+     *
      * @param array|JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError $message The message to serialize
      * @param bool $validate Whether to validate the message structure
      * @return string The serialized message with newline terminator
@@ -61,7 +61,7 @@ class MessageFraming
 
     /**
      * Deserialize a JSON-RPC message from string
-     * 
+     *
      * @param string $data The JSON string to deserialize
      * @param bool $validate Whether to validate the message structure
      * @return JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError The deserialized message
@@ -85,7 +85,7 @@ class MessageFraming
 
     /**
      * Parse multiple messages from a newline-delimited JSON stream
-     * 
+     *
      * @param string $data The stream data containing multiple messages
      * @param bool $validate Whether to validate each message
      * @return array<JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError> Array of parsed messages
@@ -111,7 +111,7 @@ class MessageFraming
 
     /**
      * Validate the structure of a JSON-RPC message array
-     * 
+     *
      * @param array $message The message array to validate
      * @throws \InvalidArgumentException If message structure is invalid
      */
@@ -156,7 +156,7 @@ class MessageFraming
 
     /**
      * Validate a request ID
-     * 
+     *
      * @param mixed $id The ID to validate
      * @throws \InvalidArgumentException If ID is invalid
      */
@@ -170,7 +170,7 @@ class MessageFraming
     /**
      * Create a chunked message stream for large messages
      * Splits large messages into smaller chunks for transmission
-     * 
+     *
      * @param array|JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError $message The message to chunk
      * @param int $chunkSize Maximum size of each chunk in bytes
      * @return array<string> Array of serialized message chunks
@@ -200,7 +200,7 @@ class MessageFraming
 
     /**
      * Reconstruct a message from chunks
-     * 
+     *
      * @param array<string> $chunks Array of message chunks
      * @param bool $validate Whether to validate the reconstructed message
      * @return JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError The reconstructed message
@@ -214,7 +214,7 @@ class MessageFraming
 
     /**
      * Check if a string contains a complete JSON-RPC message
-     * 
+     *
      * @param string $data The data to check
      * @return bool True if data contains a complete message
      */
@@ -236,7 +236,7 @@ class MessageFraming
     /**
      * Extract complete messages from a partial stream buffer
      * Returns complete messages and remaining buffer data
-     * 
+     *
      * @param string $buffer The buffer containing partial messages
      * @return array{messages: array<JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError>, remaining: string}
      */

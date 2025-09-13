@@ -7,14 +7,12 @@ namespace MCP\Client\Validation;
 use Amp\Future;
 use MCP\Types\McpError;
 use MCP\Types\ErrorCode;
-use Psr\SimpleCache\CacheInterface;
-use Psr\SimpleCache\InvalidArgumentException;
 
 use function Amp\async;
 
 /**
  * Compiles JSON schemas into optimized validators for better performance.
- * 
+ *
  * This compiler pre-processes JSON schemas to create optimized validation
  * functions that can validate data faster than generic schema validators.
  */
@@ -24,7 +22,7 @@ class JsonSchemaCompiler
     private array $compiledValidators = [];
 
     public function __construct(
-        private readonly ?CacheInterface $cache = null,
+        private readonly ?object $cache = null,
         private readonly int $cacheTimeout = 3600
     ) {}
 
@@ -41,15 +39,15 @@ class JsonSchemaCompiler
         }
 
         // Try to load from cache
-        if ($this->cache !== null) {
+        if ($this->cache !== null && method_exists($this->cache, 'get')) {
             try {
                 $cached = $this->cache->get("compiled_validator_{$schemaHash}");
                 if ($cached instanceof CompiledValidatorInterface) {
                     $this->compiledValidators[$schemaHash] = $cached;
                     return $cached;
                 }
-            } catch (InvalidArgumentException $e) {
-                // Cache key invalid, continue with compilation
+            } catch (\Throwable $e) {
+                // Cache error, continue with compilation
             }
         }
 
@@ -58,14 +56,14 @@ class JsonSchemaCompiler
         $this->compiledValidators[$schemaHash] = $validator;
 
         // Cache the compiled validator
-        if ($this->cache !== null && $validator->isValid()) {
+        if ($this->cache !== null && method_exists($this->cache, 'set') && $validator->isValid()) {
             try {
                 $this->cache->set(
                     "compiled_validator_{$schemaHash}",
                     $validator,
                     $this->cacheTimeout
                 );
-            } catch (InvalidArgumentException $e) {
+            } catch (\Throwable $e) {
                 // Cache error, but continue
             }
         }
@@ -83,7 +81,7 @@ class JsonSchemaCompiler
             // For now, this is a placeholder
             throw new McpError(
                 ErrorCode::MethodNotFound,
-                'Schema compilation from URL not yet implemented'
+                "Schema compilation from URL not yet implemented: {$url}"
             );
         });
     }
@@ -103,10 +101,10 @@ class JsonSchemaCompiler
     {
         $this->compiledValidators = [];
 
-        if ($this->cache !== null) {
+        if ($this->cache !== null && method_exists($this->cache, 'clear')) {
             try {
                 $this->cache->clear();
-            } catch (InvalidArgumentException $e) {
+            } catch (\Throwable $e) {
                 // Ignore cache errors
             }
         }

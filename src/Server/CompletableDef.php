@@ -6,7 +6,7 @@ namespace MCP\Server;
 
 /**
  * Definition for a completable value
- * 
+ *
  * @template T
  */
 class CompletableDef
@@ -19,5 +19,6 @@ class CompletableDef
         public mixed $type,
         public CompleteCallback $complete,
         public string $typeName = 'Completable'
-    ) {}
+    ) {
+    }
 }

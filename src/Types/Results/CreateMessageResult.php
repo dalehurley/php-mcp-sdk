@@ -111,7 +111,7 @@ final class CreateMessageResult extends Result
     public function jsonSerialize(): array
     {
         $data = parent::jsonSerialize();
-        
+
         $data['model'] = $this->model;
         $data['role'] = $this->role;
         $data['content'] = $this->content->jsonSerialize();

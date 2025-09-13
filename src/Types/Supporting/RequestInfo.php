@@ -14,7 +14,8 @@ final class RequestInfo
      */
     public function __construct(
         private readonly array $headers
-    ) {}
+    ) {
+    }
 
     /**
      * Get the headers of the request.

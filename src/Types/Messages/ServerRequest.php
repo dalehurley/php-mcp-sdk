@@ -14,7 +14,9 @@ final class ServerRequest
     /**
      * Private constructor to prevent instantiation.
      */
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * Get the list of valid server request methods.

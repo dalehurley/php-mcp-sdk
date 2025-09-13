@@ -12,11 +12,12 @@ use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
 use Amp\Http\HttpStatus;
 use Amp\ByteStream\WritableIterableStream;
+
 use function Amp\async;
 
 /**
  * Configuration options for SSEServerTransport
- * 
+ *
  * @deprecated Use StreamableHttpServerTransport instead
  * @internal This class will be removed in a future version
  */
@@ -35,16 +36,14 @@ class SseServerTransportOptions
 }
 
 /**
- * Server transport for SSE: this will send messages over an SSE connection 
+ * Server transport for SSE: this will send messages over an SSE connection
  * and receive messages from HTTP POST requests.
- * 
+ *
  * @deprecated Use StreamableHttpServerTransport instead. SSE transport is deprecated
  * in favor of the more feature-rich Streamable HTTP transport.
  */
 class SseServerTransport implements Transport
 {
-    private const MAXIMUM_MESSAGE_SIZE = 4 * 1024 * 1024; // 4MB
-
     private string $_endpoint;
     /** @SuppressWarnings(PHPMD.DeprecatedClass) */
     private SseServerTransportOptions $_options;
@@ -63,7 +62,7 @@ class SseServerTransport implements Transport
 
     /**
      * Creates a new SSE server transport
-     * 
+     *
      * @param string $endpoint The endpoint URL where clients should POST messages
      * @param SseServerTransportOptions|null $options Configuration options
      * @deprecated Use StreamableHttpServerTransport instead
@@ -125,7 +124,7 @@ class SseServerTransport implements Transport
 
     /**
      * Handle the initial SSE connection request
-     * 
+     *
      * @param Request $request The HTTP request
      * @return Response The SSE response
      */
@@ -177,7 +176,7 @@ class SseServerTransport implements Transport
 
     /**
      * Handle incoming POST messages
-     * 
+     *
      * @param Request $request The HTTP request
      * @param mixed $parsedBody Pre-parsed body (optional)
      * @param array|null $authInfo Authentication information
@@ -261,7 +260,7 @@ class SseServerTransport implements Transport
 
     /**
      * Handle a client message
-     * 
+     *
      * @param mixed $message The message data
      * @param array|null $extra Extra information
      */
@@ -323,7 +322,7 @@ class SseServerTransport implements Transport
 
     /**
      * Validate request headers for DNS rebinding protection
-     * 
+     *
      * @return string|null Error message if validation fails
      */
     private function validateRequestHeaders(Request $request): ?string

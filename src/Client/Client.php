@@ -56,6 +56,7 @@ use MCP\Types\Results\ReadResourceResult;
 use MCP\Types\Tools\Tool;
 use MCP\Utils\JsonSchemaValidator;
 use MCP\Validation\ValidationService;
+
 use function Amp\async;
 
 /**
@@ -112,7 +113,7 @@ class Client extends Protocol
         }
 
         if ($this->capabilities->hasElicitation()) {
-            // Default handler for elicitation requests  
+            // Default handler for elicitation requests
             $this->setRequestHandler(
                 ElicitRequest::class,
                 function (ElicitRequest $request) {
@@ -549,7 +550,7 @@ class Client extends Protocol
 
     /**
      * Cache tool output schemas for validation.
-     * 
+     *
      * @param Tool[] $tools
      */
     private function cacheToolOutputSchemas(array $tools): void
@@ -693,7 +694,7 @@ class Client extends Protocol
 
     /**
      * Set a custom handler for sampling requests from the server.
-     * 
+     *
      * @param callable(CreateMessageRequest): mixed $handler
      */
     public function setSamplingHandler(callable $handler): void
@@ -703,8 +704,8 @@ class Client extends Protocol
 
     /**
      * Set a custom handler for elicitation requests from the server.
-     * 
-     * @param callable(ElicitRequest): mixed $handler  
+     *
+     * @param callable(ElicitRequest): mixed $handler
      */
     public function setElicitationHandler(callable $handler): void
     {
@@ -713,7 +714,7 @@ class Client extends Protocol
 
     /**
      * Set a custom handler for roots list requests from the server.
-     * 
+     *
      * @param callable(ListRootsRequest): mixed $handler
      */
     public function setRootsListHandler(callable $handler): void
@@ -721,17 +722,6 @@ class Client extends Protocol
         $this->setRequestHandler(ListRootsRequest::class, $handler);
     }
 
-    /**
-     * Helper method to build a request array.
-     */
-    private function buildRequest(string $method, ?array $params = null): array
-    {
-        $request = ['method' => $method];
-        if ($params !== null) {
-            $request['params'] = $params;
-        }
-        return $request;
-    }
 
     // Middleware methods
 
@@ -769,19 +759,6 @@ class Client extends Protocol
         return $this->addMiddleware(new LoggingMiddleware($logger, $logLevel));
     }
 
-    /**
-     * Get the middleware stack (lazy initialization).
-     */
-    private function getMiddlewareStack(): ?MiddlewareStack
-    {
-        if ($this->middlewareStack === null && !empty($this->middleware)) {
-            // We would need an HTTP client to create the middleware stack
-            // For now, this is a placeholder since the transport layer handles HTTP
-            return null;
-        }
-
-        return $this->middlewareStack;
-    }
 
     /**
      * Clear all middleware.

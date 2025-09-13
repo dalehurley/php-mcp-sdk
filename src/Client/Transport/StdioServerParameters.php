@@ -22,5 +22,6 @@ class StdioServerParameters
         public readonly ?array $env = null,
         public readonly ?string $cwd = null,
         public readonly bool $inheritStderr = true
-    ) {}
+    ) {
+    }
 }

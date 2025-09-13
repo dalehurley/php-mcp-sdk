@@ -17,14 +17,14 @@ interface OAuthRegisteredClientsStore
 {
     /**
      * Get client information by client ID.
-     * 
+     *
      * @return PromiseInterface<OAuthClientInformation|null>
      */
     public function getClient(string $clientId): PromiseInterface;
 
     /**
      * Register a new client (optional - for dynamic registration).
-     * 
+     *
      * @return PromiseInterface<OAuthClientInformation>
      */
     public function registerClient(OAuthClientInformation $client): PromiseInterface;
@@ -41,15 +41,15 @@ interface OAuthServerProvider
     public function getClientsStore(): OAuthRegisteredClientsStore;
 
     /**
-     * Begins the authorization flow, which can either be implemented by this server itself 
+     * Begins the authorization flow, which can either be implemented by this server itself
      * or via redirection to a separate authorization server.
      *
-     * This server must eventually issue a redirect with an authorization response or an 
+     * This server must eventually issue a redirect with an authorization response or an
      * error response to the given redirect URI. Per OAuth 2.1:
      * - In the successful case, the redirect MUST include the `code` and `state` (if present) query parameters.
-     * - In the error case, the redirect MUST include the `error` query parameter, and MAY include 
+     * - In the error case, the redirect MUST include the `error` query parameter, and MAY include
      *   an optional `error_description` query parameter.
-     * 
+     *
      * @return PromiseInterface<void>
      */
     public function authorize(
@@ -60,7 +60,7 @@ interface OAuthServerProvider
 
     /**
      * Returns the `codeChallenge` that was used when the indicated authorization began.
-     * 
+     *
      * @return PromiseInterface<string>
      */
     public function challengeForAuthorizationCode(
@@ -70,7 +70,7 @@ interface OAuthServerProvider
 
     /**
      * Exchanges an authorization code for an access token.
-     * 
+     *
      * @return PromiseInterface<OAuthTokens>
      */
     public function exchangeAuthorizationCode(
@@ -83,7 +83,7 @@ interface OAuthServerProvider
 
     /**
      * Exchanges a refresh token for an access token.
-     * 
+     *
      * @param string[] $scopes
      * @return PromiseInterface<OAuthTokens>
      */
@@ -96,7 +96,7 @@ interface OAuthServerProvider
 
     /**
      * Verifies an access token and returns information about it.
-     * 
+     *
      * @return PromiseInterface<AuthInfo>
      */
     public function verifyAccessToken(string $token): PromiseInterface;
@@ -105,7 +105,7 @@ interface OAuthServerProvider
      * Revokes an access or refresh token. If unimplemented, token revocation is not supported (not recommended).
      *
      * If the given token is invalid or already revoked, this method should do nothing.
-     * 
+     *
      * @return PromiseInterface<void>
      */
     public function revokeToken(
@@ -116,7 +116,7 @@ interface OAuthServerProvider
     /**
      * Whether to skip local PKCE validation.
      *
-     * If true, the server will not perform PKCE validation locally and will pass the 
+     * If true, the server will not perform PKCE validation locally and will pass the
      * code_verifier to the upstream server.
      *
      * NOTE: This should only be true if the upstream server is performing the actual PKCE validation.
@@ -131,7 +131,7 @@ interface OAuthTokenVerifier
 {
     /**
      * Verifies an access token and returns information about it.
-     * 
+     *
      * @return PromiseInterface<AuthInfo>
      */
     public function verifyAccessToken(string $token): PromiseInterface;

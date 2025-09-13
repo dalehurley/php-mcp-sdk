@@ -11,7 +11,7 @@ class Stdio
 {
     /**
      * Read data from STDIN in a non-blocking way.
-     * 
+     *
      * @param resource $stdin The STDIN resource
      * @param int $length Maximum bytes to read
      * @return string|false The data read or false on failure
@@ -23,7 +23,7 @@ class Stdio
 
     /**
      * Write data to STDOUT.
-     * 
+     *
      * @param resource $stdout The STDOUT resource
      * @param string $data The data to write
      * @return int|false The number of bytes written or false on error
@@ -35,7 +35,7 @@ class Stdio
 
     /**
      * Check if STDIN has data available to read.
-     * 
+     *
      * @param resource $stdin The STDIN resource
      * @param int $timeout Timeout in microseconds
      * @return bool
@@ -56,7 +56,7 @@ class Stdio
 
     /**
      * Create a read buffer for processing STDIO messages.
-     * 
+     *
      * @return ReadBuffer
      */
     public static function createReadBuffer(): ReadBuffer

@@ -15,7 +15,8 @@ final class ModelHint implements \JsonSerializable
     public function __construct(
         private readonly ?string $name = null,
         private readonly array $additionalProperties = []
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

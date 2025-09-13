@@ -21,10 +21,9 @@ use Amp\DeferredCancellation;
 use MCP\Client\Transport\StreamableHttpReconnectionOptions;
 use MCP\Client\Transport\StreamableHttpClientTransportOptions;
 use MCP\Client\Transport\StreamableHttpError;
+
 use function Amp\async;
 use function Amp\delay;
-
-
 
 /**
  * Client transport for Streamable HTTP: this implements the MCP Streamable HTTP transport specification.

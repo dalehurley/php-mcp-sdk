@@ -17,7 +17,8 @@ abstract class PrimitiveSchemaDefinition implements \JsonSerializable
         protected readonly ?string $title = null,
         protected readonly ?string $description = null,
         protected readonly array $additional = []
-    ) {}
+    ) {
+    }
 
     /**
      * Get the type.

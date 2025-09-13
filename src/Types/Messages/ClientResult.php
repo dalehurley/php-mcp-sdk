@@ -15,7 +15,9 @@ final class ClientResult
     /**
      * Private constructor to prevent instantiation.
      */
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * Create a result from an array.

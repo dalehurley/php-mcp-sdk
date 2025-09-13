@@ -104,8 +104,8 @@ final class InitializeRequest extends Request
             return false;
         }
 
-        return isset($params['protocolVersion']) 
-            && isset($params['capabilities']) 
+        return isset($params['protocolVersion'])
+            && isset($params['capabilities'])
             && isset($params['clientInfo']);
     }
 }

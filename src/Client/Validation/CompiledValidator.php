@@ -17,7 +17,8 @@ class CompiledValidator implements CompiledValidatorInterface
     public function __construct(
         private readonly array $schema,
         private readonly string $schemaHash
-    ) {}
+    ) {
+    }
 
     public function validate(mixed $data): bool
     {

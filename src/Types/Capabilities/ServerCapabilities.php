@@ -28,7 +28,8 @@ final class ServerCapabilities implements \JsonSerializable
         private readonly ?array $resources = null,
         private readonly ?array $tools = null,
         private readonly array $additionalProperties = []
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

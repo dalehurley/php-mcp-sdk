@@ -21,7 +21,7 @@ final class Progress implements \JsonSerializable
         if ($progress < 0) {
             throw new \InvalidArgumentException('Progress cannot be negative');
         }
-        
+
         if ($total !== null && $total < 0) {
             throw new \InvalidArgumentException('Total cannot be negative');
         }

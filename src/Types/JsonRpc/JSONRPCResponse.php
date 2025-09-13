@@ -17,7 +17,8 @@ final class JSONRPCResponse implements \JsonSerializable
         private readonly RequestId $id,
         private readonly Result $result,
         private readonly string $jsonrpc = Protocol::JSONRPC_VERSION
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

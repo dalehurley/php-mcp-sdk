@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use MCP\Server\Transport\StreamableHttpServerTransport;
 use MCP\Server\Transport\StreamableHttpServerTransportOptions;
 use Amp\Future;
+
 use function Amp\async;
 
 /**
@@ -19,7 +20,7 @@ interface HttpTransportAdapter
 {
     /**
      * Handle a PSR-7 HTTP request and return a PSR-7 response
-     * 
+     *
      * @param ServerRequestInterface $request The incoming PSR-7 request
      * @param ResponseInterface $response The PSR-7 response to modify
      * @return ResponseInterface The modified PSR-7 response
@@ -31,7 +32,7 @@ interface HttpTransportAdapter
 
     /**
      * Handle a PSR-7 HTTP request asynchronously and return a Future<ResponseInterface>
-     * 
+     *
      * @param ServerRequestInterface $request The incoming PSR-7 request
      * @param ResponseInterface $response The PSR-7 response to modify
      * @return Future<ResponseInterface> The modified PSR-7 response
@@ -45,7 +46,7 @@ interface HttpTransportAdapter
 /**
  * Adapter for StreamableHttpServerTransport to work with PSR-7 HTTP messages
  * This enables easy integration with Laravel, Symfony, and other PSR-7 frameworks
- * 
+ *
  * Note: This is a placeholder implementation. Full integration would require
  * exposing public methods from the transport classes or creating a bridge.
  */

@@ -78,7 +78,7 @@ final class ListToolsResult extends PaginatedResult
             fn(Tool $tool) => $tool->jsonSerialize(),
             $this->tools
         );
-        
+
         return $data;
     }
 }

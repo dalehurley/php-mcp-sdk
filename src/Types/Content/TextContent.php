@@ -17,7 +17,8 @@ final class TextContent implements ContentBlock
         private readonly string $text,
         private readonly ?array $_meta = null,
         private readonly array $additionalProperties = []
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

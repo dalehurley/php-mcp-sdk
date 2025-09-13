@@ -29,7 +29,7 @@ final class GetPromptRequest extends Request
     public static function create(string $name, ?array $arguments = null): self
     {
         $params = ['name' => $name];
-        
+
         if ($arguments !== null) {
             $params['arguments'] = $arguments;
         }

@@ -13,7 +13,8 @@ class Implementation implements \JsonSerializable
         private string $name,
         private string $version,
         private ?string $title = null
-    ) {}
+    ) {
+    }
 
     public function getName(): string
     {

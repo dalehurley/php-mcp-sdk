@@ -20,5 +20,6 @@ class RequestOptions
         public readonly ?RequestId $relatedRequestId = null,
         public readonly ?string $resumptionToken = null,
         public readonly mixed $onresumptiontoken = null
-    ) {}
+    ) {
+    }
 }

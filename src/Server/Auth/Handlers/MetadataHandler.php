@@ -21,7 +21,8 @@ final class MetadataHandler
         private readonly OAuthProtectedResourceMetadata $protectedResourceMetadata,
         private readonly ?ResponseFactoryInterface $responseFactory = null,
         private readonly ?StreamFactoryInterface $streamFactory = null
-    ) {}
+    ) {
+    }
 
     public function handleOAuthMetadata(ServerRequestInterface $request): ResponseInterface
     {
@@ -145,13 +146,17 @@ final class MetadataHandler
         }
 
         // Fallback to a simple implementation
-        return new class($content) {
-            public function __construct(private string $content) {}
+        return new class ($content) {
+            public function __construct(private string $content)
+            {
+            }
             public function __toString(): string
             {
                 return $this->content;
             }
-            public function close(): void {}
+            public function close(): void
+            {
+            }
             public function detach()
             {
                 return null;
@@ -172,8 +177,12 @@ final class MetadataHandler
             {
                 return false;
             }
-            public function seek($offset, $whence = SEEK_SET): void {}
-            public function rewind(): void {}
+            public function seek($offset, $whence = SEEK_SET): void
+            {
+            }
+            public function rewind(): void
+            {
+            }
             public function isWritable(): bool
             {
                 return false;

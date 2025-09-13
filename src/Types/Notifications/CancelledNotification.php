@@ -29,7 +29,7 @@ final class CancelledNotification extends Notification
     public static function create(RequestId $requestId, ?string $reason = null): self
     {
         $params = ['requestId' => $requestId->jsonSerialize()];
-        
+
         if ($reason !== null) {
             $params['reason'] = $reason;
         }

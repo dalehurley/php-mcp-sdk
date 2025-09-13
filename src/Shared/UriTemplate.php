@@ -6,7 +6,7 @@ namespace MCP\Shared;
 
 /**
  * RFC 6570 URI Template implementation
- * 
+ *
  * This is a Claude-authored implementation of a subset of RFC 6570 URI Templates.
  * It supports simple string expansion with {variable} syntax.
  */

@@ -11,7 +11,7 @@ use MCP\Server\McpServer;
 /**
  * Laravel integration helpers for MCP SDK
  * Provides convenient methods for integrating MCP servers with Laravel applications
- * 
+ *
  * Note: This class provides helper methods and configurations for Laravel integration.
  * Actual Laravel types are not imported to keep the SDK framework-agnostic.
  * Users should install Laravel packages separately when using these helpers.
@@ -20,7 +20,7 @@ class LaravelIntegration
 {
     /**
      * Create a Laravel route handler configuration for MCP HTTP transport
-     * 
+     *
      * @param array<string, mixed> $options Transport options
      * @return array<string, mixed> Configuration for Laravel route handler
      */
@@ -46,7 +46,7 @@ class LaravelIntegration
 
     /**
      * Create a Laravel middleware configuration for MCP authentication
-     * 
+     *
      * @param array<string, mixed> $config Authentication configuration
      * @return array<string, mixed> Laravel middleware configuration
      */
@@ -68,7 +68,7 @@ class LaravelIntegration
 
     /**
      * Create a Laravel service provider configuration for MCP
-     * 
+     *
      * @return array<string, mixed> Service provider configuration
      */
     public static function createServiceProviderConfig(): array
@@ -96,7 +96,7 @@ class LaravelIntegration
 
     /**
      * Extract authentication information from request-like data structure
-     * 
+     *
      * @param array<string, mixed> $requestData Request data (headers, query params, etc.)
      * @param array<string, mixed> $config Authentication configuration
      * @return array<string, mixed> Authentication info
@@ -144,7 +144,7 @@ class LaravelIntegration
 
     /**
      * Create Laravel Artisan command configuration for MCP server
-     * 
+     *
      * @param string $signature Command signature
      * @param string $description Command description
      * @return array<string, mixed> Command configuration
@@ -166,7 +166,7 @@ class LaravelIntegration
 
     /**
      * Create validation rules for MCP messages (Laravel validation format)
-     * 
+     *
      * @return array<string, string|array<string>> Laravel validation rules
      */
     public static function getValidationRules(): array
@@ -186,7 +186,7 @@ class LaravelIntegration
 
     /**
      * Create example Laravel controller methods for MCP integration
-     * 
+     *
      * @return array<string, string> Example controller implementations
      */
     public static function getExampleControllerMethods(): array

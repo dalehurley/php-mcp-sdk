@@ -24,7 +24,8 @@ final class ClientCapabilities implements \JsonSerializable
         private readonly ?array $elicitation = null,
         private readonly ?array $roots = null,
         private readonly array $additionalProperties = []
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

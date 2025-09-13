@@ -11,7 +11,7 @@ use MCP\Types\ServerNotification;
 
 /**
  * Callback to read a resource at a given URI.
- * 
+ *
  * @param \URL|string $uri The resource URI
  * @param RequestHandlerExtra<ServerRequest, ServerNotification> $extra
  * @return ReadResourceResult|\Amp\Future<ReadResourceResult>

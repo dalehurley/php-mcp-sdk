@@ -12,5 +12,6 @@ final readonly class OAuthTokenRevocationRequest
     public function __construct(
         public string $token,
         public ?string $tokenTypeHint = null
-    ) {}
+    ) {
+    }
 }

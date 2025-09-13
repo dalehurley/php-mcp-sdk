@@ -77,7 +77,7 @@ final class ListResourceTemplatesResult extends PaginatedResult
             fn(ResourceTemplate $template) => $template->jsonSerialize(),
             $this->resourceTemplates
         );
-        
+
         return $data;
     }
 }

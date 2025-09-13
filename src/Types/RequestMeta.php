@@ -15,7 +15,8 @@ final class RequestMeta implements \JsonSerializable
     public function __construct(
         private readonly ?ProgressToken $progressToken = null,
         private readonly array $additionalProperties = []
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

@@ -19,7 +19,8 @@ final class JSONRPCError implements \JsonSerializable
         private readonly string $message,
         private readonly mixed $data = null,
         private readonly string $jsonrpc = Protocol::JSONRPC_VERSION
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

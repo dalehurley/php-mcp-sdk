@@ -41,9 +41,7 @@ final class ProxyProvider implements OAuthServerProvider
 
     public function __construct(
         private readonly ProxyEndpoints $endpoints,
-        /** @var callable(string): PromiseInterface<AuthInfo> */
         private readonly \Closure $verifyAccessToken,
-        /** @var callable(string): PromiseInterface<OAuthClientInformation|null> */
         private readonly \Closure $getClient,
         private readonly ClientInterface $httpClient,
         private readonly RequestFactoryInterface $requestFactory,
@@ -283,6 +281,7 @@ final class ProxyProvider implements OAuthServerProvider
                     return;
                 }
 
+                /** @phpstan-ignore-next-line */
                 $resolve();
             } catch (\Throwable $e) {
                 $reject(new ServerError('Token revocation failed', $e));
@@ -297,7 +296,6 @@ final class ProxyProvider implements OAuthServerProvider
 final class ProxyClientsStore implements OAuthRegisteredClientsStore
 {
     public function __construct(
-        /** @var callable(string): PromiseInterface<OAuthClientInformation|null> */
         private readonly \Closure $getClient,
         private readonly ?string $registrationUrl,
         private readonly ClientInterface $httpClient,

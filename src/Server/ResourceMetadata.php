@@ -7,7 +7,7 @@ namespace MCP\Server;
 /**
  * Metadata for a resource, including optional title, description, and MIME type.
  * This is used to provide additional information about resources beyond their URI.
- * 
+ *
  * @see \MCP\Types\Resources\Resource
  */
 class ResourceMetadata
@@ -21,11 +21,12 @@ class ResourceMetadata
         public readonly ?string $title = null,
         public readonly ?string $description = null,
         public readonly ?string $mimeType = null
-    ) {}
+    ) {
+    }
 
     /**
      * Convert to array for merging with resource data
-     * 
+     *
      * @return array<string, mixed>
      */
     public function toArray(): array

@@ -24,7 +24,8 @@ class RegisteredPrompt
         public bool $enabled = true,
         private ?\Closure $onUpdate = null,
         private ?\Closure $onRemove = null
-    ) {}
+    ) {
+    }
 
     /**
      * Enable the prompt
@@ -46,7 +47,7 @@ class RegisteredPrompt
 
     /**
      * Update prompt properties
-     * 
+     *
      * @param array{
      *   name?: string|null,
      *   title?: string,
@@ -85,7 +86,7 @@ class RegisteredPrompt
 
     /**
      * Remove the prompt
-     * 
+     *
      * @param callable $onRemove Callback to handle removal
      */
     public function remove(): void

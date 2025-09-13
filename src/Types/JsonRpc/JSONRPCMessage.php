@@ -13,7 +13,9 @@ final class JSONRPCMessage
     /**
      * Private constructor to prevent instantiation.
      */
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * Parse a JSON-RPC message from an array.

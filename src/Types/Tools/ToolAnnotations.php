@@ -26,7 +26,8 @@ final class ToolAnnotations implements \JsonSerializable
         private readonly ?bool $idempotentHint = null,
         private readonly ?bool $openWorldHint = null,
         private readonly array $additionalProperties = []
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

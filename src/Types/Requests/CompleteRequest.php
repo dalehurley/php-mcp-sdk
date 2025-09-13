@@ -58,7 +58,7 @@ final class CompleteRequest extends Request
         }
 
         $type = $params['ref']['type'] ?? null;
-        
+
         return match ($type) {
             'ref/prompt' => PromptReference::fromArray($params['ref']),
             'ref/resource' => ResourceTemplateReference::fromArray($params['ref']),
@@ -79,8 +79,10 @@ final class CompleteRequest extends Request
         }
 
         $argument = $params['argument'];
-        if (isset($argument['name']) && is_string($argument['name']) &&
-            isset($argument['value']) && is_string($argument['value'])) {
+        if (
+            isset($argument['name']) && is_string($argument['name']) &&
+            isset($argument['value']) && is_string($argument['value'])
+        ) {
             return [
                 'name' => $argument['name'],
                 'value' => $argument['value'],

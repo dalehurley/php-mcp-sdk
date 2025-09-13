@@ -30,7 +30,8 @@ class RegisteredTool
         public bool $enabled = true,
         private ?\Closure $onUpdate = null,
         private ?\Closure $onRemove = null
-    ) {}
+    ) {
+    }
 
     /**
      * Enable the tool
@@ -54,7 +55,7 @@ class RegisteredTool
 
     /**
      * Update tool properties
-     * 
+     *
      * @param array{
      *   name?: string|null,
      *   title?: string,
@@ -103,7 +104,7 @@ class RegisteredTool
 
     /**
      * Remove the tool
-     * 
+     *
      * @param callable $onRemove Callback to handle removal
      */
     public function remove(): void

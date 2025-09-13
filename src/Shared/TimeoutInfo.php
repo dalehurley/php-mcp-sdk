@@ -16,5 +16,6 @@ class TimeoutInfo
         public ?int $maxTotalTimeout,
         public bool $resetTimeoutOnProgress,
         public \Closure $onTimeout
-    ) {}
+    ) {
+    }
 }

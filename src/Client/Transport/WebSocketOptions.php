@@ -22,7 +22,8 @@ class WebSocketOptions
         public readonly int $pongTimeout = 5,
         public readonly ?string $origin = null,
         public readonly bool $validateCertificate = true
-    ) {}
+    ) {
+    }
 
     /**
      * Create options with custom headers.

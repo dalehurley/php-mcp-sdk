@@ -18,7 +18,8 @@ abstract class BaseMetadata implements \JsonSerializable
         private readonly ?string $title = null,
         private readonly ?array $_meta = null,
         private readonly array $additionalProperties = []
-    ) {}
+    ) {
+    }
 
     /**
      * Get the name intended for programmatic or logical use.

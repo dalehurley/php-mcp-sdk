@@ -103,7 +103,7 @@ final class CallToolResult extends Result
     public function jsonSerialize(): array
     {
         $data = parent::jsonSerialize();
-        
+
         // Content is always present, but may be empty
         $data['content'] = array_map(
             fn(ContentBlock $block) => $block->jsonSerialize(),

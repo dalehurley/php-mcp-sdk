@@ -43,7 +43,8 @@ class OAuthUtils
         private readonly ClientInterface $httpClient,
         private readonly RequestFactoryInterface $requestFactory,
         private readonly StreamFactoryInterface $streamFactory
-    ) {}
+    ) {
+    }
 
     /**
      * Generate a PKCE code verifier according to RFC 7636.
@@ -75,7 +76,7 @@ class OAuthUtils
 
     /**
      * Parse a JWT token without verification (for extracting claims).
-     * 
+     *
      * WARNING: This method does NOT verify the token signature.
      * Only use for extracting non-sensitive claims from trusted sources.
      */

@@ -19,6 +19,9 @@ use MCP\Types\References\ResourceTemplateReference;
 use MCP\Types\Results\ListToolsResult;
 use MCP\Types\Results\CallToolResult;
 use MCP\Types\Results\ListPromptsResult;
+use MCP\Types\Content\ContentBlockFactory;
+use MCP\Types\Sampling\SamplingMessage;
+use MCP\Types\Sampling\ModelPreferences;
 use MCP\Types\Results\GetPromptResult;
 use MCP\Types\Results\ListResourcesResult;
 use MCP\Types\Results\ListResourceTemplatesResult;
@@ -40,12 +43,14 @@ use MCP\Types\McpError;
 use MCP\Types\ErrorCode;
 use MCP\Types\Capabilities\ServerCapabilities;
 use MCP\Utils\JsonSchemaValidator;
+
 use function Amp\async;
 use function Amp\Future\await;
 
 /**
  * Empty JSON Schema for tools without input
  */
+
 define('EMPTY_OBJECT_JSON_SCHEMA', [
     'type' => 'object',
     'properties' => (object)[],
@@ -110,8 +115,8 @@ class McpServer
 
     /**
      * Attaches to the given transport, starts it, and starts listening for messages.
-     * 
-     * The `server` object assumes ownership of the Transport, replacing any callbacks that have 
+     *
+     * The `server` object assumes ownership of the Transport, replacing any callbacks that have
      * already been set, and expects that it is the only user of the Transport instance going forward.
      */
     public function connect(Transport $transport): \Amp\Future
@@ -249,10 +254,10 @@ class McpServer
                     } catch (\Throwable $error) {
                         $result = new CallToolResult(
                             content: [
-                                [
+                                ContentBlockFactory::fromArray([
                                     'type' => 'text',
                                     'text' => $error instanceof \Error ? $error->getMessage() : (string)$error,
-                                ],
+                                ]),
                             ],
                             isError: true
                         );
@@ -365,7 +370,7 @@ class McpServer
 
     /**
      * Register a tool with a config object and callback.
-     * 
+     *
      * @param array{
      *   title?: string,
      *   description?: string,
@@ -1042,7 +1047,7 @@ class McpServer
 
     /**
      * Register a prompt with a config object and callback.
-     * 
+     *
      * @param array{
      *   title?: string,
      *   description?: string,
@@ -1259,7 +1264,7 @@ class McpServer
     /**
      * Sends a logging message to the client, if connected.
      * Note: You only need to send the parameters object, not the entire JSON RPC message
-     * 
+     *
      * @param array{level: string, logger?: string, data?: mixed, timestamp?: string} $params
      * @param string|null $sessionId optional for stateless and backward compatibility
      */
@@ -1296,6 +1301,89 @@ class McpServer
         if ($this->isConnected()) {
             $this->server->sendPromptListChanged();
         }
+    }
+
+    /**
+     * Request the client to elicit input from the user.
+     *
+     * @param string $message The message to display to the user
+     * @param array<string, mixed> $schema JSON schema for the requested input
+     * @param string[]|null $required Required fields
+     * @return \Amp\Future<array{action: string, content?: array<string, mixed>}>
+     */
+    public function elicitUserInput(
+        string $message,
+        array $schema,
+        ?array $required = null
+    ): \Amp\Future {
+        $params = [
+            'message' => $message,
+            'requestedSchema' => [
+                'type' => 'object',
+                'properties' => $schema,
+            ]
+        ];
+
+        if ($required !== null) {
+            $params['requestedSchema']['required'] = $required;
+        }
+
+        return $this->server->elicitInput($params);
+    }
+
+    /**
+     * Request the client to sample an LLM (create a message).
+     *
+     * @param SamplingMessage[] $messages
+     * @param int $maxTokens
+     * @param string|null $systemPrompt
+     * @param string|null $includeContext
+     * @param float|null $temperature
+     * @param string[]|null $stopSequences
+     * @param array<string, mixed>|null $metadata
+     * @param ModelPreferences|null $modelPreferences
+     * @return \Amp\Future<array{model: string, role: string, content: array}>
+     */
+    public function createMessage(
+        array $messages,
+        int $maxTokens,
+        ?string $systemPrompt = null,
+        ?string $includeContext = null,
+        ?float $temperature = null,
+        ?array $stopSequences = null,
+        ?array $metadata = null,
+        ?ModelPreferences $modelPreferences = null
+    ): \Amp\Future {
+        $params = [
+            'messages' => array_map(fn(SamplingMessage $msg) => $msg->jsonSerialize(), $messages),
+            'maxTokens' => $maxTokens,
+        ];
+
+        if ($systemPrompt !== null) {
+            $params['systemPrompt'] = $systemPrompt;
+        }
+
+        if ($includeContext !== null) {
+            $params['includeContext'] = $includeContext;
+        }
+
+        if ($temperature !== null) {
+            $params['temperature'] = $temperature;
+        }
+
+        if ($stopSequences !== null) {
+            $params['stopSequences'] = $stopSequences;
+        }
+
+        if ($metadata !== null) {
+            $params['metadata'] = $metadata;
+        }
+
+        if ($modelPreferences !== null) {
+            $params['modelPreferences'] = $modelPreferences->jsonSerialize();
+        }
+
+        return $this->server->createMessage($params);
     }
 
     // Helper Methods

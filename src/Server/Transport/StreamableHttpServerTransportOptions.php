@@ -13,7 +13,7 @@ interface EventStore
 {
     /**
      * Stores an event for later retrieval
-     * 
+     *
      * @param string $streamId ID of the stream the event belongs to
      * @param \MCP\Types\JsonRpc\JSONRPCMessage $message The JSON-RPC message to store
      * @return Future<string> The generated event ID for the stored event
@@ -22,7 +22,7 @@ interface EventStore
 
     /**
      * Replay events after a specific event ID
-     * 
+     *
      * @param string $lastEventId The last event ID received by client
      * @param callable(string, \MCP\Types\JsonRpc\JSONRPCMessage): Future<void> $send Callback to send events
      * @return Future<string> The stream ID
@@ -54,5 +54,6 @@ class StreamableHttpServerTransportOptions
         public readonly ?array $allowedHosts = null,
         public readonly ?array $allowedOrigins = null,
         public readonly bool $enableDnsRebindingProtection = false
-    ) {}
+    ) {
+    }
 }

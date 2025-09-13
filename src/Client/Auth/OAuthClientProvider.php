@@ -12,7 +12,7 @@ use MCP\Shared\OAuthTokens;
 
 /**
  * Interface for OAuth client providers that handle OAuth 2.0 flows.
- * 
+ *
  * This interface abstracts the OAuth client functionality to support different
  * storage mechanisms and authentication flows while maintaining consistency
  * with the TypeScript SDK.
@@ -83,7 +83,7 @@ interface OAuthClientProvider
 
     /**
      * Add custom client authentication to OAuth requests.
-     * 
+     *
      * This method allows implementations to customize how client credentials
      * are included in token requests, supporting various authentication methods
      * beyond the standard OAuth 2.0 methods.
@@ -97,14 +97,14 @@ interface OAuthClientProvider
 
     /**
      * Validate and select the resource URL for OAuth requests.
-     * 
+     *
      * If not implemented, default validation will be used.
      */
     public function validateResourceURL(string $serverUrl, ?string $resource = null): Future;
 
     /**
      * Invalidate stored credentials when they are no longer valid.
-     * 
+     *
      * @param string $scope Scope of invalidation: 'all', 'client', 'tokens', or 'verifier'
      */
     public function invalidateCredentials(string $scope): Future;

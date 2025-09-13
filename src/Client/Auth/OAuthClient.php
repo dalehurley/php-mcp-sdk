@@ -21,7 +21,7 @@ use function Amp\async;
 
 /**
  * Enhanced OAuth 2.1 client with full authorization flow support and PKCE.
- * 
+ *
  * This client implements the complete OAuth 2.0 Authorization Code flow with PKCE,
  * automatic token refresh, OAuth server discovery, and error handling that matches
  * the TypeScript SDK functionality.

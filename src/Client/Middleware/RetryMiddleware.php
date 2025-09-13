@@ -25,7 +25,8 @@ class RetryMiddleware implements MiddlewareInterface
             \Amp\Http\Client\HttpException::class,
             \Amp\Socket\ConnectException::class,
         ]
-    ) {}
+    ) {
+    }
 
     public function process(RequestInterface $request, callable $next): Future
     {

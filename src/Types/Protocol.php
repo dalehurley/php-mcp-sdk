@@ -37,7 +37,9 @@ final class Protocol
     /**
      * Private constructor to prevent instantiation.
      */
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * Check if a protocol version is supported.

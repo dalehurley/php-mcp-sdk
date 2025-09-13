@@ -21,27 +21,27 @@ use Amp\Future;
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
 use Amp\Http\HttpStatus;
+
 use function Amp\async;
 use function Amp\delay;
 
 /**
  * Server transport for Streamable HTTP: this implements the MCP Streamable HTTP transport specification.
  * It supports both SSE streaming and direct HTTP responses.
- * 
+ *
  * In stateful mode:
  * - Session ID is generated and included in response headers
  * - Session ID is always included in initialization responses
  * - Requests with invalid session IDs are rejected with 404 Not Found
  * - Non-initialization requests without a session ID are rejected with 400 Bad Request
  * - State is maintained in-memory (connections, message history)
- * 
+ *
  * In stateless mode:
  * - No Session ID is included in any responses
  * - No session validation is performed
  */
 class StreamableHttpServerTransport implements Transport
 {
-    private const MAXIMUM_MESSAGE_SIZE = 4 * 1024 * 1024; // 4MB
     private const STANDALONE_SSE_STREAM_ID = '_GET_stream';
 
     private StreamableHttpServerTransportOptions $_options;
@@ -113,7 +113,7 @@ class StreamableHttpServerTransport implements Transport
 
     /**
      * Handles an incoming HTTP request
-     * 
+     *
      * @param Request $request The Amp HTTP request
      * @param mixed $parsedBody Pre-parsed body (optional)
      * @param array|null $authInfo Authentication information
@@ -163,7 +163,7 @@ class StreamableHttpServerTransport implements Transport
 
     /**
      * Validates request headers for DNS rebinding protection
-     * 
+     *
      * @return string|null Error message if validation fails
      */
     private function validateRequestHeaders(Request $request): ?string
@@ -550,7 +550,7 @@ class StreamableHttpServerTransport implements Transport
 
     /**
      * Validates session ID for non-initialization requests
-     * 
+     *
      * @return Response|null Response if validation fails, null if valid
      */
     private function validateSession(Request $request): ?Response
@@ -591,7 +591,7 @@ class StreamableHttpServerTransport implements Transport
 
     /**
      * Validates protocol version header
-     * 
+     *
      * @return Response|null Response if validation fails, null if valid
      */
     private function validateProtocolVersion(Request $request): ?Response

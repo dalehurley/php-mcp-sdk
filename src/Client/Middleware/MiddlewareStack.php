@@ -13,7 +13,7 @@ use function Amp\async;
 
 /**
  * Middleware stack that chains multiple middleware together.
- * 
+ *
  * Middleware are executed in the order they were added to the stack.
  * Each middleware can modify the request, call the next middleware,
  * and then modify the response.
@@ -25,7 +25,8 @@ class MiddlewareStack implements MiddlewareInterface
 
     public function __construct(
         private readonly ClientInterface $httpClient
-    ) {}
+    ) {
+    }
 
     /**
      * Add middleware to the stack.

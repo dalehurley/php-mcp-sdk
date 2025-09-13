@@ -14,7 +14,7 @@ class JsonSchemaValidator
 {
     /**
      * Validate data against a JSON schema
-     * 
+     *
      * @param mixed $data The data to validate
      * @param array $schema The JSON schema to validate against
      * @throws McpError If validation fails
@@ -33,7 +33,7 @@ class JsonSchemaValidator
 
     /**
      * Validate data against schema and return errors
-     * 
+     *
      * @param mixed $data
      * @param array $schema
      * @return array<string> Array of error messages
@@ -200,7 +200,7 @@ class JsonSchemaValidator
 
     /**
      * Convert a simple schema definition to JSON Schema format
-     * 
+     *
      * @param mixed $schema The schema definition
      * @return array JSON Schema
      */
@@ -235,7 +235,7 @@ class JsonSchemaValidator
 
     /**
      * Extract prompt arguments from a schema
-     * 
+     *
      * @param mixed $schema
      * @return array<array> Array of PromptArgument-like structures
      */
@@ -270,7 +270,7 @@ class JsonSchemaValidator
 
     /**
      * Get a field from a schema by name
-     * 
+     *
      * @param mixed $schema
      * @param string $fieldName
      * @return mixed The field schema or null if not found

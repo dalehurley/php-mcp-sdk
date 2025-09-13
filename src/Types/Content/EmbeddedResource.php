@@ -22,7 +22,8 @@ final class EmbeddedResource implements ContentBlock
         private readonly TextResourceContents|BlobResourceContents $resource,
         private readonly ?array $_meta = null,
         private readonly array $additionalProperties = []
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

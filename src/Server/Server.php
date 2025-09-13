@@ -10,7 +10,9 @@ use MCP\Shared\Transport;
 use MCP\Server\ServerOptions;
 use MCP\Shared\RequestHandlerExtra;
 use MCP\Shared\RequestOptions;
+
 use function MCP\Shared\mergeCapabilities;
+
 use MCP\Types\Implementation;
 use MCP\Types\Protocol as ProtocolConstants;
 use MCP\Types\Capabilities\ServerCapabilities;
@@ -37,15 +39,15 @@ use MCP\Types\Notifications\InitializedNotification;
 use MCP\Types\Notifications\ResourceUpdatedNotification;
 use MCP\Types\JsonRpc\JSONRPCRequest;
 use MCP\Validation\ValidationService;
+
 use function Amp\async;
 use function Amp\Future\await;
 
-
 /**
  * An MCP server on top of a pluggable transport.
- * 
+ *
  * This server will automatically respond to the initialization flow as initiated from the client.
- * 
+ *
  * @template RequestT of Request
  * @template NotificationT of Notification
  * @template ResultT of Result
@@ -131,7 +133,7 @@ class Server extends Protocol
 
     /**
      * Registers new capabilities. This can only be called before connecting to a transport.
-     * 
+     *
      * The new capabilities will be merged with any existing capabilities previously given (e.g., at initialization).
      */
     public function registerCapabilities(ServerCapabilities $capabilities): void
@@ -371,7 +373,7 @@ class Server extends Protocol
     /**
      * Sends a logging message to the client, if connected.
      * Note: You only need to send the parameters object, not the entire JSON RPC message
-     * 
+     *
      * @param array{level: string, logger?: string, data?: mixed, timestamp?: string} $params
      * @param string|null $sessionId optional for stateless and backward compatibility
      */

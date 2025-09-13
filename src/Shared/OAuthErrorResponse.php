@@ -13,7 +13,8 @@ class OAuthErrorResponse implements \JsonSerializable
         private readonly string $error,
         private readonly ?string $errorDescription = null,
         private readonly ?string $errorUri = null
-    ) {}
+    ) {
+    }
 
     public function getError(): string
     {

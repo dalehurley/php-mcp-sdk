@@ -50,6 +50,7 @@ class Resource extends BaseMetadata
         // Remove known properties to collect additional properties
         unset($data['name'], $data['uri'], $data['title'], $data['description'], $data['mimeType'], $data['_meta']);
 
+        /** @phpstan-ignore-next-line */
         return new static(
             name: $name,
             uri: $uri,

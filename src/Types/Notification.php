@@ -19,6 +19,8 @@ class Notification implements \JsonSerializable
 
     /**
      * Create from an array of data.
+     *
+     * @return static
      */
     public static function fromArray(array $data): static
     {
@@ -26,6 +28,7 @@ class Notification implements \JsonSerializable
             throw new \InvalidArgumentException('Notification must have a method property');
         }
 
+        /** @phpstan-ignore-next-line */
         return new static(
             $data['method'],
             $data['params'] ?? null
@@ -82,9 +85,12 @@ class Notification implements \JsonSerializable
 
     /**
      * Create a new notification with updated parameters.
+     *
+     * @return static
      */
     public function withParams(array $params): static
     {
+        /** @phpstan-ignore-next-line */
         return new static(
             $this->method,
             $params

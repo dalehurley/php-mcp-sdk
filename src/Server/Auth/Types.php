@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace MCP\Server\Auth;
 
-
-
 /**
  * Parameters for OAuth authorization flow.
  */
@@ -20,5 +18,6 @@ final readonly class AuthorizationParams
         public ?string $state = null,
         public array $scopes = [],
         public ?string $resource = null
-    ) {}
+    ) {
+    }
 }

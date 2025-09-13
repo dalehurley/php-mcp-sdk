@@ -8,15 +8,18 @@ use MCP\Shared\Transport;
 use MCP\Shared\ReadBuffer;
 use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\WritableStream;
+
 use function Amp\ByteStream\getStdin;
 use function Amp\ByteStream\getStdout;
+
 use Amp\Future;
 use Amp\DeferredFuture;
 use Amp\DeferredCancellation;
+
 use function Amp\async;
 
 /**
- * Server transport for stdio: this communicates with a MCP client by reading 
+ * Server transport for stdio: this communicates with a MCP client by reading
  * from the current process' stdin and writing to stdout.
  */
 class StdioServerTransport implements Transport

@@ -6,7 +6,7 @@ namespace MCP\Server;
 
 /**
  * Type for a completion callback function.
- * 
+ *
  * @template T
  * @param T $value The current value to complete
  * @param array{arguments?: array<string, string>}|null $context The completion context
@@ -26,7 +26,7 @@ interface CompleteCallback
 /**
  * A wrapper that provides autocompletion capabilities for values.
  * Useful for prompt arguments and resource templates in MCP.
- * 
+ *
  * @template T
  */
 class Completable
@@ -43,7 +43,7 @@ class Completable
 
     /**
      * Create a new completable value
-     * 
+     *
      * @template TType
      * @param TType $type The underlying type/schema
      * @param CompleteCallback $complete The completion callback
@@ -56,7 +56,7 @@ class Completable
 
     /**
      * Get the underlying type
-     * 
+     *
      * @return T
      */
     public function unwrap()
@@ -74,7 +74,7 @@ class Completable
 
     /**
      * Parse the input value
-     * 
+     *
      * @param mixed $input
      * @return mixed
      */
@@ -97,7 +97,7 @@ class Completable
 /**
  * Helper function to create a completable value.
  * Wraps a type/schema to provide autocompletion capabilities.
- * 
+ *
  * @template T
  * @param T $schema The underlying schema/type
  * @param callable(T, array{arguments?: array<string, string>}|null): array<T>|\Amp\Future<array<T>> $complete
@@ -105,7 +105,7 @@ class Completable
  */
 function completable($schema, callable $complete): Completable
 {
-    return Completable::create($schema, new class($complete) implements CompleteCallback {
+    return Completable::create($schema, new class ($complete) implements CompleteCallback {
         private $callback;
 
         public function __construct(callable $callback)

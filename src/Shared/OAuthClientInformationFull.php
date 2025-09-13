@@ -6,7 +6,7 @@ namespace MCP\Shared;
 
 /**
  * Full OAuth client information including all metadata from dynamic registration.
- * 
+ *
  * This extends the basic client information with additional metadata
  * returned during OAuth 2.0 Dynamic Client Registration (RFC 7591).
  */

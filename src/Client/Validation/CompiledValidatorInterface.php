@@ -17,7 +17,7 @@ interface CompiledValidatorInterface
 
     /**
      * Get validation errors from the last validation attempt.
-     * 
+     *
      * @return array<string> Array of error messages
      */
     public function getErrors(): array;

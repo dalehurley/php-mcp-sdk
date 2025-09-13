@@ -16,7 +16,7 @@ class MetadataUtils
      * For tools, the precedence is: title → annotations.title → name
      * For other objects: title → name
      * This implements the spec requirement: "if no title is provided, name should be used for display purposes"
-     * 
+     *
      * @param BaseMetadata|array $metadata The metadata object or array
      * @return string The display name
      */
@@ -58,7 +58,7 @@ class MetadataUtils
 
     /**
      * Check if metadata has a title.
-     * 
+     *
      * @param BaseMetadata|array $metadata
      * @return bool
      */
@@ -74,7 +74,7 @@ class MetadataUtils
 
     /**
      * Get the description from metadata.
-     * 
+     *
      * @param BaseMetadata|array $metadata
      * @return string|null
      */
@@ -92,7 +92,7 @@ class MetadataUtils
 
     /**
      * Check if metadata has a description.
-     * 
+     *
      * @param BaseMetadata|array $metadata
      * @return bool
      */
@@ -105,7 +105,7 @@ class MetadataUtils
     /**
      * Create a display string with name and optional title.
      * Format: "name (title)" if title exists and differs from name, otherwise just "name"
-     * 
+     *
      * @param BaseMetadata|array $metadata
      * @return string
      */

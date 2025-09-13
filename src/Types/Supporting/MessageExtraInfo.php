@@ -15,7 +15,8 @@ final class MessageExtraInfo
     public function __construct(
         private readonly ?RequestInfo $requestInfo = null,
         private readonly ?array $authInfo = null
-    ) {}
+    ) {
+    }
 
     /**
      * Get the request information.

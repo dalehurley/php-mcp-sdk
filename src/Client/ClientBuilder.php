@@ -20,7 +20,8 @@ class ClientBuilder
     public function __construct(
         private readonly Implementation $clientInfo,
         private readonly ?ClientOptions $options = null
-    ) {}
+    ) {
+    }
 
     /**
      * Add custom middleware.

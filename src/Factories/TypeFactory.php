@@ -9,7 +9,7 @@ use MCP\Validation\ValidationException;
 /**
  * Interface for type factories.
  *
- * @template T
+ * @template T of object
  */
 interface TypeFactory
 {

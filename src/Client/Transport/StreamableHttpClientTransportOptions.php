@@ -22,5 +22,6 @@ class StreamableHttpClientTransportOptions
         public readonly ?string $sessionId = null,
         public readonly ?StreamableHttpReconnectionOptions $reconnectionOptions = null,
         public readonly ?HttpClient $httpClient = null
-    ) {}
+    ) {
+    }
 }

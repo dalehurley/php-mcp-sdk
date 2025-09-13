@@ -13,5 +13,6 @@ class NotificationOptions
 {
     public function __construct(
         public readonly ?RequestId $relatedRequestId = null
-    ) {}
+    ) {
+    }
 }

@@ -11,7 +11,7 @@ use MCP\Types\ServerNotification;
 
 /**
  * Callback to read a resource at a given URI, following a filled-in URI template.
- * 
+ *
  * @param \URL|string $uri The resource URI
  * @param array<string, string> $variables The template variables
  * @param RequestHandlerExtra<ServerRequest, ServerNotification> $extra

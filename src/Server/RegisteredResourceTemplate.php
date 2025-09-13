@@ -27,7 +27,8 @@ class RegisteredResourceTemplate
         public bool $enabled = true,
         private ?\Closure $onUpdate = null,
         private ?\Closure $onRemove = null
-    ) {}
+    ) {
+    }
 
     /**
      * Enable the resource template
@@ -49,7 +50,7 @@ class RegisteredResourceTemplate
 
     /**
      * Update resource template properties
-     * 
+     *
      * @param array{
      *   name?: string|null,
      *   title?: string,
@@ -88,7 +89,7 @@ class RegisteredResourceTemplate
 
     /**
      * Remove the resource template
-     * 
+     *
      * @param callable $onRemove Callback to handle removal
      */
     public function remove(): void

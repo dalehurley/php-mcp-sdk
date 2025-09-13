@@ -15,5 +15,6 @@ class ProtocolOptions
     public function __construct(
         public readonly bool $enforceStrictCapabilities = false,
         public readonly array $debouncedNotificationMethods = []
-    ) {}
+    ) {
+    }
 }

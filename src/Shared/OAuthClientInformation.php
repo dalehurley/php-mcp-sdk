@@ -14,7 +14,8 @@ class OAuthClientInformation implements \JsonSerializable
         private readonly ?string $clientSecret = null,
         private readonly ?int $clientIdIssuedAt = null,
         private readonly ?int $clientSecretExpiresAt = null
-    ) {}
+    ) {
+    }
 
     public function getClientId(): string
     {

@@ -17,7 +17,8 @@ final class PromptArgument implements \JsonSerializable
         private readonly ?string $description = null,
         private readonly ?bool $required = null,
         private readonly array $additionalProperties = []
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

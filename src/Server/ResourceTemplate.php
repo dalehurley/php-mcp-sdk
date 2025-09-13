@@ -14,7 +14,7 @@ use MCP\Types\Results\ReadResourceResult;
 
 /**
  * A callback to complete one variable within a resource template's URI template.
- * 
+ *
  * @param string $value The current value to complete
  * @param array{arguments?: array<string, string>}|null $context The completion context
  * @return array<string>|\Amp\Future<array<string>> The completion suggestions
@@ -26,7 +26,7 @@ interface CompleteResourceTemplateCallback
 
 /**
  * Callback to list all resources matching a given template.
- * 
+ *
  * @param RequestHandlerExtra<ServerRequest, ServerNotification> $extra
  * @return ListResourcesResult|\Amp\Future<ListResourcesResult>
  */

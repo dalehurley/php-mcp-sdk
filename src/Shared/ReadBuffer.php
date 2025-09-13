@@ -20,7 +20,7 @@ class ReadBuffer
 
     /**
      * Append data to the buffer.
-     * 
+     *
      * @param string $chunk
      */
     public function append(string $chunk): void
@@ -34,7 +34,7 @@ class ReadBuffer
 
     /**
      * Get the buffer contents.
-     * 
+     *
      * @return string|null
      */
     public function getBuffer(): ?string
@@ -52,7 +52,7 @@ class ReadBuffer
 
     /**
      * Check if the buffer has data.
-     * 
+     *
      * @return bool
      */
     public function hasData(): bool
@@ -62,7 +62,7 @@ class ReadBuffer
 
     /**
      * Try to read a complete message from the buffer.
-     * 
+     *
      * @return JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError|null
      */
     public function readMessage(): JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError|null
@@ -98,7 +98,7 @@ class ReadBuffer
 
     /**
      * Deserialize a JSON string into a JSON-RPC message.
-     * 
+     *
      * @param string $json
      * @return JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError
      * @throws ValidationException
@@ -120,7 +120,7 @@ class ReadBuffer
 
     /**
      * Serialize a JSON-RPC message to a string with newline delimiter.
-     * 
+     *
      * @param JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError|array $message
      * @return string
      * @throws \RuntimeException

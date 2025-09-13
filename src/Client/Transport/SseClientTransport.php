@@ -14,13 +14,13 @@ use Amp\Http\Client\Response;
 use Amp\ByteStream\BufferedReader;
 use Amp\DeferredCancellation;
 use MCP\Client\Transport\SseClientTransportOptions;
-use function Amp\async;
 
+use function Amp\async;
 
 /**
  * Client transport for SSE: this will connect to a server using HTTP GET
  * for Server-Sent Events and send messages via HTTP POST.
- * 
+ *
  * @deprecated Use StreamableHttpClientTransport instead. SSE transport is deprecated
  * in favor of the more feature-rich Streamable HTTP transport.
  */

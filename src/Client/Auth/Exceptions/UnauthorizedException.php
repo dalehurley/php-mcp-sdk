@@ -6,7 +6,7 @@ namespace MCP\Client\Auth\Exceptions;
 
 /**
  * Exception thrown when authentication is required but not provided or invalid.
- * 
+ *
  * This is used for general authorization failures in the MCP client.
  */
 class UnauthorizedException extends OAuthException

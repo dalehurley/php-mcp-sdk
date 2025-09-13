@@ -8,7 +8,7 @@ use Amp\Http\Client\HttpClient;
 
 /**
  * Configuration options for SSE client transport
- * 
+ *
  * @deprecated Use StreamableHttpClientTransportOptions instead
  */
 class SseClientTransportOptions
@@ -20,5 +20,6 @@ class SseClientTransportOptions
     public function __construct(
         public readonly ?array $headers = null,
         public readonly ?HttpClient $httpClient = null
-    ) {}
+    ) {
+    }
 }

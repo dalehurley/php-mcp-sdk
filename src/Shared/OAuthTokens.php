@@ -16,7 +16,8 @@ class OAuthTokens implements \JsonSerializable
         private readonly ?int $expiresIn = null,
         private readonly ?string $scope = null,
         private readonly ?string $refreshToken = null
-    ) {}
+    ) {
+    }
 
     public function getAccessToken(): string
     {

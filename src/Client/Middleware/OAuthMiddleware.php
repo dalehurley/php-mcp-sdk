@@ -15,7 +15,7 @@ use function Amp\async;
 
 /**
  * Middleware that handles OAuth authentication automatically.
- * 
+ *
  * This middleware:
  * - Adds Authorization headers with access tokens
  * - Handles 401 responses by attempting re-authentication
@@ -162,10 +162,10 @@ class OAuthMiddleware implements MiddlewareInterface
 
     private function performAuth(string $serverUrl, ?string $resourceMetadataUrl): Future
     {
-        return async(function () use ($serverUrl) {
+        return async(function () {
             // This is a simplified version - in practice, this would need to handle
             // the full OAuth flow including discovery, client registration, etc.
-            
+
             // Check if we have stored tokens that we can refresh
             $tokens = $this->provider->loadTokens()->await();
             if ($tokens && $tokens->getRefreshToken()) {
@@ -176,7 +176,7 @@ class OAuthMiddleware implements MiddlewareInterface
                     return 'AUTHORIZED';
                 }
             }
-            
+
             // If we can't refresh, we need to start a new authorization flow
             // This would typically result in a redirect to the authorization server
             return 'REDIRECT';

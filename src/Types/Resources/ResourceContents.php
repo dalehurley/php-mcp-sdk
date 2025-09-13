@@ -18,7 +18,8 @@ abstract class ResourceContents implements \JsonSerializable
         private readonly ?string $mimeType = null,
         private readonly ?array $_meta = null,
         private readonly array $additionalProperties = []
-    ) {}
+    ) {
+    }
 
     /**
      * Get the URI of this resource.

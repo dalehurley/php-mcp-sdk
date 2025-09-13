@@ -22,7 +22,7 @@ final class CompleteResult extends Result
         ?array $_meta = null
     ) {
         parent::__construct($_meta);
-        
+
         if (count($this->values) > 100) {
             throw new \InvalidArgumentException('Completion values must not exceed 100 items');
         }
@@ -38,7 +38,7 @@ final class CompleteResult extends Result
         }
 
         $completion = $data['completion'];
-        
+
         if (!isset($completion['values']) || !is_array($completion['values'])) {
             throw new \InvalidArgumentException('CompleteResult completion must have a values array');
         }
@@ -97,7 +97,7 @@ final class CompleteResult extends Result
     public function jsonSerialize(): array
     {
         $data = parent::jsonSerialize();
-        
+
         $completion = ['values' => $this->values];
 
         if ($this->total !== null) {

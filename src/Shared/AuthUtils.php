@@ -13,7 +13,7 @@ class AuthUtils
      * Converts a server URL to a resource URL by removing the fragment.
      * RFC 8707 section 2 states that resource URIs "MUST NOT include a fragment component".
      * Keeps everything else unchanged (scheme, domain, port, path, query).
-     * 
+     *
      * @param string|\Psr\Http\Message\UriInterface $url
      * @return \Psr\Http\Message\UriInterface
      */
@@ -82,7 +82,7 @@ class AuthUtils
     /**
      * Generate a cryptographically secure random string for OAuth state parameter
      * or PKCE code verifier.
-     * 
+     *
      * @param int $length The length of the random string to generate
      * @return string Base64url-encoded random string
      */
@@ -98,7 +98,7 @@ class AuthUtils
      * The code verifier is a cryptographically random string using the characters
      * A-Z, a-z, 0-9, and the punctuation characters -._~ (hyphen, period, underscore, and tilde),
      * between 43 and 128 characters long.
-     * 
+     *
      * @return string
      */
     public static function generateCodeVerifier(): string
@@ -111,7 +111,7 @@ class AuthUtils
     /**
      * Generate a PKCE code challenge from a code verifier.
      * Uses SHA256 as the challenge method.
-     * 
+     *
      * @param string $codeVerifier
      * @return string Base64url-encoded SHA256 hash of the code verifier
      */
@@ -126,7 +126,7 @@ class AuthUtils
      * Generate an OAuth state parameter.
      * The state parameter is used to maintain state between the request and the callback
      * and provides protection against CSRF attacks.
-     * 
+     *
      * @return string
      */
     public static function generateState(): string
@@ -138,10 +138,10 @@ class AuthUtils
     /**
      * Parse a JWT token without verification.
      * This is useful for extracting claims from a token without verifying the signature.
-     * 
+     *
      * WARNING: This does NOT verify the token signature or validate the token.
      * It should only be used when the token has already been verified by another process.
-     * 
+     *
      * @param string $token The JWT token
      * @return array{header: array<string, mixed>, payload: array<string, mixed>}|null
      */
@@ -171,7 +171,7 @@ class AuthUtils
 
     /**
      * Extract claims from a JWT token without verification.
-     * 
+     *
      * @param string $token
      * @return array<string, mixed>|null The payload claims or null if invalid
      */
@@ -183,7 +183,7 @@ class AuthUtils
 
     /**
      * Check if a JWT token is expired based on the exp claim.
-     * 
+     *
      * @param string $token
      * @return bool True if expired, false if not expired or no exp claim
      */
@@ -199,7 +199,7 @@ class AuthUtils
 
     /**
      * Base64url decode
-     * 
+     *
      * @param string $input
      * @return string
      */
@@ -215,7 +215,7 @@ class AuthUtils
 
     /**
      * Build an OAuth authorization URL with the given parameters.
-     * 
+     *
      * @param string $authorizationEndpoint
      * @param array<string, string> $params Query parameters (client_id, redirect_uri, etc.)
      * @return string

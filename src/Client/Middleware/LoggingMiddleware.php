@@ -23,7 +23,8 @@ class LoggingMiddleware implements MiddlewareInterface
         private readonly bool $includeRequestHeaders = false,
         private readonly bool $includeResponseHeaders = false,
         private readonly int $statusLevelThreshold = 0
-    ) {}
+    ) {
+    }
 
     public function process(RequestInterface $request, callable $next): Future
     {

@@ -70,7 +70,7 @@ final class ListRootsResult extends Result
             fn(Root $root) => $root->jsonSerialize(),
             $this->roots
         );
-        
+
         return $data;
     }
 }

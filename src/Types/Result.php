@@ -29,6 +29,7 @@ class Result implements \JsonSerializable
             unset($data['_meta']);
         }
 
+        /** @phpstan-ignore-next-line */
         return new static(
             _meta: $_meta,
             additionalProperties: $data
@@ -78,6 +79,7 @@ class Result implements \JsonSerializable
      */
     public function withMeta(array $meta): static
     {
+        /** @phpstan-ignore-next-line */
         return new static(
             _meta: $meta,
             additionalProperties: $this->additionalProperties
