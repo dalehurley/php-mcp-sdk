@@ -207,6 +207,47 @@ export MCP_HTTP_SERVER_URL=http://localhost:3000
 php examples/client/http-client.php
 ```
 
+### OpenAI MCP Agent (`openai-mcp-agent.php`)
+
+OpenAI function calling with dynamic MCP tool discovery:
+
+- Dynamic tool discovery from MCP servers
+- Natural language interface for product management
+- GPT-4.1 intelligent tool selection and orchestration
+- Multi-step workflows with tool chaining
+
+```bash
+# Set credentials
+export FULLCX_API_TOKEN=your-token-here
+export OPENAI_API_KEY=your-openai-key-here
+
+# Run demo or custom requests
+php examples/client/openai-mcp-agent.php                    # Interactive demo
+php examples/client/openai-mcp-agent.php "show me all products"
+php examples/client/openai-mcp-agent.php "create a feature called 'User Dashboard'"
+```
+
+**Features:**
+
+- **Dynamic Tool Discovery**: Automatically discovers available MCP tools
+- **Natural Language Interface**: Process requests in plain English
+- **Intelligent Orchestration**: OpenAI selects and chains appropriate tools
+- **Error Handling**: Robust error handling for both OpenAI and MCP operations
+
+### OpenAI MCP Simple Demo (`openai-mcp-simple.php`)
+
+Simplified OpenAI + MCP integration for learning:
+
+- Mock MCP tools for demonstration
+- Basic OpenAI function calling patterns
+- Easy to understand and modify
+
+```bash
+export OPENAI_API_KEY=your-openai-key-here
+php examples/client/openai-mcp-simple.php                   # Run demo
+php examples/client/openai-mcp-simple.php "show me products"
+```
+
 ### Multiple Servers Client (`multiple-servers-client.php`)
 
 Multi-server management:

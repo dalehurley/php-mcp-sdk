@@ -20,7 +20,7 @@ class CreateMessageResultValidatorTest extends TestCase
     public function testValidCreateMessageResult(): void
     {
         $data = [
-            'model' => 'gpt-4',
+            'model' => 'gpt-4.1',
             'role' => 'assistant',
             'content' => [
                 'type' => 'text',
@@ -36,7 +36,7 @@ class CreateMessageResultValidatorTest extends TestCase
     public function testValidCreateMessageResultWithImage(): void
     {
         $data = [
-            'model' => 'gpt-4-vision',
+            'model' => 'gpt-4.1-mini',
             'role' => 'assistant',
             'content' => [
                 'type' => 'image',
@@ -68,7 +68,7 @@ class CreateMessageResultValidatorTest extends TestCase
     public function testInvalidCreateMessageResultInvalidContentType(): void
     {
         $data = [
-            'model' => 'gpt-4',
+            'model' => 'gpt-4.1',
             'role' => 'assistant',
             'content' => [
                 'type' => 'invalid',

@@ -11,7 +11,7 @@ PHP implementation of the Model Context Protocol (MCP), enabling seamless integr
 ## ✨ Features
 
 - 🚀 **Complete MCP Protocol Support** - Full implementation of the MCP specification
-- 🔧 **Type-Safe** - Leverages PHP 8.1+ type system with enums, union types, and strict typing  
+- 🔧 **Type-Safe** - Leverages PHP 8.1+ type system with enums, union types, and strict typing
 - ⚡ **Async First** - Built on Amphp for non-blocking I/O operations
 - 🔌 **Multiple Transports** - STDIO, HTTP Streaming, and WebSocket (coming soon)
 - 🔐 **OAuth 2.0 Ready** - Built-in authentication with PKCE support
@@ -22,7 +22,7 @@ PHP implementation of the Model Context Protocol (MCP), enabling seamless integr
 ## 📋 Requirements
 
 - **PHP 8.1+** - Leverages modern PHP features
-- **Composer** - For dependency management  
+- **Composer** - For dependency management
 - **ext-json** - JSON processing
 - **ext-mbstring** - String handling
 
@@ -87,7 +87,7 @@ $server->registerTool(
         return [
             'content' => [[
                 'type' => 'text',
-                'text' => "Weather in {$params['location']}: " . 
+                'text' => "Weather in {$params['location']}: " .
                          "{$weather['temperature']}, {$weather['condition']}, " .
                          "Humidity: {$weather['humidity']}"
             ]]
@@ -108,7 +108,7 @@ Loop::run();
 ### Creating an MCP Client
 
 ```php
-#!/usr/bin/env php  
+#!/usr/bin/env php
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -150,7 +150,7 @@ Amp\async(function() use ($client, $transport) {
         echo $result['content'][0]['text'] . "\n";
 
         yield $client->close();
-        
+
     } catch (\Exception $error) {
         echo "❌ Error: " . $error->getMessage() . "\n";
     } finally {
@@ -198,12 +198,12 @@ class McpController extends Controller
         $server = new McpServer(
             new Implementation('my-laravel-app', '1.0.0')
         );
-        
+
         // Register your tools, resources, and prompts
         $server->registerTool('search-users', function($params) {
             return User::where('name', 'like', "%{$params['query']}%")->get();
         });
-        
+
         return $server;
     }
 }
@@ -216,11 +216,13 @@ For a complete Laravel package with service providers, Artisan commands, and Lar
 Comprehensive documentation is available in the [docs/](docs/) directory:
 
 ### Getting Started
+
 - [📖 Complete Documentation](docs/README.md) - Start here for full overview
 - [⚡ Quick Start Guide](docs/getting-started/quick-start.md) - Get up and running fast
 - [💡 Core Concepts](docs/getting-started/concepts.md) - Understand MCP fundamentals
 
-### Implementation Guides  
+### Implementation Guides
+
 - [🖥️ Creating Servers](docs/guides/creating-servers.md) - Build MCP servers
 - [📱 Creating Clients](docs/guides/creating-clients.md) - Build MCP clients
 - [🔐 Authentication](docs/guides/authentication.md) - OAuth 2.0 and security
@@ -228,12 +230,14 @@ Comprehensive documentation is available in the [docs/](docs/) directory:
 - [🏗️ Laravel Integration](examples/laravel/README.md) - Using core SDK with Laravel
 
 ### API Reference
+
 - [🔧 Server API](docs/api/server.md) - Complete server API
-- [📡 Client API](docs/api/client.md) - Complete client API  
+- [📡 Client API](docs/api/client.md) - Complete client API
 - [📋 Types & Schemas](docs/api/types.md) - Type system reference
 - [🚀 Transport APIs](docs/api/transports.md) - Transport layer APIs
 
 ### Examples & Migration
+
 - [💻 Code Examples](docs/examples/README.md) - Working examples
 - [🔄 TypeScript Migration](docs/migration/from-typescript.md) - Migration guide
 

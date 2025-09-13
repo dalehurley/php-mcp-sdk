@@ -25,6 +25,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced backward compatibility with graceful error handling
   - Added proper logging for validation and conversion warnings
 
+### Added
+
+- **FullCX Integration Guide and Example with OpenAI**: Comprehensive tutorial and example demonstrating how to connect to and interact with the FullCX MCP server for AI-enhanced product management:
+
+  - Complete integration guide at `docs/guides/fullcx-integration.md` with step-by-step instructions for FullCX (https://full.cx/mcp) integration
+  - Full-featured example client at `examples/client/fullcx-client.php` with AI-powered features using [OpenAI PHP client](https://github.com/openai-php/client)
+  - Demonstrates product, feature, requirement, and idea management workflows enhanced with AI
+  - AI-powered features: feature planning, idea generation, competitive analysis, roadmap creation, and strategic insights
+  - Integration with OpenAI for intelligent content generation and strategic recommendations
+  - Includes interactive creation workflows, comprehensive analysis tools, and error handling patterns
+  - Shows authentication, configuration, and security best practices for both FullCX and OpenAI APIs
+  - Provides Laravel integration examples and testing strategies
+
+- **OpenAI Tool Calling with MCP Integration**: Complete implementation showing how OpenAI can use function calling to interact with MCP servers:
+  - OpenAI tool calling tutorial at `docs/guides/openai-tool-calling.md` with dynamic tool discovery patterns
+  - Working example at `examples/client/openai-mcp-agent.php` demonstrating GPT-4.1 function calling with FullCX MCP tools
+  - Simple demo at `examples/client/openai-mcp-simple.php` for learning the basic concepts
+  - Dynamic tool discovery from MCP servers instead of hardcoded tool definitions
+  - Natural language interface for product management operations
+  - Multi-step workflow orchestration with intelligent tool selection
+  - Comprehensive error handling and configuration management
+  - Added OpenAI PHP client dependency for seamless integration
+
 ### Fixed
 
 - **MCP Client Initialization**: Fixed "Server sent invalid initialize result" error by properly converting InitializeResult responses from JSON-RPC to typed objects in the Protocol class
