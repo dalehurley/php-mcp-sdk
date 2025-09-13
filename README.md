@@ -13,7 +13,7 @@ PHP implementation of the Model Context Protocol (MCP), enabling seamless integr
 - 🚀 **Complete MCP Protocol Support** - Full implementation of the MCP specification
 - 🔧 **Type-Safe** - Leverages PHP 8.1+ type system with enums, union types, and strict typing
 - ⚡ **Async First** - Built on Amphp for non-blocking I/O operations
-- 🔌 **Multiple Transports** - STDIO, HTTP Streaming, and WebSocket (coming soon)
+- 🔌 **Multiple Transports** - STDIO, HTTP Streaming, and WebSocket
 - 🔐 **OAuth 2.0 Ready** - Built-in authentication with PKCE support
 - 🏗️ **Framework Integration** - PSR-compatible design for easy framework integration
 - 📦 **PSR Compliant** - Follows PSR-4, PSR-7, PSR-12, and PSR-15 standards

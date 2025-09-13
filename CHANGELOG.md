@@ -9,6 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WebSocket Server Transport**: Complete WebSocket server transport implementation for real-time, bidirectional communication:
+
+  - Full `WebSocketServerTransport` class implementing the MCP transport interface
+  - Comprehensive `WebSocketServerTransportOptions` with production-ready configuration options
+  - Support for multiple concurrent client connections with configurable limits
+  - Automatic connection lifecycle management (connect, disconnect, cleanup)
+  - Heartbeat/ping-pong mechanism for connection health monitoring
+  - Security features: CORS support, origin validation, DNS rebinding protection
+  - Comprehensive error handling and logging with connection-specific tracking
+  - Example server demonstrating WebSocket usage with tools, resources, and prompts
+  - Complete unit test coverage for all WebSocket transport functionality
+
+- **Comprehensive Documentation Testing Framework**: Implemented automated testing system for all documentation code examples:
+  - Created DocumentationTester class that extracts and tests PHP code blocks from markdown files
+  - Added intelligent code block filtering to skip configuration snippets and incomplete examples
+  - Integrated with fullcxexamplemcp project for testing environment
+  - Automated validation ensures all documentation examples remain functional
+- **Enhanced Getting Started Examples**: Created comprehensive beginner-friendly examples:
+  - hello-world-server.php and hello-world-client.php: Simplest possible MCP implementations
+  - basic-calculator.php: Multi-tool server demonstrating math operations, resources, and prompts
+  - file-reader-server.php: Secure file system integration with safety checks
+  - weather-client.php: Mock external API integration patterns
+  - All examples include proper error handling, security considerations, and extensive documentation
+- **Understanding MCP Guide**: Created comprehensive conceptual guide covering:
+  - Core MCP architecture and components (tools, resources, prompts, sampling)
+  - Protocol flow and message types
+  - Transport layer options (STDIO, HTTP, WebSocket)
+  - Security model and authentication patterns
+  - Real-world use cases and design patterns
+  - Learning paths for different developer types
+- **Enhanced Troubleshooting Guide**: Comprehensive troubleshooting documentation covering:
+
+  - Installation and environment setup issues
+  - Server and client connection problems
+  - Tool registration and execution errors
+  - Security and authentication troubleshooting
+  - Performance optimization guidance
+  - Community resources and bug reporting guidelines
+
 - **WebSocket Transport Options Enhancement**: Completed WebSocketClientTransportOptions implementation with comprehensive configuration support:
   - Added validation for all configuration parameters
   - Implemented factory methods for production and development configurations

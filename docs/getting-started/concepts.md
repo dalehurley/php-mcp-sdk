@@ -26,7 +26,7 @@ MCP follows a client-server architecture where:
 ### Key Roles
 
 - **LLM**: The AI model that needs external capabilities
-- **MCP Client**: Connects to servers and makes capabilities available to LLMs  
+- **MCP Client**: Connects to servers and makes capabilities available to LLMs
 - **MCP Server**: Provides tools, resources, and other capabilities
 - **Transport**: Communication layer (STDIO, HTTP, WebSocket)
 
@@ -44,13 +44,15 @@ Tools are **callable functions** that servers provide to clients. They:
 - Support both synchronous and asynchronous operations
 
 **Example Use Cases**:
+
 - Database queries
-- API calls  
+- API calls
 - File operations
 - Mathematical calculations
 - Code execution
 
 **Code Example**:
+
 ```php
 $server->registerTool(
     'search-database',
@@ -67,7 +69,7 @@ $server->registerTool(
     ],
     function (array $params): array {
         $results = Database::search($params['query'], $params['limit'] ?? 10);
-        
+
         return [
             'content' => [[
                 'type' => 'text',
@@ -88,13 +90,15 @@ Resources are **data sources** that clients can read. They:
 - Include metadata like MIME types and descriptions
 
 **Example Use Cases**:
+
 - Configuration files
 - Documentation
 - Database records
-- API responses  
+- API responses
 - Media files
 
 **Code Example**:
+
 ```php
 $server->registerResource(
     'config://app/{environment}',
@@ -106,9 +110,9 @@ $server->registerResource(
     function (string $uri): array {
         preg_match('/config:\/\/app\/(.+)/', $uri, $matches);
         $env = $matches[1];
-        
+
         $config = ConfigManager::load($env);
-        
+
         return [
             'contents' => [[
                 'uri' => $uri,
@@ -126,16 +130,18 @@ Prompts are **templates** that help LLMs understand how to use server capabiliti
 
 - Provide context and instructions
 - Support dynamic arguments
-- Guide LLM behavior and responses  
+- Guide LLM behavior and responses
 - Can include examples and best practices
 
 **Example Use Cases**:
+
 - Code review guidelines
 - Analysis templates
 - Response formatting
 - Domain-specific instructions
 
 **Code Example**:
+
 ```php
 $server->registerPrompt(
     'code-review',
@@ -158,7 +164,7 @@ $server->registerPrompt(
     function (array $arguments): array {
         $language = $arguments['language'];
         $complexity = $arguments['complexity'] ?? 'medium';
-        
+
         return [
             'description' => "Code review for {$language} code",
             'messages' => [[
@@ -178,24 +184,26 @@ $server->registerPrompt(
 Sampling allows servers to **request LLM completions**. This enables:
 
 - LLM-powered processing within server logic
-- Multi-step AI workflows  
+- Multi-step AI workflows
 - Dynamic content generation
 - Intelligent data analysis
 
 **Example Use Cases**:
+
 - Content generation
 - Data analysis
 - Translation
 - Summarization
 
 **Code Example**:
+
 ```php
 $server->registerTool(
     'analyze-sentiment',
     [
         'description' => 'Analyze sentiment of text using LLM',
         'inputSchema' => [
-            'type' => 'object', 
+            'type' => 'object',
             'properties' => [
                 'text' => ['type' => 'string']
             ],
@@ -214,7 +222,7 @@ $server->registerTool(
             ]],
             'maxTokens' => 50
         ]);
-        
+
         return [
             'content' => [[
                 'type' => 'text',
@@ -233,16 +241,16 @@ $server->registerTool(
 sequenceDiagram
     participant Client
     participant Server
-    
+
     Client->>Server: initialize
     Server->>Client: initialized (capabilities)
-    
+
     Client->>Server: list_tools
     Server->>Client: tools list
-    
-    Client->>Server: list_resources  
+
+    Client->>Server: list_resources
     Server->>Client: resources list
-    
+
     Client->>Server: list_prompts
     Server->>Client: prompts list
 ```
@@ -252,9 +260,9 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant LLM
-    participant Client  
+    participant Client
     participant Server
-    
+
     LLM->>Client: I need to search database
     Client->>Server: call_tool("search-database", {...})
     Server->>Server: Execute search
@@ -269,7 +277,7 @@ sequenceDiagram
     participant LLM
     participant Client
     participant Server
-    
+
     LLM->>Client: I need config for production
     Client->>Server: read_resource("config://app/production")
     Server->>Server: Load configuration
@@ -293,8 +301,9 @@ yield $server->connect($transport);
 ```
 
 **Characteristics**:
+
 - ✅ Simple setup
-- ✅ No network configuration  
+- ✅ No network configuration
 - ✅ Secure (process isolation)
 - ❌ Single client only
 - ❌ Local machine only
@@ -315,25 +324,29 @@ yield $server->connect($transport);
 ```
 
 **Characteristics**:
+
 - ✅ Multiple clients
 - ✅ Network accessible
 - ✅ Standard HTTP protocol
-- ✅ Load balancing support  
+- ✅ Load balancing support
 - ❌ More complex setup
 - ❌ Requires network security
 
-### WebSocket Transport (Coming Soon)
+### WebSocket Transport
 
 **Best for**: Real-time applications, bidirectional communication
 
 ```php
 use MCP\Server\Transport\WebSocketServerTransport;
+use MCP\Server\Transport\WebSocketServerTransportOptions;
 
-$transport = new WebSocketServerTransport([
-    'host' => '0.0.0.0',
-    'port' => 8080,
-    'ssl' => true
-]);
+$options = new WebSocketServerTransportOptions(
+    host: '0.0.0.0',
+    port: 8080,
+    maxConnections: 100,
+    enablePing: true
+);
+$transport = new WebSocketServerTransport($options);
 yield $server->connect($transport);
 ```
 
@@ -371,7 +384,7 @@ $server->registerTool(
                 'Admin access required'
             );
         }
-        
+
         // Tool logic here...
     }
 );
@@ -385,7 +398,7 @@ Always validate inputs:
 use Respect\Validation\Validator as v;
 
 $server->registerTool(
-    'validated-tool', 
+    'validated-tool',
     [
         'inputSchema' => [
             'type' => 'object',
@@ -397,7 +410,7 @@ $server->registerTool(
     ],
     function (array $params): array {
         // Schema validation happens automatically
-        
+
         // Additional validation if needed
         if (!v::email()->validate($params['email'])) {
             throw new McpError(
@@ -405,7 +418,7 @@ $server->registerTool(
                 'Invalid email format'
             );
         }
-        
+
         return $result;
     }
 );
@@ -424,16 +437,16 @@ use Amp\Loop;
 Amp\async(function() {
     // Async operations use yield
     $result = yield $client->callTool('example');
-    
+
     // Handle multiple operations concurrently
     $promises = [
         $client->callTool('tool1'),
         $client->callTool('tool2'),
         $client->callTool('tool3')
     ];
-    
+
     $results = yield $promises; // Wait for all to complete
-    
+
     return $results;
 });
 
@@ -461,7 +474,7 @@ use Amp\TimeoutCancellation;
 
 Amp\async(function() {
     $cancellation = new TimeoutCancellation(30); // 30 second timeout
-    
+
     try {
         $result = yield $client->callTool('slow-tool', [], $cancellation);
     } catch (CancelledException $e) {
@@ -484,8 +497,8 @@ class WeatherRepository
         // Weather API logic
         return $weatherData;
     }
-    
-    public function getForecast(string $location, int $days): array  
+
+    public function getForecast(string $location, int $days): array
     {
         // Forecast API logic
         return $forecastData;
@@ -497,7 +510,7 @@ class WeatherTools
     public function __construct(
         private WeatherRepository $repository
     ) {}
-    
+
     public function register(McpServer $server): void
     {
         $server->registerTool(
@@ -505,18 +518,18 @@ class WeatherTools
             $config,
             fn($params) => $this->handleGetWeather($params)
         );
-        
+
         $server->registerTool(
-            'get-forecast', 
+            'get-forecast',
             $config,
             fn($params) => $this->handleGetForecast($params)
         );
     }
-    
+
     private function handleGetWeather(array $params): array
     {
         $weather = $this->repository->getCurrentWeather($params['location']);
-        
+
         return [
             'content' => [[
                 'type' => 'text',
@@ -539,22 +552,22 @@ class McpServerFactory
         $server = new McpServer(
             new Implementation('weather', '1.0.0')
         );
-        
+
         $weatherTools = new WeatherTools(new WeatherRepository());
         $weatherTools->register($server);
-        
+
         return $server;
     }
-    
+
     public static function createDatabaseServer(): McpServer
     {
         $server = new McpServer(
-            new Implementation('database', '1.0.0')  
+            new Implementation('database', '1.0.0')
         );
-        
+
         $dbTools = new DatabaseTools(new DatabaseRepository());
         $dbTools->register($server);
-        
+
         return $server;
     }
 }
@@ -568,21 +581,21 @@ Add cross-cutting concerns:
 class LoggingMiddleware
 {
     public function __construct(private Logger $logger) {}
-    
+
     public function handle(Request $request, callable $next): Response
     {
         $this->logger->info('Tool called', [
             'tool' => $request->getMethod(),
             'params' => $request->getParams()
         ]);
-        
+
         $response = yield $next($request);
-        
+
         $this->logger->info('Tool completed', [
             'tool' => $request->getMethod(),
             'success' => $response->isSuccess()
         ]);
-        
+
         return $response;
     }
 }
@@ -621,20 +634,20 @@ class CachedWeatherRepository extends WeatherRepository
         private WeatherRepository $repository,
         private ArrayCache $cache
     ) {}
-    
+
     public function getCurrentWeather(string $location): array
     {
         $cacheKey = "weather:{$location}";
-        
+
         $cached = yield $this->cache->get($cacheKey);
         if ($cached !== null) {
             return $cached;
         }
-        
+
         $weather = $this->repository->getCurrentWeather($location);
-        
+
         yield $this->cache->set($cacheKey, $weather, 300); // 5 min TTL
-        
+
         return $weather;
     }
 }
@@ -650,18 +663,18 @@ $server->registerTool(
     $config,
     function (array $params): array {
         $locations = $params['locations'];
-        
+
         // Process all locations concurrently
         $promises = array_map(
             fn($location) => $this->getWeatherAsync($location),
             $locations
         );
-        
+
         $results = yield $promises;
-        
+
         return [
             'content' => [[
-                'type' => 'text', 
+                'type' => 'text',
                 'text' => json_encode($results)
             ]]
         ];
@@ -683,13 +696,13 @@ class WeatherServerTest extends TestCase
     {
         $server = McpServerFactory::createWeatherServer();
         $transport = new MockTransport();
-        
+
         yield $server->connect($transport);
-        
+
         $response = yield $transport->callTool('get-weather', [
             'location' => 'London'
         ]);
-        
+
         $this->assertArrayHasKey('content', $response);
         $this->assertNotEmpty($response['content']);
     }
@@ -711,18 +724,18 @@ class WeatherIntegrationTest extends TestCase
             'command' => 'php',
             'args' => [__DIR__ . '/../weather-server.php']
         ]);
-        
+
         yield $client->connect($transport);
-        
+
         $tools = yield $client->listTools();
         $this->assertNotEmpty($tools['tools']);
-        
+
         $result = yield $client->callTool('get-weather', [
             'location' => 'Test City'
         ]);
-        
+
         $this->assertArrayHasKey('content', $result);
-        
+
         yield $client->close();
     }
 }
@@ -733,7 +746,7 @@ class WeatherIntegrationTest extends TestCase
 Now that you understand MCP concepts:
 
 1. [🖥️ Build Advanced Servers](../guides/creating-servers.md)
-2. [📱 Create Robust Clients](../guides/creating-clients.md)  
+2. [📱 Create Robust Clients](../guides/creating-clients.md)
 3. [🔐 Implement Security](../guides/authentication.md)
 4. [🔌 Choose Transport Layers](../guides/transports.md)
 5. [🏗️ Framework Integration](../guides/laravel-integration.md)
