@@ -325,9 +325,10 @@ class Server extends Protocol
         array $params,
         ?RequestOptions $options = null
     ): \Amp\Future {
+        $validationService = new ValidationService();
         return $this->request(
             CreateMessageRequest::fromArray(['params' => $params]),
-            new ValidationService(), // TODO: CreateMessageResultSchema
+            $validationService,
             $options
         );
     }
@@ -340,16 +341,20 @@ class Server extends Protocol
         ?RequestOptions $options = null
     ): \Amp\Future {
         return async(function () use ($params, $options) {
+            $validationService = new ValidationService();
             $result = $this->request(
                 ElicitRequest::fromArray(['params' => $params]),
-                new ValidationService(), // TODO: ElicitResultSchema
+                $validationService,
                 $options
             )->await();
 
             // Validate the response content against the requested schema if action is "accept"
-            if ($result['action'] === 'accept' && isset($result['content'])) {
-                // TODO: Implement JSON schema validation
-                // For now, just return the result
+            if (is_array($result) && ($result['action'] ?? null) === 'accept' && isset($result['content'])) {
+                // Validate the result structure
+                $validationService->validateElicitResult($result);
+
+                // Additional content validation could be added here based on the requested schema
+                // from the original ElicitRequest parameters
             }
 
             return $result;
@@ -363,9 +368,10 @@ class Server extends Protocol
         ?array $params = null,
         ?RequestOptions $options = null
     ): \Amp\Future {
+        $validationService = new ValidationService();
         return $this->request(
             ListRootsRequest::fromArray(['params' => $params]),
-            new ValidationService(), // TODO: ListRootsResultSchema
+            $validationService,
             $options
         );
     }

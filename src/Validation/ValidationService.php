@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace MCP\Validation;
 
 use MCP\Validation\Types\ContentBlockValidator;
+use MCP\Validation\Types\CreateMessageResultValidator;
 use MCP\Validation\Types\CursorValidator;
+use MCP\Validation\Types\ElicitResultValidator;
 use MCP\Validation\Types\JSONRPCRequestValidator;
+use MCP\Validation\Types\ListRootsResultValidator;
 use MCP\Validation\Types\ProgressTokenValidator;
 use MCP\Validation\Types\RequestIdValidator;
 use MCP\Validation\Types\ToolValidator;
@@ -44,6 +47,11 @@ class ValidationService
 
         // Tool types
         $this->registerValidator('tool', new ToolValidator());
+
+        // Result types
+        $this->registerValidator('createMessageResult', new CreateMessageResultValidator());
+        $this->registerValidator('elicitResult', new ElicitResultValidator());
+        $this->registerValidator('listRootsResult', new ListRootsResultValidator());
     }
 
     /**
@@ -158,5 +166,38 @@ class ValidationService
     public function validateTool(mixed $data): array
     {
         return $this->validate('tool', $data);
+    }
+
+    /**
+     * Validate create message result.
+     *
+     * @return array<string, mixed>
+     * @throws ValidationException
+     */
+    public function validateCreateMessageResult(mixed $data): array
+    {
+        return $this->validate('createMessageResult', $data);
+    }
+
+    /**
+     * Validate elicit result.
+     *
+     * @return array<string, mixed>
+     * @throws ValidationException
+     */
+    public function validateElicitResult(mixed $data): array
+    {
+        return $this->validate('elicitResult', $data);
+    }
+
+    /**
+     * Validate list roots result.
+     *
+     * @return array<string, mixed>
+     * @throws ValidationException
+     */
+    public function validateListRootsResult(mixed $data): array
+    {
+        return $this->validate('listRootsResult', $data);
     }
 }

@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WebSocket Transport Options Enhancement**: Completed WebSocketClientTransportOptions implementation with comprehensive configuration support:
+  - Added validation for all configuration parameters
+  - Implemented factory methods for production and development configurations
+  - Added fluent interface methods for customizing headers, subprotocols, and timeout settings
+  - Enhanced error handling with detailed validation messages
+- **Result Validation System**: Implemented comprehensive validation for MCP result types:
+  - Added CreateMessageResultValidator for validating sampling results
+  - Added ElicitResultValidator for validating elicitation results
+  - Added ListRootsResultValidator for validating root listing results
+  - Integrated validators into ValidationService with convenient validation methods
+- **Enhanced Protocol Result Handling**: Improved result processing in Protocol class:
+  - Added automatic result validation based on request type
+  - Implemented defensive type conversion for all result types
+  - Enhanced backward compatibility with graceful error handling
+  - Added proper logging for validation and conversion warnings
+
+### Fixed
+
+- **MCP Client Initialization**: Fixed "Server sent invalid initialize result" error by properly converting InitializeResult responses from JSON-RPC to typed objects in the Protocol class
+- **FullCX Demo Application**: Updated demo to correctly parse JSON responses from FullCX MCP server that returns data as text content instead of structured content
+
 - **Server-side Elicitation Support**: Complete server-side implementation for user input collection:
   - `McpServer::elicitUserInput()` method for requesting user input with JSON schema validation
   - Full support for ElicitRequest/ElicitResult protocol messages

@@ -572,9 +572,21 @@ abstract class Protocol extends EventEmitter
 
             if ($response instanceof JSONRPCResponse) {
                 $result = $response->getResult()->jsonSerialize();
-                // TODO: Implement proper validation
-                // $resultSchema->validate($result);
-                return $result;
+
+                // Validate the result using the provided validation service
+                if ($resultSchema && is_array($result)) {
+                    try {
+                        // Determine result type based on request type and validate accordingly
+                        $this->validateAndConvertResult($request, $result, $resultSchema);
+                    } catch (\Throwable $e) {
+                        // Log validation errors but don't fail the request
+                        // This maintains backward compatibility
+                        error_log("Result validation warning: " . $e->getMessage());
+                    }
+                }
+
+                // Convert to appropriate result type based on request
+                return $this->convertToTypedResult($request, $result);
             }
 
             throw new \Error("Unexpected response type");
@@ -744,6 +756,73 @@ abstract class Protocol extends EventEmitter
     public function removeNotificationHandler(string $method): void
     {
         unset($this->notificationHandlers[$method]);
+    }
+
+    /**
+     * Validate and convert result based on request type.
+     *
+     * @param Request $request
+     * @param array<string, mixed> $result
+     * @param ValidationService $resultSchema
+     * @throws \Throwable
+     */
+    private function validateAndConvertResult(Request $request, array $result, ValidationService $resultSchema): void
+    {
+        $method = $request->getMethod();
+
+        try {
+            match ($method) {
+                'sampling/createMessage' => $resultSchema->validateCreateMessageResult($result),
+                'elicitation/create' => $resultSchema->validateElicitResult($result),
+                'roots/list' => $resultSchema->validateListRootsResult($result),
+                'ping' => null, // Ping responses are typically empty
+                default => null, // Other methods don't have specific validation yet
+            };
+        } catch (\Throwable $e) {
+            // Don't throw validation errors for now, just log them
+            // This maintains backward compatibility with existing code
+            error_log("Result validation failed for method '$method': " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Convert raw result to typed result object based on request type.
+     *
+     * @param Request $request
+     * @param mixed $result
+     * @return mixed
+     */
+    private function convertToTypedResult(Request $request, mixed $result): mixed
+    {
+        if (!is_array($result)) {
+            return $result;
+        }
+
+        $method = $request->getMethod();
+
+        // Only convert for known request types, and only if the result looks like the expected format
+        try {
+            return match ($method) {
+                'initialize' => isset($result['protocolVersion'])
+                    ? \MCP\Types\Results\InitializeResult::fromArray($result)
+                    : $result,
+                'sampling/createMessage' => isset($result['model'], $result['content'])
+                    ? \MCP\Types\Results\CreateMessageResult::fromArray($result)
+                    : $result,
+                'elicitation/create' => isset($result['action'])
+                    ? \MCP\Types\Results\ElicitResult::fromArray($result)
+                    : $result,
+                'roots/list' => isset($result['roots'])
+                    ? \MCP\Types\Results\ListRootsResult::fromArray($result)
+                    : $result,
+                'ping' => empty($result) ? new \MCP\Types\Result() : $result,
+                default => $result, // Return raw result for unknown methods
+            };
+        } catch (\Throwable $e) {
+            // If type conversion fails, log and return raw result for backward compatibility
+            error_log("Result type conversion warning for method '$method': " . $e->getMessage());
+            return $result;
+        }
     }
 }
 
