@@ -1,109 +1,131 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * MCP (Model Context Protocol) Configuration for Laravel
+ *
+ * This configuration file shows how to configure the core PHP MCP SDK
+ * when using it directly in a Laravel application.
+ */
+
 return [
     /*
     |--------------------------------------------------------------------------
-    | MCP Server Configuration
+    | Server Information
     |--------------------------------------------------------------------------
     |
-    | Configuration options for the Model Context Protocol server integration
-    | with Laravel applications.
+    | Basic information about your MCP server implementation.
     |
     */
-
-    'enabled' => env('MCP_ENABLED', true),
-
-    /*
-    |--------------------------------------------------------------------------
-    | HTTP Transport Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Settings for HTTP-based MCP transport when serving MCP over HTTP.
-    |
-    */
-    'http' => [
-        'enabled' => env('MCP_HTTP_ENABLED', false),
-        'host' => env('MCP_HTTP_HOST', '127.0.0.1'),
-        'port' => env('MCP_HTTP_PORT', 3000),
-        'prefix' => env('MCP_HTTP_PREFIX', 'mcp'),
-        'cors' => env('MCP_HTTP_CORS', true),
-        'middleware' => ['api', 'throttle:60,1'],
+    'server' => [
+        'name' => env('MCP_SERVER_NAME', config('app.name', 'Laravel MCP Server')),
+        'version' => env('MCP_SERVER_VERSION', '1.0.0'),
+        'description' => env('MCP_SERVER_DESCRIPTION', 'Laravel application with MCP integration'),
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | WebSocket Configuration
+    | Transport Configuration
     |--------------------------------------------------------------------------
     |
-    | Configuration for WebSocket-based MCP transport.
+    | Configure how your MCP server communicates. The core SDK supports
+    | STDIO and HTTP transports.
     |
     */
-    'websocket' => [
-        'enabled' => env('MCP_WEBSOCKET_ENABLED', false),
-        'host' => env('MCP_WEBSOCKET_HOST', '127.0.0.1'),
-        'port' => env('MCP_WEBSOCKET_PORT', 6001),
-        'path' => env('MCP_WEBSOCKET_PATH', '/mcp'),
+    'transport' => [
+        'default' => env('MCP_TRANSPORT', 'http'),
+
+        'stdio' => [
+            'enabled' => env('MCP_STDIO_ENABLED', true),
+        ],
+
+        'http' => [
+            'enabled' => env('MCP_HTTP_ENABLED', true),
+            'host' => env('MCP_HTTP_HOST', '127.0.0.1'),
+            'port' => env('MCP_HTTP_PORT', 3000),
+            'path' => env('MCP_HTTP_PATH', '/mcp'),
+            'cors' => [
+                'enabled' => env('MCP_HTTP_CORS_ENABLED', true),
+                'origins' => env('MCP_HTTP_CORS_ORIGINS', '*'),
+                'methods' => ['GET', 'POST', 'OPTIONS'],
+                'headers' => ['Content-Type', 'Authorization'],
+            ],
+        ],
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Authentication & Authorization
+    | Authentication
     |--------------------------------------------------------------------------
     |
-    | Configure authentication and authorization for MCP endpoints.
+    | Configure authentication for your MCP server when using HTTP transport.
     |
     */
     'auth' => [
-        'enabled' => env('MCP_AUTH_ENABLED', true),
-        'guard' => env('MCP_AUTH_GUARD', 'api'),
-        'middleware' => ['auth:api'],
+        'enabled' => env('MCP_AUTH_ENABLED', false),
+        'method' => env('MCP_AUTH_METHOD', 'bearer'), // bearer, basic, custom
 
-        // OAuth configuration
-        'oauth' => [
-            'enabled' => env('MCP_OAUTH_ENABLED', false),
-            'client_id' => env('MCP_OAUTH_CLIENT_ID'),
-            'client_secret' => env('MCP_OAUTH_CLIENT_SECRET'),
-            'issuer' => env('MCP_OAUTH_ISSUER'),
-            'scopes' => [
-                'read' => 'Read access to MCP resources',
-                'write' => 'Write access to MCP resources',
-                'admin' => 'Administrative access'
-            ]
-        ]
+        'bearer' => [
+            'token' => env('MCP_AUTH_BEARER_TOKEN'),
+        ],
+
+        'basic' => [
+            'username' => env('MCP_AUTH_BASIC_USERNAME'),
+            'password' => env('MCP_AUTH_BASIC_PASSWORD'),
+        ],
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Rate Limiting
+    | Tool Configuration
     |--------------------------------------------------------------------------
     |
-    | Configure rate limiting for MCP requests.
+    | Configure which tools are available in your MCP server.
+    | This is just for reference - actual tool registration happens in code.
     |
     */
-    'rate_limiting' => [
-        'enabled' => env('MCP_RATE_LIMITING_ENABLED', true),
-        'requests_per_minute' => env('MCP_RATE_LIMIT_PER_MINUTE', 60),
-        'requests_per_hour' => env('MCP_RATE_LIMIT_PER_HOUR', 1000),
+    'tools' => [
+        'user_search' => [
+            'enabled' => env('MCP_TOOL_USER_SEARCH_ENABLED', true),
+            'description' => 'Search for users by name or email',
+            'max_results' => env('MCP_TOOL_USER_SEARCH_MAX_RESULTS', 50),
+        ],
+
+        'cache_operations' => [
+            'enabled' => env('MCP_TOOL_CACHE_ENABLED', true),
+            'description' => 'Perform Laravel cache operations',
+            'allowed_operations' => ['get', 'put', 'forget'], // exclude 'flush' for security
+        ],
+
+        'database_query' => [
+            'enabled' => env('MCP_TOOL_DATABASE_ENABLED', false),
+            'description' => 'Execute safe database queries',
+            'allowed_tables' => ['users', 'posts'], // whitelist tables
+            'max_results' => env('MCP_TOOL_DATABASE_MAX_RESULTS', 100),
+        ],
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Caching Configuration
+    | Resource Configuration
     |--------------------------------------------------------------------------
     |
-    | Configure caching for MCP responses and resources.
+    | Configure which resources are exposed by your MCP server.
     |
     */
-    'cache' => [
-        'enabled' => env('MCP_CACHE_ENABLED', true),
-        'store' => env('MCP_CACHE_STORE', 'redis'),
-        'ttl' => env('MCP_CACHE_TTL', 300), // 5 minutes
-        'prefix' => env('MCP_CACHE_PREFIX', 'mcp:'),
+    'resources' => [
+        'users' => [
+            'enabled' => env('MCP_RESOURCE_USERS_ENABLED', true),
+            'description' => 'User data resource',
+            'cache_ttl' => env('MCP_RESOURCE_USERS_CACHE_TTL', 300), // 5 minutes
+        ],
 
-        // Cache specific types of responses
-        'cache_tools' => env('MCP_CACHE_TOOLS', false),
-        'cache_resources' => env('MCP_CACHE_RESOURCES', true),
-        'cache_prompts' => env('MCP_CACHE_PROMPTS', true),
+        'posts' => [
+            'enabled' => env('MCP_RESOURCE_POSTS_ENABLED', true),
+            'description' => 'Blog posts resource',
+            'cache_ttl' => env('MCP_RESOURCE_POSTS_CACHE_TTL', 600), // 10 minutes
+        ],
     ],
 
     /*
@@ -116,11 +138,33 @@ return [
     */
     'logging' => [
         'enabled' => env('MCP_LOGGING_ENABLED', true),
-        'channel' => env('MCP_LOG_CHANNEL', 'stack'),
-        'level' => env('MCP_LOG_LEVEL', 'info'),
+        'channel' => env('MCP_LOGGING_CHANNEL', 'default'),
+        'level' => env('MCP_LOGGING_LEVEL', 'info'),
         'log_requests' => env('MCP_LOG_REQUESTS', true),
-        'log_responses' => env('MCP_LOG_RESPONSES', false),
+        'log_responses' => env('MCP_LOG_RESPONSES', false), // may contain sensitive data
         'log_errors' => env('MCP_LOG_ERRORS', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Performance Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure performance-related settings.
+    |
+    */
+    'performance' => [
+        'cache_enabled' => env('MCP_CACHE_ENABLED', true),
+        'cache_ttl' => env('MCP_CACHE_TTL', 300), // 5 minutes default
+        'rate_limiting' => [
+            'enabled' => env('MCP_RATE_LIMITING_ENABLED', true),
+            'max_requests' => env('MCP_RATE_LIMIT_REQUESTS', 100),
+            'per_minutes' => env('MCP_RATE_LIMIT_MINUTES', 1),
+        ],
+        'timeout' => [
+            'tool_execution' => env('MCP_TOOL_TIMEOUT', 30), // seconds
+            'resource_fetch' => env('MCP_RESOURCE_TIMEOUT', 10), // seconds
+        ],
     ],
 
     /*
@@ -128,184 +172,14 @@ return [
     | Security Configuration
     |--------------------------------------------------------------------------
     |
-    | Security settings for MCP operations.
+    | Configure security settings for your MCP server.
     |
     */
     'security' => [
-        // Allowed SQL operations for database tools
-        'allowed_sql_operations' => ['SELECT'],
-
-        // Maximum query execution time
-        'max_query_time' => env('MCP_MAX_QUERY_TIME', 30),
-
-        // Maximum result set size
-        'max_result_size' => env('MCP_MAX_RESULT_SIZE', 1000),
-
-        // Allowed file extensions for file operations
-        'allowed_file_extensions' => [
-            'txt',
-            'md',
-            'json',
-            'xml',
-            'csv',
-            'log'
-        ],
-
-        // Restricted paths for file operations
-        'restricted_paths' => [
-            '/etc',
-            '/var/log',
-            storage_path('framework'),
-            base_path('.env')
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Tool Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Configure which tools are enabled and their settings.
-    |
-    */
-    'tools' => [
-        'database' => [
-            'enabled' => env('MCP_TOOL_DATABASE_ENABLED', true),
-            'max_rows' => env('MCP_DATABASE_MAX_ROWS', 100),
-            'timeout' => env('MCP_DATABASE_TIMEOUT', 30),
-        ],
-
-        'cache' => [
-            'enabled' => env('MCP_TOOL_CACHE_ENABLED', true),
-            'allowed_operations' => ['get', 'put', 'forget', 'flush'],
-        ],
-
-        'artisan' => [
-            'enabled' => env('MCP_TOOL_ARTISAN_ENABLED', false),
-            'allowed_commands' => [
-                'route:list',
-                'config:show',
-                'about',
-                'inspire'
-            ],
-        ],
-
-        'filesystem' => [
-            'enabled' => env('MCP_TOOL_FILESYSTEM_ENABLED', false),
-            'allowed_disks' => ['local', 'public'],
-            'max_file_size' => env('MCP_MAX_FILE_SIZE', 1024 * 1024), // 1MB
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Resource Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Configure which resources are available and their settings.
-    |
-    */
-    'resources' => [
-        'config' => [
-            'enabled' => env('MCP_RESOURCE_CONFIG_ENABLED', true),
-            'expose_sensitive' => env('MCP_EXPOSE_SENSITIVE_CONFIG', false),
-        ],
-
-        'routes' => [
-            'enabled' => env('MCP_RESOURCE_ROUTES_ENABLED', true),
-            'include_middleware' => env('MCP_ROUTES_INCLUDE_MIDDLEWARE', true),
-        ],
-
-        'logs' => [
-            'enabled' => env('MCP_RESOURCE_LOGS_ENABLED', true),
-            'max_lines' => env('MCP_LOGS_MAX_LINES', 100),
-            'allowed_channels' => ['single', 'daily', 'slack'],
-        ],
-
-        'models' => [
-            'enabled' => env('MCP_RESOURCE_MODELS_ENABLED', true),
-            'allowed_models' => [
-                'App\Models\User',
-                'App\Models\Post',
-                // Add your models here
-            ],
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Notification Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Configure real-time notifications for MCP events.
-    |
-    */
-    'notifications' => [
-        'enabled' => env('MCP_NOTIFICATIONS_ENABLED', true),
-        'channels' => [
-            'websocket' => env('MCP_WEBSOCKET_NOTIFICATIONS', false),
-            'sse' => env('MCP_SSE_NOTIFICATIONS', true),
-            'redis' => env('MCP_REDIS_NOTIFICATIONS', false),
-        ],
-
-        // Events to notify about
-        'events' => [
-            'tool_called' => true,
-            'resource_accessed' => false,
-            'prompt_generated' => false,
-            'connection_opened' => true,
-            'connection_closed' => true,
-            'error_occurred' => true,
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Development Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Settings for development and debugging.
-    |
-    */
-    'development' => [
-        'debug' => env('MCP_DEBUG', env('APP_DEBUG', false)),
-        'mock_external_services' => env('MCP_MOCK_EXTERNAL', false),
-        'enable_introspection' => env('MCP_ENABLE_INTROSPECTION', true),
-        'log_performance' => env('MCP_LOG_PERFORMANCE', false),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Client Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Configuration for MCP client operations.
-    |
-    */
-    'client' => [
-        'default_timeout' => env('MCP_CLIENT_TIMEOUT', 30),
-        'retry_attempts' => env('MCP_CLIENT_RETRY_ATTEMPTS', 3),
-        'retry_delay' => env('MCP_CLIENT_RETRY_DELAY', 1000), // milliseconds
-        'connection_pool_size' => env('MCP_CONNECTION_POOL_SIZE', 10),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Monitoring & Metrics
-    |--------------------------------------------------------------------------
-    |
-    | Configure monitoring and metrics collection.
-    |
-    */
-    'monitoring' => [
-        'enabled' => env('MCP_MONITORING_ENABLED', true),
-        'collect_metrics' => env('MCP_COLLECT_METRICS', true),
-        'metrics_retention' => env('MCP_METRICS_RETENTION', 86400), // 24 hours
-
-        'alerts' => [
-            'enabled' => env('MCP_ALERTS_ENABLED', false),
-            'error_threshold' => env('MCP_ERROR_THRESHOLD', 10), // errors per minute
-            'response_time_threshold' => env('MCP_RESPONSE_TIME_THRESHOLD', 5000), // milliseconds
-        ],
+        'validate_schemas' => env('MCP_VALIDATE_SCHEMAS', true),
+        'sanitize_output' => env('MCP_SANITIZE_OUTPUT', true),
+        'allowed_hosts' => env('MCP_ALLOWED_HOSTS', '*'), // comma-separated list or '*'
+        'max_request_size' => env('MCP_MAX_REQUEST_SIZE', 1024 * 1024), // 1MB
+        'require_https' => env('MCP_REQUIRE_HTTPS', false),
     ],
 ];

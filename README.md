@@ -15,7 +15,7 @@ PHP implementation of the Model Context Protocol (MCP), enabling seamless integr
 - ⚡ **Async First** - Built on Amphp for non-blocking I/O operations
 - 🔌 **Multiple Transports** - STDIO, HTTP Streaming, and WebSocket (coming soon)
 - 🔐 **OAuth 2.0 Ready** - Built-in authentication with PKCE support
-- 🏗️ **Framework Integration** - First-class Laravel package with Artisan commands
+- 🏗️ **Framework Integration** - PSR-compatible design for easy framework integration
 - 📦 **PSR Compliant** - Follows PSR-4, PSR-7, PSR-12, and PSR-15 standards
 - 🛡️ **Production Ready** - Comprehensive error handling, logging, and monitoring
 
@@ -174,49 +174,42 @@ npx @modelcontextprotocol/inspector ./weather-server.php
 php weather-client.php
 ```
 
-## Laravel Integration
+## Framework Integration
 
-### Installation
+The PHP MCP SDK is designed to work with any PHP framework through its PSR-compliant architecture.
+
+### Laravel Integration
+
+You can use the core PHP MCP SDK directly in Laravel applications:
 
 ```bash
 composer require mcp/php-sdk
-php artisan vendor:publish --tag=mcp-config
 ```
-
-### Configuration
-
-Configure MCP in `config/mcp.php`:
 
 ```php
-return [
-    'server' => [
-        'name' => env('MCP_SERVER_NAME', 'laravel-mcp'),
-        'version' => env('MCP_SERVER_VERSION', '1.0.0'),
-    ],
-    'tools' => [
-        'search-users' => [
-            'definition' => [...],
-            'handler' => \App\Mcp\Tools\UserSearchTool::class,
-        ],
-    ],
-];
-```
+// In a Laravel controller or service
+use MCP\Server\McpServer;
+use MCP\Types\Implementation;
 
-### Using with InertiaJS
-
-```tsx
-import { McpClient } from "@/Components/McpClient";
-
-export default function Dashboard() {
-  const handleSearch = async (query: string) => {
-    const client = new McpClient();
-    const result = await client.callTool("search-users", { query });
-    console.log(result);
-  };
-
-  return <div>{/* Your UI */}</div>;
+class McpController extends Controller
+{
+    public function createServer()
+    {
+        $server = new McpServer(
+            new Implementation('my-laravel-app', '1.0.0')
+        );
+        
+        // Register your tools, resources, and prompts
+        $server->registerTool('search-users', function($params) {
+            return User::where('name', 'like', "%{$params['query']}%")->get();
+        });
+        
+        return $server;
+    }
 }
 ```
+
+For a complete Laravel package with service providers, Artisan commands, and Laravel-specific features, see the separate `laravel-mcp-sdk` package.
 
 ## 📚 Documentation
 
@@ -232,7 +225,7 @@ Comprehensive documentation is available in the [docs/](docs/) directory:
 - [📱 Creating Clients](docs/guides/creating-clients.md) - Build MCP clients
 - [🔐 Authentication](docs/guides/authentication.md) - OAuth 2.0 and security
 - [🔌 Transports](docs/guides/transports.md) - STDIO, HTTP, WebSocket
-- [🏗️ Laravel Integration](docs/guides/laravel-integration.md) - Framework integration
+- [🏗️ Laravel Integration](examples/laravel/README.md) - Using core SDK with Laravel
 
 ### API Reference
 - [🔧 Server API](docs/api/server.md) - Complete server API

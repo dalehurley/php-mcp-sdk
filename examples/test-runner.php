@@ -204,7 +204,7 @@ try {
 
     // Check for required services
     $content = file_get_contents('examples/docker/docker-compose.yml');
-    $requiredServices = ['mcp-simple-server', 'mcp-client', 'laravel-mcp'];
+    $requiredServices = ['mcp-simple-server', 'mcp-client'];
 
     foreach ($requiredServices as $service) {
         if (strpos($content, $service . ':') === false) {

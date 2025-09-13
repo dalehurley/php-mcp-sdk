@@ -14,7 +14,7 @@ use function Amp\async;
 
 /**
  * Interface for adapting MCP transports to PSR-7 HTTP messages
- * This enables integration with Laravel, Symfony, and other PSR-7 compatible frameworks
+ * This enables integration with Symfony and other PSR-7 compatible frameworks
  */
 interface HttpTransportAdapter
 {
@@ -45,7 +45,7 @@ interface HttpTransportAdapter
 
 /**
  * Adapter for StreamableHttpServerTransport to work with PSR-7 HTTP messages
- * This enables easy integration with Laravel, Symfony, and other PSR-7 frameworks
+ * This enables easy integration with Symfony and other PSR-7 frameworks
  *
  * Note: This is a placeholder implementation. Full integration would require
  * exposing public methods from the transport classes or creating a bridge.
