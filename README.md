@@ -15,9 +15,13 @@ PHP implementation of the Model Context Protocol (MCP), enabling seamless integr
 - ⚡ **Async First** - Built on Amphp for non-blocking I/O operations
 - 🔌 **Multiple Transports** - STDIO, HTTP Streaming, and WebSocket
 - 🔐 **OAuth 2.0 Ready** - Built-in authentication with PKCE support
-- 🏗️ **Framework Integration** - PSR-compatible design for easy framework integration
+- 🏗️ **Framework Integration** - Laravel, Symfony, and PSR-compatible design
 - 📦 **PSR Compliant** - Follows PSR-4, PSR-7, PSR-12, and PSR-15 standards
 - 🛡️ **Production Ready** - Comprehensive error handling, logging, and monitoring
+- 🤖 **Agentic AI Support** - Build intelligent AI agents with MCP tool orchestration
+- 🏭 **Real-World Examples** - Complete applications (Blog CMS, Task Manager, API Gateway)
+- 📚 **Comprehensive Documentation** - Best-in-class documentation with tested examples
+- 🧪 **Automated Testing** - All documentation examples are automatically tested
 
 ## 📋 Requirements
 
@@ -52,57 +56,51 @@ require_once __DIR__ . '/vendor/autoload.php';
 use MCP\Server\McpServer;
 use MCP\Server\Transport\StdioServerTransport;
 use MCP\Types\Implementation;
-use Amp\Loop;
+use function Amp\async;
 
-// Create server instance
+// Create the simplest possible MCP server
 $server = new McpServer(
-    new Implementation('weather-server', '1.0.0', 'Simple Weather Server')
+    new Implementation(
+        'hello-world-server',
+        '1.0.0'
+    )
 );
 
-// Register a tool
-$server->registerTool(
-    'get-weather',
+// Add a simple "say_hello" tool
+$server->tool(
+    'say_hello',
+    'Says hello to someone',
     [
-        'title' => 'Get Weather',
-        'description' => 'Get current weather for a location',
-        'inputSchema' => [
-            'type' => 'object',
-            'properties' => [
-                'location' => [
-                    'type' => 'string',
-                    'description' => 'City name or coordinates'
-                ]
-            ],
-            'required' => ['location']
-        ]
+        'type' => 'object',
+        'properties' => [
+            'name' => [
+                'type' => 'string',
+                'description' => 'Name of the person to greet'
+            ]
+        ],
+        'required' => ['name']
     ],
-    function (array $params): array {
-        // In a real implementation, you'd call a weather API
-        $weather = [
-            'temperature' => rand(15, 30) . '°C',
-            'condition' => ['sunny', 'cloudy', 'rainy'][rand(0, 2)],
-            'humidity' => rand(40, 80) . '%'
-        ];
+    function (array $args): array {
+        $name = $args['name'] ?? 'World';
 
         return [
-            'content' => [[
-                'type' => 'text',
-                'text' => "Weather in {$params['location']}: " .
-                         "{$weather['temperature']}, {$weather['condition']}, " .
-                         "Humidity: {$weather['humidity']}"
-            ]]
+            'content' => [
+                [
+                    'type' => 'text',
+                    'text' => "Hello, {$name}! 👋 Welcome to MCP!"
+                ]
+            ]
         ];
     }
 );
 
-// Start server with STDIO transport
-$transport = new StdioServerTransport();
-Amp\async(function() use ($server, $transport) {
-    yield $server->connect($transport);
-    error_log("Weather server started and listening...");
-});
+// Start the server
+async(function () use ($server) {
+    echo "🚀 Hello World MCP Server starting...\n";
 
-Loop::run();
+    $transport = new StdioServerTransport();
+    $server->connect($transport)->await();
+})->await();
 ```
 
 ### Creating an MCP Client
@@ -164,15 +162,61 @@ Loop::run();
 ### Test Your Implementation
 
 ```bash
-# Make the server executable
-chmod +x weather-server.php
+# Run the hello-world server
+php examples/getting-started/hello-world-server.php
 
-# Test with the MCP Inspector (Node.js required)
-npx @modelcontextprotocol/inspector ./weather-server.php
+# Test with Claude Desktop by adding to your configuration:
+{
+  "mcpServers": {
+    "hello-world": {
+      "command": "php",
+      "args": ["/path/to/examples/getting-started/hello-world-server.php"]
+    }
+  }
+}
 
-# Or run the client directly
-php weather-client.php
+# Or test with the MCP Inspector (Node.js required)
+npx @modelcontextprotocol/inspector examples/getting-started/hello-world-server.php
 ```
+
+## 🎯 Examples Overview
+
+The PHP MCP SDK includes **20+ comprehensive examples** across all skill levels:
+
+### 🎓 Getting Started (4 examples)
+
+- **Hello World** - Simplest possible server and client
+- **Calculator** - Multi-tool server with math operations
+- **File Reader** - Secure file system integration
+- **Weather Client** - External API integration patterns
+
+### 🏗️ Framework Integration (2 examples)
+
+- **Laravel Integration** - Complete Laravel patterns with service container
+- **Symfony Integration** - Full Symfony integration with DI container
+
+### 🤖 Agentic AI (4 examples)
+
+- **Working Agentic Demo** - Rule-based agent reasoning
+- **Personal Assistant** - Multi-MCP server coordination
+- **Multi-Agent Orchestrator** - Specialized agent coordination
+- **OpenAI Integration** - LLM-powered intelligent agents
+
+### 🏭 Real-World Applications (5 examples)
+
+- **Blog CMS** - Complete content management system
+- **Task Manager** - Project management with analytics
+- **API Gateway** - Enterprise API orchestration
+- **Code Analyzer** - Development quality tools
+- **Data Pipeline** - ETL and data processing
+
+### 🏢 Enterprise & Production (3 examples)
+
+- **Docker Deployment** - Production containerization
+- **Microservices Architecture** - Distributed systems patterns
+- **Monitoring & Observability** - Production monitoring
+
+**All examples are tested and working!** 🎉
 
 ## Framework Integration
 
@@ -213,32 +257,59 @@ For a complete Laravel package with service providers, Artisan commands, and Lar
 
 ## 📚 Documentation
 
-Comprehensive documentation is available in the [docs/](docs/) directory:
+The **most comprehensive MCP SDK documentation in the ecosystem** is available in the [docs/](docs/) directory:
 
-### Getting Started
+### 🎓 Getting Started (Beginner-Friendly)
 
 - [📖 Complete Documentation](docs/README.md) - Start here for full overview
-- [⚡ Quick Start Guide](docs/getting-started/quick-start.md) - Get up and running fast
+- [⚡ Quick Start Guide](docs/getting-started/quick-start.md) - Get up and running in 5 minutes
+- [🏗️ First Server](docs/getting-started/first-server.md) - Build your first server in 10 minutes
+- [📱 First Client](docs/getting-started/first-client.md) - Build your first client in 10 minutes
+- [🧠 Understanding MCP](docs/getting-started/understanding-mcp.md) - Deep dive into MCP protocol
 - [💡 Core Concepts](docs/getting-started/concepts.md) - Understand MCP fundamentals
+- [🔧 Troubleshooting](docs/getting-started/troubleshooting.md) - Common issues and solutions
 
-### Implementation Guides
+### 🏗️ Implementation Guides
 
 - [🖥️ Creating Servers](docs/guides/creating-servers.md) - Build MCP servers
 - [📱 Creating Clients](docs/guides/creating-clients.md) - Build MCP clients
 - [🔐 Authentication](docs/guides/authentication.md) - OAuth 2.0 and security
 - [🔌 Transports](docs/guides/transports.md) - STDIO, HTTP, WebSocket
-- [🏗️ Laravel Integration](examples/laravel/README.md) - Using core SDK with Laravel
+- [🏗️ Laravel Integration](docs/guides/integrations/laravel-integration.md) - Complete Laravel guide
+- [⚡ Symfony Integration](docs/guides/integrations/symfony-integration.md) - Complete Symfony guide
+- [🤖 OpenAI Integration](docs/guides/integrations/openai-tool-calling.md) - AI tool calling
+- [📊 FullCX Integration](docs/guides/integrations/fullcx-integration.md) - Product management
 
-### API Reference
+### 🤖 Agentic AI Development
+
+- [🧠 Build Agentic AI Agents](docs/tutorials/specialized/agentic-ai-agents.md) - Complete agentic AI tutorial
+- [🎯 Agent Examples](examples/agentic-ai/) - Working agent implementations
+- [🔗 Multi-Agent Systems](examples/agentic-ai/multi-agent-orchestrator.php) - Agent coordination
+
+### 🏭 Real-World Applications
+
+- [📝 Blog CMS](examples/real-world/blog-cms/) - Complete content management system
+- [📋 Task Manager](examples/real-world/task-manager/) - Project management system
+- [🚀 API Gateway](examples/real-world/api-gateway/) - Enterprise API management
+- [🔍 Code Analyzer](examples/real-world/code-analyzer/) - Development quality tools
+- [🔄 Data Pipeline](examples/real-world/data-pipeline/) - ETL and data processing
+
+### 🏢 Enterprise & Production
+
+- [🐳 Docker Deployment](examples/enterprise/docker-mcp-deployment.php) - Containerization
+- [🏗️ Microservices](examples/enterprise/microservices-mcp-architecture.php) - Distributed systems
+- [📊 Monitoring](examples/enterprise/monitoring-observability-mcp.php) - Observability
+
+### 📖 API Reference
 
 - [🔧 Server API](docs/api/server.md) - Complete server API
 - [📡 Client API](docs/api/client.md) - Complete client API
 - [📋 Types & Schemas](docs/api/types.md) - Type system reference
 - [🚀 Transport APIs](docs/api/transports.md) - Transport layer APIs
 
-### Examples & Migration
+### 🔄 Migration & Examples
 
-- [💻 Code Examples](docs/examples/README.md) - Working examples
+- [💻 Working Examples](examples/README.md) - 20+ tested examples
 - [🔄 TypeScript Migration](docs/migration/from-typescript.md) - Migration guide
 
 ## Testing
