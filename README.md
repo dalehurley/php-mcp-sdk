@@ -227,7 +227,7 @@ The PHP MCP SDK is designed to work with any PHP framework through its PSR-compl
 You can use the core PHP MCP SDK directly in Laravel applications:
 
 ```bash
-composer require mcp/php-sdk
+composer require dalehurley/php-mcp-sdk
 ```
 
 ```php
@@ -244,8 +244,20 @@ class McpController extends Controller
         );
 
         // Register your tools, resources, and prompts
-        $server->registerTool('search-users', function($params) {
-            return User::where('name', 'like', "%{$params['query']}%")->get();
+        $server->tool('search-users', 'Search for users', [
+            'type' => 'object',
+            'properties' => [
+                'query' => ['type' => 'string', 'description' => 'Search query']
+            ]
+        ], function($params) {
+            return [
+                'content' => [
+                    [
+                        'type' => 'text',
+                        'text' => json_encode(User::where('name', 'like', "%{$params['query']}%")->get())
+                    ]
+                ]
+            ];
         });
 
         return $server;
@@ -271,14 +283,12 @@ The **most comprehensive MCP SDK documentation in the ecosystem** is available i
 
 ### 🏗️ Implementation Guides
 
-- [🖥️ Creating Servers](docs/guides/creating-servers.md) - Build MCP servers
-- [📱 Creating Clients](docs/guides/creating-clients.md) - Build MCP clients
-- [🔐 Authentication](docs/guides/authentication.md) - OAuth 2.0 and security
-- [🔌 Transports](docs/guides/transports.md) - STDIO, HTTP, WebSocket
-- [🏗️ Laravel Integration](docs/guides/integrations/laravel-integration.md) - Complete Laravel guide
-- [⚡ Symfony Integration](docs/guides/integrations/symfony-integration.md) - Complete Symfony guide
-- [🤖 OpenAI Integration](docs/guides/integrations/openai-tool-calling.md) - AI tool calling
-- [📊 FullCX Integration](docs/guides/integrations/fullcx-integration.md) - Product management
+- [📱 Creating Clients](docs/guides/client-development/creating-clients.md) - Build MCP clients
+- [🔐 Security Best Practices](docs/guides/security/security-best-practices.md) - OAuth 2.0 and security
+- [🛠️ Tools Guide](docs/guides/server-development/tools-guide.md) - Server development with tools
+- [📚 Resources Guide](docs/guides/server-development/resources-guide.md) - Server development with resources
+- [🤖 OpenAI Integration](docs/guides/openai-tool-calling.md) - AI tool calling
+- [📊 FullCX Integration](docs/guides/fullcx-integration.md) - Product management
 
 ### 🤖 Agentic AI Development
 
@@ -288,11 +298,11 @@ The **most comprehensive MCP SDK documentation in the ecosystem** is available i
 
 ### 🏭 Real-World Applications
 
-- [📝 Blog CMS](examples/real-world/blog-cms/) - Complete content management system
-- [📋 Task Manager](examples/real-world/task-manager/) - Project management system
-- [🚀 API Gateway](examples/real-world/api-gateway/) - Enterprise API management
-- [🔍 Code Analyzer](examples/real-world/code-analyzer/) - Development quality tools
-- [🔄 Data Pipeline](examples/real-world/data-pipeline/) - ETL and data processing
+- [📝 Blog CMS](examples/real-world/blog-cms/blog-cms-mcp-server.php) - Complete content management system
+- [📋 Task Manager](examples/real-world/task-manager/task-manager-mcp-server.php) - Project management system
+- [🚀 API Gateway](examples/real-world/api-gateway/api-gateway-mcp-server.php) - Enterprise API management
+- [🔍 Code Analyzer](examples/real-world/code-analyzer/code-analyzer-mcp-server.php) - Development quality tools
+- [🔄 Data Pipeline](examples/real-world/data-pipeline/data-pipeline-mcp-server.php) - ETL and data processing
 
 ### 🏢 Enterprise & Production
 
@@ -304,8 +314,7 @@ The **most comprehensive MCP SDK documentation in the ecosystem** is available i
 
 - [🔧 Server API](docs/api/server.md) - Complete server API
 - [📡 Client API](docs/api/client.md) - Complete client API
-- [📋 Types & Schemas](docs/api/types.md) - Type system reference
-- [🚀 Transport APIs](docs/api/transports.md) - Transport layer APIs
+- [📋 Types & Schemas](docs/api/types/core-types.md) - Type system reference
 
 ### 🔄 Migration & Examples
 
@@ -334,7 +343,7 @@ composer check
 
 ## Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
+Contributions are welcome! Please read our [Contributing Guide](docs/contributing.md) for details.
 
 ### Changelog
 
