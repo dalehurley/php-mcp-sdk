@@ -347,5 +347,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - Based on the [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
-- Built with [ReactPHP](https://reactphp.org/) for async operations
+- Built with [Amphp](https://amphp.org/) for async operations
 - Uses [Respect/Validation](https://respect-validation.readthedocs.io/) for schema validation
