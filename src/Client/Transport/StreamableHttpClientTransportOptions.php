@@ -7,7 +7,7 @@ namespace MCP\Client\Transport;
 use Amp\Http\Client\HttpClient;
 
 /**
- * Configuration options for StreamableHttpClientTransport
+ * Configuration options for StreamableHttpClientTransport.
  */
 class StreamableHttpClientTransportOptions
 {

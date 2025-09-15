@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Client\Auth;
 
-use MCP\Client\Auth\OAuthClient;
 use MCP\Client\Auth\InMemoryTokenStorage;
+use MCP\Client\Auth\OAuthClient;
 use MCP\Shared\OAuthClientInformation;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;

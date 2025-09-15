@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace MCP\Client\Transport;
 
-use MCP\Shared\Transport;
-use MCP\Types\JsonRpc\JSONRPCMessage;
+use function Amp\async;
+
+use Amp\ByteStream\BufferedReader;
+use Amp\DeferredCancellation;
 use Amp\Future;
 use Amp\Http\Client\HttpClient;
 use Amp\Http\Client\HttpClientBuilder;
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response;
-use Amp\ByteStream\BufferedReader;
-use Amp\DeferredCancellation;
-use MCP\Client\Transport\SseClientTransportOptions;
+use MCP\Shared\Transport;
 
-use function Amp\async;
+use MCP\Types\JsonRpc\JSONRPCMessage;
 
 /**
  * Client transport for SSE: this will connect to a server using HTTP GET
@@ -27,9 +27,13 @@ use function Amp\async;
 class SseClientTransport implements Transport
 {
     private string $_url;
+
     private SseClientTransportOptions $_options;
+
     private HttpClient $_httpClient;
+
     private ?string $_postEndpoint = null;
+
     private bool $_started = false;
 
     /** @var DeferredCancellation|null */
@@ -47,6 +51,7 @@ class SseClientTransport implements Transport
     /**
      * @param string $url The SSE endpoint URL
      * @param SseClientTransportOptions|null $options Configuration options
+     *
      * @deprecated Use StreamableHttpClientTransport instead
      */
     public function __construct(string $url, ?SseClientTransportOptions $options = null)
@@ -93,8 +98,8 @@ class SseClientTransport implements Transport
         return async(function () {
             if ($this->_started) {
                 throw new \RuntimeException(
-                    "SseClientTransport already started! If using Client class, " .
-                        "note that connect() calls start() automatically."
+                    'SseClientTransport already started! If using Client class, ' .
+                        'note that connect() calls start() automatically.'
                 );
             }
 
@@ -107,7 +112,7 @@ class SseClientTransport implements Transport
     }
 
     /**
-     * Connect to the SSE endpoint
+     * Connect to the SSE endpoint.
      */
     private function connectToSse(): void
     {
@@ -136,13 +141,14 @@ class SseClientTransport implements Transport
                 if ($this->onerror !== null) {
                     ($this->onerror)($e);
                 }
+
                 throw $e;
             }
         });
     }
 
     /**
-     * Handle the SSE stream
+     * Handle the SSE stream.
      */
     private function handleSseStream(Response $response): void
     {
@@ -188,7 +194,7 @@ class SseClientTransport implements Transport
     }
 
     /**
-     * Process an SSE event
+     * Process an SSE event.
      */
     private function processEvent(string $eventType, string $data): void
     {
@@ -201,7 +207,7 @@ class SseClientTransport implements Transport
                 $decoded = json_decode($data, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    throw new \RuntimeException("Invalid JSON in SSE event: " . json_last_error_msg());
+                    throw new \RuntimeException('Invalid JSON in SSE event: ' . json_last_error_msg());
                 }
 
                 $message = JSONRPCMessage::fromArray($decoded);
@@ -224,7 +230,7 @@ class SseClientTransport implements Transport
     {
         return async(function () use ($message) {
             if (!$this->_started || $this->_postEndpoint === null) {
-                throw new \RuntimeException("Not connected or endpoint not received");
+                throw new \RuntimeException('Not connected or endpoint not received');
             }
 
             // Resolve the POST endpoint URL relative to the original URL
@@ -269,6 +275,7 @@ class SseClientTransport implements Transport
 
                 if ($response->getStatus() !== 202) {
                     $body = $response->getBody()->buffer();
+
                     throw new \RuntimeException(
                         "Failed to send message: HTTP {$response->getStatus()} - $body"
                     );
@@ -277,6 +284,7 @@ class SseClientTransport implements Transport
                 if ($this->onerror !== null) {
                     ($this->onerror)($e);
                 }
+
                 throw $e;
             }
         });

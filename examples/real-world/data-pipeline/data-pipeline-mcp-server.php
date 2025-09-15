@@ -2,8 +2,8 @@
 <?php
 
 /**
- * Data Processing Pipeline MCP Server - Real-World Application Example
- * 
+ * Data Processing Pipeline MCP Server - Real-World Application Example.
+ *
  * This is a comprehensive data processing pipeline built with MCP that demonstrates:
  * - ETL (Extract, Transform, Load) operations
  * - Data validation and quality checks
@@ -13,29 +13,32 @@
  * - Error handling and data recovery
  * - Performance monitoring and optimization
  * - Data lineage tracking
- * 
+ *
  * Perfect example of how MCP can orchestrate complex data workflows
  * and integrate with data processing systems.
- * 
+ *
  * Usage:
  *   php data-pipeline-mcp-server.php
  */
 
 require_once __DIR__ . '/../../../vendor/autoload.php';
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
 use MCP\Server\Transport\StdioServerTransport;
 use MCP\Types\Implementation;
 use MCP\Types\McpError;
-use function Amp\async;
 
 /**
- * Data Pipeline Engine
+ * Data Pipeline Engine.
  */
 class DataPipelineEngine
 {
     private array $pipelines = [];
+
     private array $executionHistory = [];
+
     private array $dataStore = [];
 
     public function __construct()
@@ -55,10 +58,10 @@ class DataPipelineEngine
                     ['type' => 'validate', 'schema' => 'user_event_schema'],
                     ['type' => 'transform', 'operation' => 'aggregate_by_user'],
                     ['type' => 'enrich', 'source' => 'user_profiles'],
-                    ['type' => 'load', 'destination' => 'analytics_warehouse']
+                    ['type' => 'load', 'destination' => 'analytics_warehouse'],
                 ],
                 'schedule' => 'hourly',
-                'status' => 'active'
+                'status' => 'active',
             ],
             'sales_reporting' => [
                 'name' => 'Sales Reporting Pipeline',
@@ -68,10 +71,10 @@ class DataPipelineEngine
                     ['type' => 'clean', 'operations' => ['remove_duplicates', 'validate_amounts']],
                     ['type' => 'transform', 'operation' => 'calculate_metrics'],
                     ['type' => 'aggregate', 'groupby' => ['date', 'product', 'region']],
-                    ['type' => 'load', 'destination' => 'reporting_database']
+                    ['type' => 'load', 'destination' => 'reporting_database'],
                 ],
                 'schedule' => 'daily',
-                'status' => 'active'
+                'status' => 'active',
             ],
             'log_processing' => [
                 'name' => 'Log Processing Pipeline',
@@ -81,11 +84,11 @@ class DataPipelineEngine
                     ['type' => 'parse', 'pattern' => 'apache_combined'],
                     ['type' => 'filter', 'condition' => 'error_level >= warning'],
                     ['type' => 'transform', 'operation' => 'extract_patterns'],
-                    ['type' => 'load', 'destination' => 'monitoring_system']
+                    ['type' => 'load', 'destination' => 'monitoring_system'],
                 ],
                 'schedule' => 'real_time',
-                'status' => 'active'
-            ]
+                'status' => 'active',
+            ],
         ];
     }
 
@@ -97,26 +100,26 @@ class DataPipelineEngine
                 ['user_id' => 1, 'event' => 'page_view', 'timestamp' => time() - 3500, 'page' => '/dashboard'],
                 ['user_id' => 2, 'event' => 'login', 'timestamp' => time() - 3400, 'ip' => '192.168.1.2'],
                 ['user_id' => 2, 'event' => 'purchase', 'timestamp' => time() - 3300, 'amount' => 99.99],
-                ['user_id' => 3, 'event' => 'signup', 'timestamp' => time() - 3200, 'email' => 'new@user.com']
+                ['user_id' => 3, 'event' => 'signup', 'timestamp' => time() - 3200, 'email' => 'new@user.com'],
             ],
             'transactions' => [
                 ['id' => 1001, 'user_id' => 1, 'amount' => 49.99, 'product' => 'MCP Guide', 'date' => '2024-09-13', 'region' => 'US'],
                 ['id' => 1002, 'user_id' => 2, 'amount' => 99.99, 'product' => 'Pro License', 'date' => '2024-09-13', 'region' => 'EU'],
                 ['id' => 1003, 'user_id' => 3, 'amount' => 29.99, 'product' => 'Basic Plan', 'date' => '2024-09-13', 'region' => 'US'],
-                ['id' => 1004, 'user_id' => 1, 'amount' => 199.99, 'product' => 'Enterprise', 'date' => '2024-09-12', 'region' => 'US']
+                ['id' => 1004, 'user_id' => 1, 'amount' => 199.99, 'product' => 'Enterprise', 'date' => '2024-09-12', 'region' => 'US'],
             ],
             'user_profiles' => [
                 ['user_id' => 1, 'name' => 'John Doe', 'segment' => 'enterprise', 'lifetime_value' => 500],
                 ['user_id' => 2, 'name' => 'Jane Smith', 'segment' => 'professional', 'lifetime_value' => 250],
-                ['user_id' => 3, 'name' => 'Bob Wilson', 'segment' => 'starter', 'lifetime_value' => 50]
+                ['user_id' => 3, 'name' => 'Bob Wilson', 'segment' => 'starter', 'lifetime_value' => 50],
             ],
             'application_logs' => [
                 '[2024-09-13 10:00:01] INFO: User login successful - user_id: 1',
                 '[2024-09-13 10:01:15] WARNING: Slow query detected - duration: 2.3s',
                 '[2024-09-13 10:02:30] ERROR: Database connection failed - retrying...',
                 '[2024-09-13 10:02:35] INFO: Database connection restored',
-                '[2024-09-13 10:05:45] ERROR: Payment processing failed - insufficient funds'
-            ]
+                '[2024-09-13 10:05:45] ERROR: Payment processing failed - insufficient funds',
+            ],
         ];
     }
 
@@ -134,7 +137,7 @@ class DataPipelineEngine
             'steps_executed' => [],
             'data_flow' => [],
             'errors' => [],
-            'status' => 'running'
+            'status' => 'running',
         ];
 
         $currentData = null;
@@ -148,7 +151,7 @@ class DataPipelineEngine
                     'step' => $stepIndex,
                     'input_size' => is_array($currentData) ? count($currentData) : strlen($currentData ?? ''),
                     'output_size' => is_array($stepResult['output']) ? count($stepResult['output']) : strlen($stepResult['output'] ?? ''),
-                    'processing_time' => $stepResult['execution_time']
+                    'processing_time' => $stepResult['execution_time'],
                 ];
 
                 if (!$stepResult['success']) {
@@ -198,7 +201,7 @@ class DataPipelineEngine
                 'success' => true,
                 'output' => $output,
                 'execution_time' => microtime(true) - $startTime,
-                'records_processed' => is_array($output) ? count($output) : 1
+                'records_processed' => is_array($output) ? count($output) : 1,
             ];
         } catch (Exception $e) {
             return [
@@ -206,7 +209,7 @@ class DataPipelineEngine
                 'step_type' => $step['type'],
                 'success' => false,
                 'error' => $e->getMessage(),
-                'execution_time' => microtime(true) - $startTime
+                'execution_time' => microtime(true) - $startTime,
             ];
         }
     }
@@ -225,7 +228,7 @@ class DataPipelineEngine
     private function validateData(array $step, $inputData): array
     {
         if (!is_array($inputData)) {
-            throw new Exception("Invalid input data for validation");
+            throw new Exception('Invalid input data for validation');
         }
 
         // Simple validation - in production, use proper schema validation
@@ -250,7 +253,7 @@ class DataPipelineEngine
     private function transformData(array $step, $inputData): array
     {
         if (!is_array($inputData)) {
-            throw new Exception("Invalid input data for transformation");
+            throw new Exception('Invalid input data for transformation');
         }
 
         $operation = $step['operation'];
@@ -276,7 +279,7 @@ class DataPipelineEngine
                     'event_count' => 0,
                     'events' => [],
                     'first_event' => $event['timestamp'],
-                    'last_event' => $event['timestamp']
+                    'last_event' => $event['timestamp'],
                 ];
             }
 
@@ -296,7 +299,7 @@ class DataPipelineEngine
             'average_order_value' => 0,
             'revenue_by_product' => [],
             'revenue_by_region' => [],
-            'daily_revenue' => []
+            'daily_revenue' => [],
         ];
 
         foreach ($transactions as $transaction) {
@@ -320,7 +323,7 @@ class DataPipelineEngine
     private function cleanData(array $step, $inputData): array
     {
         if (!is_array($inputData)) {
-            throw new Exception("Invalid input data for cleaning");
+            throw new Exception('Invalid input data for cleaning');
         }
 
         $operations = $step['operations'] ?? [];
@@ -366,7 +369,7 @@ class DataPipelineEngine
     private function enrichData(array $step, $inputData): array
     {
         if (!is_array($inputData)) {
-            throw new Exception("Invalid input data for enrichment");
+            throw new Exception('Invalid input data for enrichment');
         }
 
         $source = $step['source'];
@@ -401,7 +404,7 @@ class DataPipelineEngine
             'destination' => $destination,
             'records_loaded' => is_array($inputData) ? count($inputData) : 1,
             'load_time' => microtime(true),
-            'status' => 'success'
+            'status' => 'success',
         ];
 
         // Store in our mock destination
@@ -415,18 +418,22 @@ class DataPipelineEngine
     {
         return $inputData;
     }
+
     private function aggregateData(array $step, $inputData): array
     {
         return $inputData;
     }
+
     private function parseData(array $step, $inputData): array
     {
         return $inputData;
     }
+
     private function extractLogPatterns(array $inputData): array
     {
         return $inputData;
     }
+
     private function normalizeDates(array $data): array
     {
         return $data;
@@ -436,10 +443,12 @@ class DataPipelineEngine
     {
         return $this->pipelines;
     }
+
     public function getExecutionHistory(): array
     {
         return $this->executionHistory;
     }
+
     public function getDataStore(): array
     {
         return $this->dataStore;
@@ -447,11 +456,12 @@ class DataPipelineEngine
 }
 
 /**
- * Data Quality Monitor
+ * Data Quality Monitor.
  */
 class DataQualityMonitor
 {
     private array $qualityRules = [];
+
     private array $qualityHistory = [];
 
     public function __construct()
@@ -465,23 +475,23 @@ class DataQualityMonitor
             'completeness' => [
                 'description' => 'Check for missing or null values',
                 'threshold' => 95, // 95% completeness required
-                'weight' => 0.3
+                'weight' => 0.3,
             ],
             'accuracy' => [
                 'description' => 'Validate data format and ranges',
                 'threshold' => 98, // 98% accuracy required
-                'weight' => 0.4
+                'weight' => 0.4,
             ],
             'consistency' => [
                 'description' => 'Check for data consistency across sources',
                 'threshold' => 90, // 90% consistency required
-                'weight' => 0.2
+                'weight' => 0.2,
             ],
             'timeliness' => [
                 'description' => 'Check if data is fresh and up-to-date',
                 'threshold' => 85, // 85% timeliness required
-                'weight' => 0.1
-            ]
+                'weight' => 0.1,
+            ],
         ];
     }
 
@@ -494,7 +504,7 @@ class DataQualityMonitor
             'quality_scores' => [],
             'overall_score' => 0,
             'issues' => [],
-            'recommendations' => []
+            'recommendations' => [],
         ];
 
         foreach ($this->qualityRules as $ruleName => $rule) {
@@ -506,7 +516,7 @@ class DataQualityMonitor
                     'rule' => $ruleName,
                     'score' => $score,
                     'threshold' => $rule['threshold'],
-                    'description' => $rule['description']
+                    'description' => $rule['description'],
                 ];
             }
         }
@@ -540,13 +550,17 @@ class DataQualityMonitor
 
     private function checkCompleteness(array $data): float
     {
-        if (empty($data)) return 0.0;
+        if (empty($data)) {
+            return 0.0;
+        }
 
         $totalFields = 0;
         $completeFields = 0;
 
         foreach ($data as $record) {
-            if (!is_array($record)) continue;
+            if (!is_array($record)) {
+                continue;
+            }
 
             foreach ($record as $value) {
                 $totalFields++;
@@ -653,9 +667,9 @@ $server->tool(
         'type' => 'object',
         'properties' => [
             'pipeline_name' => ['type' => 'string', 'description' => 'Name of pipeline to execute'],
-            'options' => ['type' => 'object', 'additionalProperties' => true, 'description' => 'Pipeline options']
+            'options' => ['type' => 'object', 'additionalProperties' => true, 'description' => 'Pipeline options'],
         ],
-        'required' => ['pipeline_name']
+        'required' => ['pipeline_name'],
     ],
     function (array $args) use ($pipelineEngine): array {
         $pipelineName = $args['pipeline_name'];
@@ -667,18 +681,18 @@ $server->tool(
             $statusIcon = $execution['status'] === 'completed' ? '✅' : ($execution['status'] === 'failed' ? '❌' : '⚡');
 
             $report = "{$statusIcon} Pipeline Execution: {$pipelineName}\n";
-            $report .= "=" . str_repeat("=", 40) . "\n\n";
+            $report .= '=' . str_repeat('=', 40) . "\n\n";
 
             $report .= "📊 Execution Summary\n";
-            $report .= "-" . str_repeat("-", 18) . "\n";
+            $report .= '-' . str_repeat('-', 18) . "\n";
             $report .= "Status: {$execution['status']}\n";
-            $report .= "Duration: " . round($execution['total_duration'], 3) . "s\n";
-            $report .= "Steps Executed: " . count($execution['steps_executed']) . "\n";
-            $report .= "Errors: " . count($execution['errors']) . "\n\n";
+            $report .= 'Duration: ' . round($execution['total_duration'], 3) . "s\n";
+            $report .= 'Steps Executed: ' . count($execution['steps_executed']) . "\n";
+            $report .= 'Errors: ' . count($execution['errors']) . "\n\n";
 
             if (!empty($execution['steps_executed'])) {
                 $report .= "🔄 Step Details\n";
-                $report .= "-" . str_repeat("-", 14) . "\n";
+                $report .= '-' . str_repeat('-', 14) . "\n";
                 foreach ($execution['steps_executed'] as $step) {
                     $stepIcon = $step['success'] ? '✅' : '❌';
                     $duration = round($step['execution_time'], 3);
@@ -691,7 +705,7 @@ $server->tool(
 
             if (!empty($execution['errors'])) {
                 $report .= "❌ Errors\n";
-                $report .= "-" . str_repeat("-", 8) . "\n";
+                $report .= '-' . str_repeat('-', 8) . "\n";
                 foreach ($execution['errors'] as $error) {
                     $report .= "• {$error}\n";
                 }
@@ -707,12 +721,12 @@ $server->tool(
                 'content' => [
                     [
                         'type' => 'text',
-                        'text' => $report
-                    ]
-                ]
+                        'text' => $report,
+                    ],
+                ],
             ];
         } catch (Exception $e) {
-            throw new McpError(-32602, "Pipeline execution failed: " . $e->getMessage());
+            throw new McpError(-32602, 'Pipeline execution failed: ' . $e->getMessage());
         }
     }
 );
@@ -724,18 +738,18 @@ $server->tool(
     [
         'type' => 'object',
         'properties' => [
-            'status' => ['type' => 'string', 'enum' => ['active', 'inactive', 'all'], 'default' => 'all']
-        ]
+            'status' => ['type' => 'string', 'enum' => ['active', 'inactive', 'all'], 'default' => 'all'],
+        ],
     ],
     function (array $args) use ($pipelineEngine): array {
         $statusFilter = $args['status'] ?? 'all';
         $pipelines = $pipelineEngine->getPipelines();
 
         if ($statusFilter !== 'all') {
-            $pipelines = array_filter($pipelines, fn($p) => $p['status'] === $statusFilter);
+            $pipelines = array_filter($pipelines, fn ($p) => $p['status'] === $statusFilter);
         }
 
-        $output = "🔄 Data Processing Pipelines (" . count($pipelines) . ")\n\n";
+        $output = '🔄 Data Processing Pipelines (' . count($pipelines) . ")\n\n";
 
         foreach ($pipelines as $name => $pipeline) {
             $statusIcon = $pipeline['status'] === 'active' ? '🟢' : '🔴';
@@ -748,7 +762,7 @@ $server->tool(
 
             $output .= "{$statusIcon}{$scheduleIcon} **{$pipeline['name']}**\n";
             $output .= "   Status: {$pipeline['status']} | Schedule: {$pipeline['schedule']}\n";
-            $output .= "   Steps: " . count($pipeline['steps']) . "\n";
+            $output .= '   Steps: ' . count($pipeline['steps']) . "\n";
             $output .= "   Description: {$pipeline['description']}\n";
 
             $output .= "   Pipeline Flow:\n";
@@ -774,9 +788,9 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $output
-                ]
-            ]
+                    'text' => $output,
+                ],
+            ],
         ];
     }
 );
@@ -789,9 +803,9 @@ $server->tool(
         'type' => 'object',
         'properties' => [
             'dataset_name' => ['type' => 'string', 'description' => 'Name of dataset to assess'],
-            'detailed' => ['type' => 'boolean', 'default' => false, 'description' => 'Include detailed quality breakdown']
+            'detailed' => ['type' => 'boolean', 'default' => false, 'description' => 'Include detailed quality breakdown'],
         ],
-        'required' => ['dataset_name']
+        'required' => ['dataset_name'],
     ],
     function (array $args) use ($pipelineEngine, $qualityMonitor): array {
         $datasetName = $args['dataset_name'];
@@ -807,18 +821,18 @@ $server->tool(
         $assessment = $qualityMonitor->assessQuality($data, $datasetName);
 
         $report = "🔍 Data Quality Assessment: {$datasetName}\n";
-        $report .= "=" . str_repeat("=", 40) . "\n\n";
+        $report .= '=' . str_repeat('=', 40) . "\n\n";
 
         $report .= "📊 Quality Overview\n";
-        $report .= "-" . str_repeat("-", 17) . "\n";
+        $report .= '-' . str_repeat('-', 17) . "\n";
         $report .= "Dataset: {$datasetName}\n";
-        $report .= "Records: " . number_format($assessment['record_count']) . "\n";
+        $report .= 'Records: ' . number_format($assessment['record_count']) . "\n";
         $report .= "Overall Score: {$assessment['overall_score']}/100\n";
         $report .= "Assessment Date: {$assessment['assessed_at']}\n\n";
 
         if ($detailed) {
             $report .= "📋 Quality Dimensions\n";
-            $report .= "-" . str_repeat("-", 20) . "\n";
+            $report .= '-' . str_repeat('-', 20) . "\n";
             foreach ($assessment['quality_scores'] as $dimension => $score) {
                 $scoreIcon = $score >= 90 ? '🟢' : ($score >= 70 ? '🟡' : '🔴');
                 $report .= "{$scoreIcon} {$dimension}: {$score}/100\n";
@@ -828,7 +842,7 @@ $server->tool(
 
         if (!empty($assessment['issues'])) {
             $report .= "⚠️ Quality Issues\n";
-            $report .= "-" . str_repeat("-", 15) . "\n";
+            $report .= '-' . str_repeat('-', 15) . "\n";
             foreach ($assessment['issues'] as $issue) {
                 $report .= "• {$issue['rule']}: {$issue['score']}/{$issue['threshold']} - {$issue['description']}\n";
             }
@@ -837,7 +851,7 @@ $server->tool(
 
         if (!empty($assessment['recommendations'])) {
             $report .= "💡 Recommendations\n";
-            $report .= "-" . str_repeat("-", 17) . "\n";
+            $report .= '-' . str_repeat('-', 17) . "\n";
             foreach ($assessment['recommendations'] as $rec) {
                 $report .= "• {$rec}\n";
             }
@@ -847,9 +861,9 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $report
-                ]
-            ]
+                    'text' => $report,
+                ],
+            ],
         ];
     }
 );
@@ -861,7 +875,7 @@ $server->resource(
     [
         'title' => 'Data Pipeline Configuration',
         'description' => 'Complete data pipeline configuration and capabilities',
-        'mimeType' => 'application/json'
+        'mimeType' => 'application/json',
     ],
     function () use ($pipelineEngine): string {
         return json_encode([
@@ -874,8 +888,8 @@ $server->resource(
                     'stream_processing',
                     'batch_processing',
                     'error_recovery',
-                    'performance_monitoring'
-                ]
+                    'performance_monitoring',
+                ],
             ],
             'supported_formats' => ['json', 'csv', 'xml', 'parquet', 'avro'],
             'step_types' => [
@@ -886,7 +900,7 @@ $server->resource(
                 'clean' => 'Clean and normalize data',
                 'filter' => 'Filter data based on conditions',
                 'aggregate' => 'Aggregate and summarize data',
-                'enrich' => 'Enrich data with additional information'
+                'enrich' => 'Enrich data with additional information',
             ],
             'pipelines' => $pipelineEngine->getPipelines(),
             'quality_monitoring' => [
@@ -895,9 +909,9 @@ $server->resource(
                     'excellent' => '90-100',
                     'good' => '70-89',
                     'fair' => '50-69',
-                    'poor' => '0-49'
-                ]
-            ]
+                    'poor' => '0-49',
+                ],
+            ],
         ], JSON_PRETTY_PRINT);
     }
 );
@@ -905,9 +919,9 @@ $server->resource(
 // Start the Data Pipeline server
 async(function () use ($server, $pipelineEngine, $qualityMonitor) {
     echo "🔄 Data Processing Pipeline MCP Server starting...\n";
-    echo "📊 Pipelines: " . count($pipelineEngine->getPipelines()) . " configured\n";
-    echo "🔍 Quality Rules: " . count($qualityMonitor->qualityRules ?? []) . " dimensions\n";
-    echo "💾 Data Sources: " . count($pipelineEngine->getDataStore()) . " datasets\n";
+    echo '📊 Pipelines: ' . count($pipelineEngine->getPipelines()) . " configured\n";
+    echo '🔍 Quality Rules: ' . count($qualityMonitor->qualityRules ?? []) . " dimensions\n";
+    echo '💾 Data Sources: ' . count($pipelineEngine->getDataStore()) . " datasets\n";
     echo "🛠️ Available tools: execute_pipeline, list_pipelines, assess_quality\n";
     echo "📚 Resources: pipeline configuration\n";
     echo "⚡ Ready for data processing!\n" . PHP_EOL;

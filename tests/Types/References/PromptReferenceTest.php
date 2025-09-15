@@ -18,7 +18,7 @@ class PromptReferenceTest extends TestCase
     public function testBasicConstruction(): void
     {
         $ref = new PromptReference('my-prompt');
-        
+
         $this->assertEquals('my-prompt', $ref->getName());
     }
 
@@ -29,11 +29,11 @@ class PromptReferenceTest extends TestCase
     {
         $data = [
             'type' => 'ref/prompt',
-            'name' => 'test-prompt'
+            'name' => 'test-prompt',
         ];
-        
+
         $ref = PromptReference::fromArray($data);
-        
+
         $this->assertEquals('test-prompt', $ref->getName());
     }
 
@@ -46,13 +46,13 @@ class PromptReferenceTest extends TestCase
             'type' => 'ref/prompt',
             'name' => 'custom-prompt',
             'version' => '1.0',
-            'metadata' => ['key' => 'value']
+            'metadata' => ['key' => 'value'],
         ];
-        
+
         $ref = PromptReference::fromArray($data);
-        
+
         $this->assertEquals('custom-prompt', $ref->getName());
-        
+
         // Additional properties should be preserved in JSON
         $json = $ref->jsonSerialize();
         $this->assertEquals('1.0', $json['version']);
@@ -66,10 +66,10 @@ class PromptReferenceTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('PromptReference must have type "ref/prompt"');
-        
+
         PromptReference::fromArray([
             'type' => 'ref/other',
-            'name' => 'test'
+            'name' => 'test',
         ]);
     }
 
@@ -80,9 +80,9 @@ class PromptReferenceTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('PromptReference must have a name property');
-        
+
         PromptReference::fromArray([
-            'type' => 'ref/prompt'
+            'type' => 'ref/prompt',
         ]);
     }
 
@@ -93,7 +93,7 @@ class PromptReferenceTest extends TestCase
     {
         $ref = new PromptReference('json-prompt');
         $json = $ref->jsonSerialize();
-        
+
         $this->assertEquals('ref/prompt', $json['type']);
         $this->assertEquals('json-prompt', $json['name']);
     }
@@ -105,7 +105,7 @@ class PromptReferenceTest extends TestCase
     {
         $ref = new PromptReference('extra-prompt', ['extra' => 'data']);
         $json = $ref->jsonSerialize();
-        
+
         $this->assertEquals('ref/prompt', $json['type']);
         $this->assertEquals('extra-prompt', $json['name']);
         $this->assertEquals('data', $json['extra']);

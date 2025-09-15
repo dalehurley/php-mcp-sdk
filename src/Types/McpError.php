@@ -19,6 +19,7 @@ class McpError extends \Exception
 
     /**
      * Create an error from a JSON-RPC error response.
+     *
      * @param array{code?: int, message?: string, data?: mixed} $error
      */
     public static function fromJsonRpcError(array $error): self
@@ -34,6 +35,7 @@ class McpError extends \Exception
 
     /**
      * Convert to JSON-RPC error format.
+     *
      * @return array{code: int, message: string, data?: mixed}
      */
     public function toJsonRpcError(): array

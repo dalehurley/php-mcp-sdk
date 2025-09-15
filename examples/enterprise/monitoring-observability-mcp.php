@@ -2,8 +2,8 @@
 <?php
 
 /**
- * Monitoring and Observability MCP Server
- * 
+ * Monitoring and Observability MCP Server.
+ *
  * This example demonstrates comprehensive monitoring and observability for MCP systems:
  * - Real-time metrics collection and reporting
  * - Distributed tracing and logging
@@ -11,28 +11,33 @@
  * - System health dashboards
  * - Custom metrics and SLA monitoring
  * - Log aggregation and analysis
- * 
+ *
  * Perfect for production MCP deployments requiring full observability.
- * 
+ *
  * Usage:
  *   php monitoring-observability-mcp.php
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
 use MCP\Server\Transport\StdioServerTransport;
 use MCP\Types\Implementation;
 use MCP\Types\McpError;
-use function Amp\async;
 
 // Metrics Collector
 class MetricsCollector
 {
     private array $metrics = [];
+
     private array $counters = [];
+
     private array $gauges = [];
+
     private array $histograms = [];
+
     private int $startTime;
 
     public function __construct()
@@ -71,7 +76,7 @@ class MetricsCollector
             'gauges' => $this->gauges,
             'histograms' => $this->getHistogramStats(),
             'uptime' => time() - $this->startTime,
-            'timestamp' => time()
+            'timestamp' => time(),
         ];
     }
 
@@ -79,6 +84,7 @@ class MetricsCollector
     {
         ksort($labels);
         $labelStr = empty($labels) ? '' : '{' . http_build_query($labels, '', ',') . '}';
+
         return $name . $labelStr;
     }
 
@@ -89,7 +95,7 @@ class MetricsCollector
             'name' => $name,
             'value' => $value,
             'labels' => $labels,
-            'timestamp' => microtime(true)
+            'timestamp' => microtime(true),
         ];
 
         // Keep only last 1000 metrics to prevent memory issues
@@ -102,7 +108,9 @@ class MetricsCollector
     {
         $stats = [];
         foreach ($this->histograms as $key => $values) {
-            if (empty($values)) continue;
+            if (empty($values)) {
+                continue;
+            }
 
             sort($values);
             $count = count($values);
@@ -119,6 +127,7 @@ class MetricsCollector
                 'p99' => $values[intval($count * 0.99)] ?? 0,
             ];
         }
+
         return $stats;
     }
 }
@@ -127,6 +136,7 @@ class MetricsCollector
 class DistributedTracer
 {
     private array $traces = [];
+
     private array $activeSpans = [];
 
     public function startTrace(string $operationName, array $context = []): string
@@ -140,7 +150,7 @@ class DistributedTracer
             'start_time' => microtime(true),
             'context' => $context,
             'spans' => [],
-            'status' => 'active'
+            'status' => 'active',
         ];
 
         $this->activeSpans[$spanId] = [
@@ -150,7 +160,7 @@ class DistributedTracer
             'start_time' => microtime(true),
             'parent_span' => null,
             'tags' => [],
-            'logs' => []
+            'logs' => [],
         ];
 
         return $traceId;
@@ -167,7 +177,7 @@ class DistributedTracer
             'start_time' => microtime(true),
             'parent_span' => $parentSpanId,
             'tags' => [],
-            'logs' => []
+            'logs' => [],
         ];
 
         return $spanId;
@@ -175,7 +185,9 @@ class DistributedTracer
 
     public function finishSpan(string $spanId, array $tags = []): void
     {
-        if (!isset($this->activeSpans[$spanId])) return;
+        if (!isset($this->activeSpans[$spanId])) {
+            return;
+        }
 
         $span = $this->activeSpans[$spanId];
         $span['end_time'] = microtime(true);
@@ -193,7 +205,9 @@ class DistributedTracer
 
     public function finishTrace(string $traceId, string $status = 'completed'): void
     {
-        if (!isset($this->traces[$traceId])) return;
+        if (!isset($this->traces[$traceId])) {
+            return;
+        }
 
         $this->traces[$traceId]['end_time'] = microtime(true);
         $this->traces[$traceId]['duration'] = $this->traces[$traceId]['end_time'] - $this->traces[$traceId]['start_time'];
@@ -220,6 +234,7 @@ class DistributedTracer
 class LogAggregator
 {
     private array $logs = [];
+
     private array $logLevels = ['debug', 'info', 'warn', 'error', 'fatal'];
 
     public function log(string $level, string $message, array $context = []): void
@@ -234,7 +249,7 @@ class LogAggregator
             'message' => $message,
             'context' => $context,
             'service' => 'monitoring-mcp',
-            'trace_id' => $context['trace_id'] ?? null
+            'trace_id' => $context['trace_id'] ?? null,
         ];
 
         // Keep only last 500 logs
@@ -248,7 +263,7 @@ class LogAggregator
         $logs = $this->logs;
 
         if ($level) {
-            $logs = array_filter($logs, fn($log) => $log['level'] === $level);
+            $logs = array_filter($logs, fn ($log) => $log['level'] === $level);
         }
 
         return array_slice(array_reverse($logs), 0, $limit);
@@ -258,8 +273,9 @@ class LogAggregator
     {
         $stats = [];
         foreach ($this->logLevels as $level) {
-            $stats[$level] = count(array_filter($this->logs, fn($log) => $log['level'] === $level));
+            $stats[$level] = count(array_filter($this->logs, fn ($log) => $log['level'] === $level));
         }
+
         return $stats;
     }
 }
@@ -306,13 +322,13 @@ $server->tool(
                 'type' => 'string',
                 'enum' => ['json', 'prometheus'],
                 'description' => 'Output format for metrics',
-                'default' => 'json'
+                'default' => 'json',
             ],
             'filter' => [
                 'type' => 'string',
-                'description' => 'Filter metrics by name pattern'
-            ]
-        ]
+                'description' => 'Filter metrics by name pattern',
+            ],
+        ],
     ],
     function (array $args) use ($metricsCollector): array {
         $format = $args['format'] ?? 'json';
@@ -328,7 +344,7 @@ $server->tool(
             foreach (['counters', 'gauges', 'histograms'] as $type) {
                 $metrics[$type] = array_filter(
                     $metrics[$type],
-                    fn($key) => stripos($key, $filter) !== false,
+                    fn ($key) => stripos($key, $filter) !== false,
                     ARRAY_FILTER_USE_KEY
                 );
             }
@@ -336,7 +352,7 @@ $server->tool(
 
         if ($format === 'prometheus') {
             $output = "# Prometheus Metrics Export\n";
-            $output .= "# Generated at " . date('c') . "\n\n";
+            $output .= '# Generated at ' . date('c') . "\n\n";
 
             foreach ($metrics['counters'] as $name => $value) {
                 $output .= "# TYPE {$name} counter\n";
@@ -357,9 +373,9 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $text
-                ]
-            ]
+                    'text' => $text,
+                ],
+            ],
         ];
     }
 );
@@ -373,14 +389,14 @@ $server->tool(
         'properties' => [
             'trace_id' => [
                 'type' => 'string',
-                'description' => 'Specific trace ID to retrieve'
+                'description' => 'Specific trace ID to retrieve',
             ],
             'limit' => [
                 'type' => 'integer',
                 'description' => 'Maximum number of traces to return',
-                'default' => 10
-            ]
-        ]
+                'default' => 10,
+            ],
+        ],
     ],
     function (array $args) use ($tracer, $metricsCollector): array {
         $traceId = $args['trace_id'] ?? null;
@@ -407,7 +423,7 @@ $server->tool(
             $output .= "Operation: {$trace['operation']}\n";
             $output .= "Status: {$trace['status']}\n";
             $output .= "Duration: {$duration}\n";
-            $output .= "Spans: " . count($trace['spans']) . "\n";
+            $output .= 'Spans: ' . count($trace['spans']) . "\n";
 
             if (!empty($trace['spans'])) {
                 $output .= "Span Details:\n";
@@ -423,9 +439,9 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $output
-                ]
-            ]
+                    'text' => $output,
+                ],
+            ],
         ];
     }
 );
@@ -440,18 +456,18 @@ $server->tool(
             'level' => [
                 'type' => 'string',
                 'enum' => ['debug', 'info', 'warn', 'error', 'fatal'],
-                'description' => 'Filter logs by level'
+                'description' => 'Filter logs by level',
             ],
             'limit' => [
                 'type' => 'integer',
                 'description' => 'Maximum number of logs to return',
-                'default' => 50
+                'default' => 50,
             ],
             'search' => [
                 'type' => 'string',
-                'description' => 'Search term to filter log messages'
-            ]
-        ]
+                'description' => 'Search term to filter log messages',
+            ],
+        ],
     ],
     function (array $args) use ($logger, $metricsCollector): array {
         $level = $args['level'] ?? null;
@@ -465,15 +481,14 @@ $server->tool(
         if ($search) {
             $logs = array_filter(
                 $logs,
-                fn($log) =>
-                stripos($log['message'], $search) !== false ||
+                fn ($log) => stripos($log['message'], $search) !== false ||
                     stripos(json_encode($log['context']), $search) !== false
             );
         }
 
         $output = "📝 Application Logs\n\n";
-        $output .= "Filter: " . ($level ? "level={$level}" : 'all levels') . "\n";
-        $output .= "Count: " . count($logs) . "\n\n";
+        $output .= 'Filter: ' . ($level ? "level={$level}" : 'all levels') . "\n";
+        $output .= 'Count: ' . count($logs) . "\n\n";
 
         foreach ($logs as $log) {
             $timestamp = date('Y-m-d H:i:s', intval($log['timestamp']));
@@ -489,7 +504,7 @@ $server->tool(
             $output .= "{$levelIcon} [{$timestamp}] {$log['level']}: {$log['message']}\n";
 
             if (!empty($log['context'])) {
-                $output .= "   Context: " . json_encode($log['context']) . "\n";
+                $output .= '   Context: ' . json_encode($log['context']) . "\n";
             }
 
             if ($log['trace_id']) {
@@ -503,9 +518,9 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $output
-                ]
-            ]
+                    'text' => $output,
+                ],
+            ],
         ];
     }
 );
@@ -516,7 +531,7 @@ $server->tool(
     'Generate comprehensive health dashboard',
     [
         'type' => 'object',
-        'properties' => []
+        'properties' => [],
     ],
     function (array $args) use ($metricsCollector, $tracer, $logger): array {
         $metrics = $metricsCollector->getMetrics();
@@ -525,20 +540,20 @@ $server->tool(
         $totalTraces = count($tracer->getAllTraces());
 
         $dashboard = "🏥 MCP System Health Dashboard\n";
-        $dashboard .= "=" . str_repeat("=", 40) . "\n\n";
+        $dashboard .= '=' . str_repeat('=', 40) . "\n\n";
 
         // System Overview
         $dashboard .= "📊 System Overview\n";
-        $dashboard .= "-" . str_repeat("-", 20) . "\n";
-        $dashboard .= "Uptime: " . gmdate('H:i:s', $metrics['uptime']) . "\n";
-        $dashboard .= "Memory Usage: " . round(memory_get_usage(true) / 1024 / 1024, 2) . " MB\n";
-        $dashboard .= "Peak Memory: " . round(memory_get_peak_usage(true) / 1024 / 1024, 2) . " MB\n";
+        $dashboard .= '-' . str_repeat('-', 20) . "\n";
+        $dashboard .= 'Uptime: ' . gmdate('H:i:s', $metrics['uptime']) . "\n";
+        $dashboard .= 'Memory Usage: ' . round(memory_get_usage(true) / 1024 / 1024, 2) . " MB\n";
+        $dashboard .= 'Peak Memory: ' . round(memory_get_peak_usage(true) / 1024 / 1024, 2) . " MB\n";
         $dashboard .= "Active Traces: {$activeSpans}\n";
         $dashboard .= "Total Traces: {$totalTraces}\n\n";
 
         // Request Metrics
         $dashboard .= "🚀 Request Metrics\n";
-        $dashboard .= "-" . str_repeat("-", 20) . "\n";
+        $dashboard .= '-' . str_repeat('-', 20) . "\n";
         foreach ($metrics['counters'] as $name => $value) {
             if (str_contains($name, 'requests_total')) {
                 $dashboard .= "{$name}: {$value}\n";
@@ -549,13 +564,13 @@ $server->tool(
         // Performance Stats
         if (!empty($metrics['histograms'])) {
             $dashboard .= "⚡ Performance Stats\n";
-            $dashboard .= "-" . str_repeat("-", 20) . "\n";
+            $dashboard .= '-' . str_repeat('-', 20) . "\n";
             foreach ($metrics['histograms'] as $name => $stats) {
                 if (str_contains($name, 'duration')) {
                     $dashboard .= "{$name}:\n";
-                    $dashboard .= "  Average: " . round($stats['avg'] * 1000, 2) . "ms\n";
-                    $dashboard .= "  P95: " . round($stats['p95'] * 1000, 2) . "ms\n";
-                    $dashboard .= "  P99: " . round($stats['p99'] * 1000, 2) . "ms\n";
+                    $dashboard .= '  Average: ' . round($stats['avg'] * 1000, 2) . "ms\n";
+                    $dashboard .= '  P95: ' . round($stats['p95'] * 1000, 2) . "ms\n";
+                    $dashboard .= '  P99: ' . round($stats['p99'] * 1000, 2) . "ms\n";
                 }
             }
             $dashboard .= "\n";
@@ -563,7 +578,7 @@ $server->tool(
 
         // Log Summary
         $dashboard .= "📝 Log Summary\n";
-        $dashboard .= "-" . str_repeat("-", 20) . "\n";
+        $dashboard .= '-' . str_repeat('-', 20) . "\n";
         foreach ($logStats as $level => $count) {
             $icon = match ($level) {
                 'debug' => '🐛',
@@ -580,16 +595,16 @@ $server->tool(
         $dashboard .= "\n🟢 Overall Status: HEALTHY\n";
         $errorRate = ($logStats['error'] + $logStats['fatal']) / max(array_sum($logStats), 1);
         if ($errorRate > 0.1) {
-            $dashboard .= "⚠️  Warning: High error rate detected (" . round($errorRate * 100, 2) . "%)\n";
+            $dashboard .= '⚠️  Warning: High error rate detected (' . round($errorRate * 100, 2) . "%)\n";
         }
 
         return [
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $dashboard
-                ]
-            ]
+                    'text' => $dashboard,
+                ],
+            ],
         ];
     }
 );
@@ -601,7 +616,7 @@ $server->resource(
     [
         'title' => 'Monitoring and Observability Configuration',
         'description' => 'Complete monitoring stack configuration',
-        'mimeType' => 'application/json'
+        'mimeType' => 'application/json',
     ],
     function (): string {
         return json_encode([
@@ -610,38 +625,38 @@ $server->resource(
                     'collector' => 'custom',
                     'storage' => 'in_memory',
                     'export_formats' => ['json', 'prometheus'],
-                    'retention' => '1000_points'
+                    'retention' => '1000_points',
                 ],
                 'tracing' => [
                     'system' => 'custom_distributed_tracer',
                     'sampling_rate' => 1.0,
-                    'storage' => 'in_memory'
+                    'storage' => 'in_memory',
                 ],
                 'logging' => [
                     'levels' => ['debug', 'info', 'warn', 'error', 'fatal'],
                     'aggregation' => 'in_memory',
-                    'retention' => '500_entries'
-                ]
+                    'retention' => '500_entries',
+                ],
             ],
             'integrations' => [
                 'prometheus' => 'metrics export compatible',
                 'jaeger' => 'tracing format compatible',
                 'elk_stack' => 'log format compatible',
-                'grafana' => 'dashboard ready'
+                'grafana' => 'dashboard ready',
             ],
             'alerting' => [
                 'thresholds' => [
                     'error_rate' => '> 10%',
                     'response_time_p95' => '> 1000ms',
-                    'memory_usage' => '> 80%'
-                ]
+                    'memory_usage' => '> 80%',
+                ],
             ],
             'production_recommendations' => [
                 'use_external_storage' => 'Redis/PostgreSQL for metrics',
                 'implement_sampling' => 'For high-volume tracing',
                 'setup_log_rotation' => 'Prevent disk space issues',
-                'configure_alerting' => 'PagerDuty/Slack integration'
-            ]
+                'configure_alerting' => 'PagerDuty/Slack integration',
+            ],
         ], JSON_PRETTY_PRINT);
     }
 );
@@ -659,9 +674,9 @@ $server->prompt(
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => 'How do I monitor my MCP applications?'
-                        ]
-                    ]
+                            'text' => 'How do I monitor my MCP applications?',
+                        ],
+                    ],
                 ],
                 [
                     'role' => 'assistant',
@@ -691,11 +706,11 @@ $server->prompt(
                                 "• Performance statistics\n" .
                                 "• Error rate monitoring\n" .
                                 "• Resource usage tracking\n\n" .
-                                "Try: 'Use health_dashboard to see system overview'"
-                        ]
-                    ]
-                ]
-            ]
+                                "Try: 'Use health_dashboard to see system overview'",
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 );

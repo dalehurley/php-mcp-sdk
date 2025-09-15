@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Types\Messages;
 
-use MCP\Types\Results;
 use MCP\Types\EmptyResult;
+use MCP\Types\Results;
 
 /**
  * Union type helper for client results.
@@ -23,7 +23,9 @@ final class ClientResult
      * Create a result from an array.
      *
      * @param array<string, mixed> $data
+     *
      * @return EmptyResult|Results\CreateMessageResult|Results\ElicitResult|Results\ListRootsResult
+     *
      * @throws \InvalidArgumentException
      */
     public static function fromArray(array $data): object

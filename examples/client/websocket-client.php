@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use function Amp\delay;
+
 use MCP\Client\Client;
 use MCP\Client\ClientOptions;
 use MCP\Client\Transport\WebSocketClientTransport;
@@ -11,10 +13,8 @@ use MCP\Client\Transport\WebSocketOptions;
 use MCP\Types\Capabilities\ClientCapabilities;
 use MCP\Types\Implementation;
 use Monolog\Handler\StreamHandler;
-use Monolog\Logger;
 
-use function Amp\async;
-use function Amp\delay;
+use Monolog\Logger;
 
 /**
  * WebSocket client example demonstrating connection management and reconnection.
@@ -54,7 +54,7 @@ function runWebSocketExample(): void
         headers: [
             'Authorization' => 'Bearer your-api-token',
             'User-Agent' => 'MCP-PHP-Client/1.0',
-            'X-Client-Version' => '1.0.0'
+            'X-Client-Version' => '1.0.0',
         ],
         subprotocols: ['mcp-v1'],
         timeout: 30,
@@ -107,7 +107,7 @@ function runWebSocketExample(): void
             echo "\nCalling tool: {$firstTool->getName()}\n";
 
             $toolResult = $client->callToolByName($firstTool->getName(), [])->await();
-            echo "Tool result: " . json_encode($toolResult->getContent(), JSON_PRETTY_PRINT) . "\n";
+            echo 'Tool result: ' . json_encode($toolResult->getContent(), JSON_PRETTY_PRINT) . "\n";
         }
 
         // Demonstrate connection resilience
@@ -121,7 +121,7 @@ function runWebSocketExample(): void
         echo "Waiting 10 seconds to demonstrate heartbeat...\n";
         delay(10);
 
-        echo "Connection still active: " . ($transport->isConnected() ? 'Yes' : 'No') . "\n";
+        echo 'Connection still active: ' . ($transport->isConnected() ? 'Yes' : 'No') . "\n";
     } catch (\Throwable $e) {
         echo "Error: {$e->getMessage()}\n";
 
@@ -148,29 +148,29 @@ function demonstrateWebSocketOptions(): void
     $basicOptions = new WebSocketOptions();
     echo "Basic options:\n";
     echo "- Timeout: {$basicOptions->timeout}s\n";
-    echo "- Auto-reconnect: " . ($basicOptions->autoReconnect ? 'Yes' : 'No') . "\n";
+    echo '- Auto-reconnect: ' . ($basicOptions->autoReconnect ? 'Yes' : 'No') . "\n";
     echo "- Max reconnect attempts: {$basicOptions->maxReconnectAttempts}\n";
     echo "- Heartbeat interval: {$basicOptions->heartbeatInterval}s\n\n";
 
     // Options with authentication
     $authOptions = WebSocketOptions::withAuth('token123', 'Bearer');
-    echo "Auth options array: " . json_encode($authOptions->toArray(), JSON_PRETTY_PRINT) . "\n\n";
+    echo 'Auth options array: ' . json_encode($authOptions->toArray(), JSON_PRETTY_PRINT) . "\n\n";
 
     // Options with custom headers
     $customOptions = WebSocketOptions::withHeaders([
         'X-API-Key' => 'api-key-123',
-        'X-Client-ID' => 'client-456'
+        'X-Client-ID' => 'client-456',
     ]);
-    echo "Custom headers options: " . json_encode($customOptions->toArray(), JSON_PRETTY_PRINT) . "\n\n";
+    echo 'Custom headers options: ' . json_encode($customOptions->toArray(), JSON_PRETTY_PRINT) . "\n\n";
 
     // Development options (no SSL validation)
     $devOptions = WebSocketOptions::development();
     echo "Development options (no SSL validation):\n";
-    echo "- Validate certificate: " . ($devOptions->validateCertificate ? 'Yes' : 'No') . "\n\n";
+    echo '- Validate certificate: ' . ($devOptions->validateCertificate ? 'Yes' : 'No') . "\n\n";
 
     // Options with subprotocols
     $protocolOptions = WebSocketOptions::withSubprotocols(['mcp-v1', 'mcp-v2']);
-    echo "Subprotocol options: " . json_encode($protocolOptions->toArray(), JSON_PRETTY_PRINT) . "\n\n";
+    echo 'Subprotocol options: ' . json_encode($protocolOptions->toArray(), JSON_PRETTY_PRINT) . "\n\n";
 }
 
 /**

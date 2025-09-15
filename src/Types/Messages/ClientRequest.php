@@ -54,7 +54,9 @@ final class ClientRequest
      * Create a request from an array based on the method.
      *
      * @param array<string, mixed> $data
+     *
      * @return Requests\PingRequest|Requests\InitializeRequest|Requests\CompleteRequest|Requests\SetLevelRequest|Requests\GetPromptRequest|Requests\ListPromptsRequest|Requests\ListResourcesRequest|Requests\ListResourceTemplatesRequest|Requests\ReadResourceRequest|Requests\SubscribeRequest|Requests\UnsubscribeRequest|Requests\CallToolRequest|Requests\ListToolsRequest
+     *
      * @throws \InvalidArgumentException
      */
     public static function fromArray(array $data): object

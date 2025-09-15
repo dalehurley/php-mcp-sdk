@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace MCP\Types\Results;
 
+use MCP\Types\Cursor;
 use MCP\Types\PaginatedResult;
 use MCP\Types\Resources\ResourceTemplate;
-use MCP\Types\Cursor;
 
 /**
  * The server's response to a resources/templates/list request from the client.
@@ -35,7 +35,7 @@ final class ListResourceTemplatesResult extends PaginatedResult
         }
 
         $resourceTemplates = array_map(
-            fn(array $item) => ResourceTemplate::fromArray($item),
+            fn (array $item) => ResourceTemplate::fromArray($item),
             $data['resourceTemplates']
         );
 
@@ -74,7 +74,7 @@ final class ListResourceTemplatesResult extends PaginatedResult
     {
         $data = parent::jsonSerialize();
         $data['resourceTemplates'] = array_map(
-            fn(ResourceTemplate $template) => $template->jsonSerialize(),
+            fn (ResourceTemplate $template) => $template->jsonSerialize(),
             $this->resourceTemplates
         );
 

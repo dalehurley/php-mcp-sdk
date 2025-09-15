@@ -2,8 +2,8 @@
 <?php
 
 /**
- * Parallel Tool Calls Client Example
- * 
+ * Parallel Tool Calls Client Example.
+ *
  * This example demonstrates how to:
  * - Execute multiple tool calls concurrently
  * - Handle parallel responses and notifications
@@ -19,15 +19,16 @@ require_once __DIR__ . '/../../src/Client/ClientOptions.php';
 require_once __DIR__ . '/../../src/Client/Client.php';
 require_once __DIR__ . '/../../src/Client/Transport/StdioClientTransport.php';
 
+use function Amp\async;
+use function Amp\await;
+use function Amp\Future\all;
+
 use MCP\Client\Client;
 use MCP\Client\ClientOptions;
 use MCP\Client\Transport\StdioClientTransport;
 use MCP\Client\Transport\StdioServerParameters;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ClientCapabilities;
-use function Amp\async;
-use function Amp\await;
-use function Amp\Future\all;
+use MCP\Types\Implementation;
 
 // Create the client
 $client = new Client(
@@ -42,24 +43,24 @@ $servers = [
     'calculator' => [
         'command' => 'php',
         'args' => [__DIR__ . '/../server/simple-server.php'],
-        'name' => 'Calculator Server'
+        'name' => 'Calculator Server',
     ],
     'weather' => [
         'command' => 'php',
         'args' => [__DIR__ . '/../server/weather-server.php'],
-        'name' => 'Weather Server'
+        'name' => 'Weather Server',
     ],
     'database' => [
         'command' => 'php',
         'args' => [__DIR__ . '/../server/sqlite-server.php'],
-        'name' => 'Database Server'
-    ]
+        'name' => 'Database Server',
+    ],
 ];
 
 // Choose which server to connect to
 $serverChoice = $argv[1] ?? 'calculator';
 if (!isset($servers[$serverChoice])) {
-    echo "Available servers: " . implode(', ', array_keys($servers)) . "\n";
+    echo 'Available servers: ' . implode(', ', array_keys($servers)) . "\n";
     echo "Usage: php parallel-tools-client.php [server_name]\n";
     exit(1);
 }
@@ -82,7 +83,7 @@ async(function () use ($client, $serverConfig, $serverChoice) {
         $transport = new StdioClientTransport($serverParams);
         await($client->connect($transport));
 
-        echo "✅ Connected! Server info: " . json_encode($client->getServerVersion()) . "\n\n";
+        echo '✅ Connected! Server info: ' . json_encode($client->getServerVersion()) . "\n\n";
 
         // List available tools
         echo "📋 Available Tools:\n";
@@ -96,6 +97,7 @@ async(function () use ($client, $serverConfig, $serverChoice) {
 
         if (empty($toolNames)) {
             echo "❌ No tools available on this server.\n";
+
             return;
         }
 
@@ -118,14 +120,14 @@ async(function () use ($client, $serverConfig, $serverChoice) {
         await($client->close());
         echo "✅ Done!\n";
     } catch (\Throwable $e) {
-        echo "❌ Error: " . $e->getMessage() . "\n";
+        echo '❌ Error: ' . $e->getMessage() . "\n";
         echo $e->getTraceAsString() . "\n";
         exit(1);
     }
 })->await();
 
 /**
- * Demonstrate parallel calculator operations
+ * Demonstrate parallel calculator operations.
  */
 function demonstrateCalculatorParallel(Client $client): \Amp\Future
 {
@@ -138,7 +140,7 @@ function demonstrateCalculatorParallel(Client $client): \Amp\Future
             ['expression' => '10 * 5'],
             ['expression' => '100 / 4'],
             ['expression' => '15 - 3'],
-            ['expression' => '(5 + 3) * 2']
+            ['expression' => '(5 + 3) * 2'],
         ];
 
         // Sequential execution for comparison
@@ -153,7 +155,7 @@ function demonstrateCalculatorParallel(Client $client): \Amp\Future
         }
 
         $sequentialTime = microtime(true) - $sequentialStart;
-        echo "  Sequential time: " . round($sequentialTime * 1000, 2) . "ms\n\n";
+        echo '  Sequential time: ' . round($sequentialTime * 1000, 2) . "ms\n\n";
 
         // Parallel execution
         echo "⚡ Parallel execution:\n";
@@ -169,8 +171,8 @@ function demonstrateCalculatorParallel(Client $client): \Amp\Future
         $parallelResults = await(all($promises));
         $parallelTime = microtime(true) - $parallelStart;
 
-        echo "  Parallel time: " . round($parallelTime * 1000, 2) . "ms\n";
-        echo "  Speed improvement: " . round(($sequentialTime / $parallelTime), 2) . "x faster\n\n";
+        echo '  Parallel time: ' . round($parallelTime * 1000, 2) . "ms\n";
+        echo '  Speed improvement: ' . round(($sequentialTime / $parallelTime), 2) . "x faster\n\n";
 
         // Display results
         echo "📊 Results Comparison:\n";
@@ -183,7 +185,7 @@ function demonstrateCalculatorParallel(Client $client): \Amp\Future
 }
 
 /**
- * Demonstrate parallel weather queries
+ * Demonstrate parallel weather queries.
  */
 function demonstrateWeatherParallel(Client $client): \Amp\Future
 {
@@ -195,7 +197,7 @@ function demonstrateWeatherParallel(Client $client): \Amp\Future
             ['location' => 'London,UK', 'units' => 'metric'],
             ['location' => 'New York,NY,US', 'units' => 'imperial'],
             ['location' => 'Tokyo,JP', 'units' => 'metric'],
-            ['location' => 'Sydney,AU', 'units' => 'metric']
+            ['location' => 'Sydney,AU', 'units' => 'metric'],
         ];
 
         echo "⚡ Fetching weather for multiple cities in parallel:\n";
@@ -210,7 +212,7 @@ function demonstrateWeatherParallel(Client $client): \Amp\Future
         $results = await(all($promises));
         $totalTime = microtime(true) - $start;
 
-        echo "  Total time: " . round($totalTime * 1000, 2) . "ms\n\n";
+        echo '  Total time: ' . round($totalTime * 1000, 2) . "ms\n\n";
 
         // Display results
         echo "🌍 Weather Results:\n";
@@ -218,12 +220,12 @@ function demonstrateWeatherParallel(Client $client): \Amp\Future
             $location = $locations[$i]['location'];
             echo "  📍 $location:\n";
             if ($result->isError()) {
-                echo "    ❌ Error: " . getResultText($result) . "\n";
+                echo '    ❌ Error: ' . getResultText($result) . "\n";
             } else {
                 $weatherText = getResultText($result);
                 // Extract just the first line for summary
                 $firstLine = explode("\n", $weatherText)[0] ?? $weatherText;
-                echo "    " . trim($firstLine) . "\n";
+                echo '    ' . trim($firstLine) . "\n";
             }
         }
 
@@ -239,13 +241,13 @@ function demonstrateWeatherParallel(Client $client): \Amp\Future
         $forecastResults = await(all($forecastPromises));
         $forecastTime = microtime(true) - $forecastStart;
 
-        echo "  Forecast time: " . round($forecastTime * 1000, 2) . "ms\n";
-        echo "  Retrieved forecasts for " . count($forecastResults) . " cities\n";
+        echo '  Forecast time: ' . round($forecastTime * 1000, 2) . "ms\n";
+        echo '  Retrieved forecasts for ' . count($forecastResults) . " cities\n";
     });
 }
 
 /**
- * Demonstrate parallel database queries
+ * Demonstrate parallel database queries.
  */
 function demonstrateDatabaseParallel(Client $client): \Amp\Future
 {
@@ -256,20 +258,20 @@ function demonstrateDatabaseParallel(Client $client): \Amp\Future
         $queries = [
             [
                 'query' => 'SELECT COUNT(*) as user_count FROM users',
-                'description' => 'Count users'
+                'description' => 'Count users',
             ],
             [
                 'query' => 'SELECT COUNT(*) as post_count FROM posts',
-                'description' => 'Count posts'
+                'description' => 'Count posts',
             ],
             [
                 'query' => 'SELECT COUNT(*) as comment_count FROM comments',
-                'description' => 'Count comments'
+                'description' => 'Count comments',
             ],
             [
                 'query' => 'SELECT username, email FROM users LIMIT 3',
-                'description' => 'Sample users'
-            ]
+                'description' => 'Sample users',
+            ],
         ];
 
         echo "⚡ Executing multiple database queries in parallel:\n";
@@ -284,7 +286,7 @@ function demonstrateDatabaseParallel(Client $client): \Amp\Future
         $results = await(all($promises));
         $totalTime = microtime(true) - $start;
 
-        echo "  Total query time: " . round($totalTime * 1000, 2) . "ms\n\n";
+        echo '  Total query time: ' . round($totalTime * 1000, 2) . "ms\n\n";
 
         // Display results
         echo "📊 Query Results:\n";
@@ -292,7 +294,7 @@ function demonstrateDatabaseParallel(Client $client): \Amp\Future
             $description = $queries[$i]['description'];
             echo "  🔍 $description:\n";
             if ($result->isError()) {
-                echo "    ❌ Error: " . getResultText($result) . "\n";
+                echo '    ❌ Error: ' . getResultText($result) . "\n";
             } else {
                 $resultText = getResultText($result);
                 // Try to extract just the relevant data
@@ -301,7 +303,7 @@ function demonstrateDatabaseParallel(Client $client): \Amp\Future
                 } elseif (preg_match('/\"data\":\s*(\[.*?\])/s', $resultText, $matches)) {
                     $data = json_decode($matches[1], true);
                     if ($data && is_array($data)) {
-                        echo "    ✅ Retrieved " . count($data) . " records\n";
+                        echo '    ✅ Retrieved ' . count($data) . " records\n";
                         if (count($data) <= 3) {
                             foreach ($data as $row) {
                                 if (isset($row['username'])) {
@@ -330,13 +332,13 @@ function demonstrateDatabaseParallel(Client $client): \Amp\Future
         $searchResults = await(all($searchPromises));
         $searchTime = microtime(true) - $searchStart;
 
-        echo "  Search time: " . round($searchTime * 1000, 2) . "ms\n";
-        echo "  Completed " . count($searchResults) . " parallel searches\n";
+        echo '  Search time: ' . round($searchTime * 1000, 2) . "ms\n";
+        echo '  Completed ' . count($searchResults) . " parallel searches\n";
     });
 }
 
 /**
- * Generic parallel demonstration for unknown tools
+ * Generic parallel demonstration for unknown tools.
  */
 function demonstrateGenericParallel(Client $client, array $toolNames): \Amp\Future
 {
@@ -360,7 +362,7 @@ function demonstrateGenericParallel(Client $client, array $toolNames): \Amp\Futu
         $results = await(all($promises));
         $totalTime = microtime(true) - $start;
 
-        echo "  Total time: " . round($totalTime * 1000, 2) . "ms\n\n";
+        echo '  Total time: ' . round($totalTime * 1000, 2) . "ms\n\n";
 
         // Display results
         echo "📋 Tool Results:\n";
@@ -368,7 +370,7 @@ function demonstrateGenericParallel(Client $client, array $toolNames): \Amp\Futu
             $toolName = $toolsToTest[$i];
             echo "  🔧 $toolName:\n";
             if ($result->isError()) {
-                echo "    ❌ Error: " . getResultText($result) . "\n";
+                echo '    ❌ Error: ' . getResultText($result) . "\n";
             } else {
                 echo "    ✅ Success\n";
             }
@@ -377,7 +379,7 @@ function demonstrateGenericParallel(Client $client, array $toolNames): \Amp\Futu
 }
 
 /**
- * Extract text content from a tool result
+ * Extract text content from a tool result.
  */
 function getResultText($result): string
 {
@@ -403,7 +405,7 @@ function getResultText($result): string
 }
 
 /**
- * Demonstration of notification handling during parallel operations
+ * Demonstration of notification handling during parallel operations.
  */
 function demonstrateNotificationHandling(Client $client): \Amp\Future
 {
@@ -423,7 +425,7 @@ function demonstrateNotificationHandling(Client $client): \Amp\Future
         // This would work with servers that send notifications
         $promises = [
             $client->callToolByName('some-tool', ['param' => 'value1']),
-            $client->callToolByName('another-tool', ['param' => 'value2'])
+            $client->callToolByName('another-tool', ['param' => 'value2']),
         ];
 
         await(all($promises));

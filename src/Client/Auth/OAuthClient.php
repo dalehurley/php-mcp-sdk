@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace MCP\Client\Auth;
 
+use function Amp\async;
+
 use Amp\Future;
 use MCP\Client\Auth\Exceptions\InvalidClientException;
 use MCP\Client\Auth\Exceptions\InvalidGrantException;
 use MCP\Client\Auth\Exceptions\UnauthorizedClientException;
-use MCP\Client\Auth\Exceptions\UnauthorizedException;
 use MCP\Shared\OAuthClientInformation;
 use MCP\Shared\OAuthClientInformationFull;
 use MCP\Shared\OAuthClientMetadata;
 use MCP\Shared\OAuthTokens;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
-use Psr\Http\Message\StreamFactoryInterface;
 
-use function Amp\async;
+use Psr\Http\Message\StreamFactoryInterface;
 
 /**
  * Enhanced OAuth 2.1 client with full authorization flow support and PKCE.
@@ -137,7 +137,7 @@ final class OAuthClient
                 throw OAuthUtils::parseErrorResponse($response);
             }
 
-            $data = json_decode((string)$response->getBody(), true);
+            $data = json_decode((string) $response->getBody(), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new \Exception('Invalid JSON response from token endpoint');
             }
@@ -206,7 +206,7 @@ final class OAuthClient
                 throw OAuthUtils::parseErrorResponse($response);
             }
 
-            $data = json_decode((string)$response->getBody(), true);
+            $data = json_decode((string) $response->getBody(), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new \Exception('Invalid JSON response from token endpoint');
             }
@@ -348,7 +348,7 @@ final class OAuthClient
             return [
                 'authorizationUrl' => $authUrl,
                 'codeVerifier' => $codeVerifier,
-                'state' => $state
+                'state' => $state,
             ];
         });
     }
@@ -503,10 +503,12 @@ final class OAuthClient
             } catch (InvalidClientException | UnauthorizedClientException $e) {
                 // Handle recoverable errors by invalidating credentials and retrying
                 $provider->invalidateCredentials('all')->await();
+
                 return $this->authInternal($provider, $serverUrl, $authorizationCode, $scope, $resourceMetadataUrl)->await();
             } catch (InvalidGrantException $e) {
                 // Handle token-specific errors
                 $provider->invalidateCredentials('tokens')->await();
+
                 return $this->authInternal($provider, $serverUrl, $authorizationCode, $scope, $resourceMetadataUrl)->await();
             }
         });
@@ -571,6 +573,7 @@ final class OAuthClient
                 )->await();
 
                 $provider->storeTokens($tokens)->await();
+
                 return 'AUTHORIZED';
             }
 
@@ -590,6 +593,7 @@ final class OAuthClient
                     )->await();
 
                     $provider->storeTokens($newTokens)->await();
+
                     return 'AUTHORIZED';
                 } catch (\Exception $e) {
                     // If refresh fails, continue to new authorization

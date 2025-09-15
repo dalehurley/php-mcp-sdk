@@ -81,6 +81,7 @@ final class Root implements \JsonSerializable
         }
 
         $parts = explode('/', rtrim($path, '/'));
+
         return end($parts) ?: $this->uri;
     }
 

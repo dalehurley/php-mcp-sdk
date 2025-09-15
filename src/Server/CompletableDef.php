@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Server;
 
 /**
- * Definition for a completable value
+ * Definition for a completable value.
  *
  * @template T
  */

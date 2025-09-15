@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Types\Messages;
 
-use MCP\Types\Results;
 use MCP\Types\EmptyResult;
+use MCP\Types\Results;
 
 /**
  * Union type helper for server results.
@@ -23,7 +23,9 @@ final class ServerResult
      * Create a result from an array.
      *
      * @param array<string, mixed> $data
+     *
      * @return EmptyResult|Results\InitializeResult|Results\CompleteResult|Results\GetPromptResult|Results\ListPromptsResult|Results\ListResourcesResult|Results\ListResourceTemplatesResult|Results\ReadResourceResult|Results\CallToolResult|Results\ListToolsResult
+     *
      * @throws \InvalidArgumentException
      */
     public static function fromArray(array $data): object

@@ -45,6 +45,7 @@ abstract class PaginatedRequest extends Request
         $params['cursor'] = $cursor->getValue();
 
         $class = static::class;
+
         return new $class($params);
     }
 

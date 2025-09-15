@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Validation;
 
-use PHPUnit\Framework\TestCase;
-use MCP\Validation\ValidationService;
 use MCP\Validation\ValidationException;
+use MCP\Validation\ValidationService;
+use PHPUnit\Framework\TestCase;
 
 class ValidationServiceTest extends TestCase
 {
@@ -47,7 +47,7 @@ class ValidationServiceTest extends TestCase
             'jsonrpc' => '2.0',
             'id' => 1,
             'method' => 'test/method',
-            'params' => ['key' => 'value']
+            'params' => ['key' => 'value'],
         ];
 
         $result = $this->validator->validateJSONRPCRequest($validRequest);

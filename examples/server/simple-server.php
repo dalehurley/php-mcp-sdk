@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Simple MCP Server Example
- * 
+ * Simple MCP Server Example.
+ *
  * This example demonstrates how to create a basic MCP server with:
  * - A tool that performs calculations
  * - A static resource that provides information
@@ -11,19 +11,20 @@
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
-use MCP\Server\Transport\StdioServerTransport;
 use MCP\Server\ResourceTemplate;
-use MCP\Types\Implementation;
+use MCP\Server\Transport\StdioServerTransport;
 use MCP\Types\Capabilities\ServerCapabilities;
-use MCP\Types\Results\CallToolResult;
-use MCP\Types\Results\GetPromptResult;
-use MCP\Types\Results\ReadResourceResult;
-use MCP\Types\Results\ListResourcesResult;
 use MCP\Types\Content\TextContent;
+use MCP\Types\Implementation;
 use MCP\Types\Prompts\PromptMessage;
 use MCP\Types\Resources\TextResourceContents;
-use function Amp\async;
+use MCP\Types\Results\CallToolResult;
+use MCP\Types\Results\GetPromptResult;
+use MCP\Types\Results\ListResourcesResult;
+use MCP\Types\Results\ReadResourceResult;
 
 // Create the server
 // Load required files to ensure all classes are available
@@ -40,7 +41,7 @@ $server = new McpServer(
             resources: ['listChanged' => true],
             prompts: ['listChanged' => true]
         ),
-        instructions: "This is a simple example MCP server demonstrating basic functionality."
+        instructions: 'This is a simple example MCP server demonstrating basic functionality.'
     )
 );
 
@@ -52,8 +53,8 @@ $server->tool(
         'expression' => [
             'type' => 'string',
             'description' => 'A mathematical expression to evaluate (e.g., "2 + 2")',
-            'pattern' => '^[0-9+\\-*/(). ]+$'
-        ]
+            'pattern' => '^[0-9+\\-*/(). ]+$',
+        ],
     ],
     function (array $args) {
         $expression = $args['expression'] ?? '';
@@ -62,7 +63,7 @@ $server->tool(
         if (!preg_match('/^[0-9+\-*\/(). ]+$/', $expression)) {
             return new CallToolResult(
                 content: [
-                    ['type' => 'text', 'text' => 'Invalid expression. Only numbers and basic operators are allowed.']
+                    ['type' => 'text', 'text' => 'Invalid expression. Only numbers and basic operators are allowed.'],
                 ],
                 isError: true
             );
@@ -74,13 +75,13 @@ $server->tool(
 
             return new CallToolResult(
                 content: [
-                    ['type' => 'text', 'text' => "Result: $result"]
+                    ['type' => 'text', 'text' => "Result: $result"],
                 ]
             );
         } catch (\Throwable $e) {
             return new CallToolResult(
                 content: [
-                    ['type' => 'text', 'text' => 'Error evaluating expression: ' . $e->getMessage()]
+                    ['type' => 'text', 'text' => 'Error evaluating expression: ' . $e->getMessage()],
                 ],
                 isError: true
             );
@@ -95,25 +96,25 @@ $server->resource(
     [
         'title' => 'Server Information',
         'description' => 'Basic information about this MCP server',
-        'mimeType' => 'text/plain'
+        'mimeType' => 'text/plain',
     ],
     function ($uri, $extra) {
         $info = <<<EOF
-Example MCP Server
-==================
+            Example MCP Server
+            ==================
 
-This is a simple demonstration of the PHP MCP SDK capabilities.
+            This is a simple demonstration of the PHP MCP SDK capabilities.
 
-Available Tools:
-- calculate: Perform basic math calculations
+            Available Tools:
+            - calculate: Perform basic math calculations
 
-Available Resources:
-- server-info: This information file
-- dynamic-data: Dynamic resource with parameters
+            Available Resources:
+            - server-info: This information file
+            - dynamic-data: Dynamic resource with parameters
 
-Available Prompts:
-- greeting: Generate a personalized greeting
-EOF;
+            Available Prompts:
+            - greeting: Generate a personalized greeting
+            EOF;
 
         return new ReadResourceResult(
             contents: [
@@ -121,7 +122,7 @@ EOF;
                     uri: 'file:///info.txt',
                     text: $info,
                     mimeType: 'text/plain'
-                )
+                ),
             ]
         );
     }
@@ -138,16 +139,16 @@ $dynamicTemplate = new ResourceTemplate(
                     'uri' => 'data/user/123',
                     'name' => 'user-123',
                     'title' => 'User #123',
-                    'description' => 'Information about user 123'
+                    'description' => 'Information about user 123',
                 ],
                 [
                     'uri' => 'data/product/456',
                     'name' => 'product-456',
                     'title' => 'Product #456',
-                    'description' => 'Details about product 456'
-                ]
+                    'description' => 'Details about product 456',
+                ],
             ]);
-        }
+        },
     ]
 );
 
@@ -156,14 +157,14 @@ $server->resource(
     $dynamicTemplate,
     [
         'title' => 'Dynamic Data Resources',
-        'description' => 'Access various types of data by ID'
+        'description' => 'Access various types of data by ID',
     ],
     function ($uri, $variables, $extra) {
         $type = $variables['type'] ?? 'unknown';
         $id = $variables['id'] ?? '0';
 
         $data = "Dynamic $type data for ID: $id\n";
-        $data .= "Retrieved at: " . date('Y-m-d H:i:s') . "\n";
+        $data .= 'Retrieved at: ' . date('Y-m-d H:i:s') . "\n";
 
         return new ReadResourceResult(
             contents: [
@@ -171,7 +172,7 @@ $server->resource(
                     uri: $uri,
                     text: $data,
                     mimeType: 'text/plain'
-                )
+                ),
             ]
         );
     }
@@ -185,14 +186,14 @@ $server->prompt(
         'name' => [
             'type' => 'string',
             'description' => 'The name of the person to greet',
-            'required' => true
+            'required' => true,
         ],
         'style' => [
             'type' => 'string',
             'description' => 'The style of greeting (formal, casual, enthusiastic)',
             'enum' => ['formal', 'casual', 'enthusiastic'],
-            'default' => 'casual'
-        ]
+            'default' => 'casual',
+        ],
     ],
     function (array $args) {
         $name = $args['name'] ?? 'friend';
@@ -209,7 +210,7 @@ $server->prompt(
                 new PromptMessage(
                     role: 'assistant',
                     content: new TextContent($greeting)
-                )
+                ),
             ]
         );
     }
@@ -227,7 +228,7 @@ async(function () use ($server) {
         // Server will now handle requests until terminated
 
     } catch (\Throwable $e) {
-        error_log("Server error: " . $e->getMessage());
+        error_log('Server error: ' . $e->getMessage());
         exit(1);
     }
 })->await();

@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace MCP\Client\Transport;
 
-use Amp\Cancellation;
+use function Amp\async;
+
 use Amp\DeferredCancellation;
+
+use function Amp\delay;
+
 use Amp\Future;
-use Amp\TimeoutCancellation;
 use Evenement\EventEmitter;
 use MCP\Shared\Transport;
 use MCP\Types\ErrorCode;
 use MCP\Types\McpError;
+
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-
-use function Amp\async;
-use function Amp\delay;
 
 /**
  * WebSocket client transport with automatic reconnection and heartbeat support.
@@ -28,19 +29,29 @@ use function Amp\delay;
 class WebSocketClientTransport extends EventEmitter implements Transport
 {
     private ?object $connection = null;
+
     private bool $isConnected = false;
+
     private bool $isConnecting = false;
+
     private bool $shouldReconnect = true;
+
     private int $reconnectAttempts = 0;
+
     /** @var Future<mixed>|null */
     private ?Future $heartbeatTask = null;
+
     /** @var Future<mixed>|null */
     private ?Future $reconnectTask = null;
+
     private ?DeferredCancellation $cancellation = null;
+
     /** @var callable|null */
     private $messageHandler = null;
+
     /** @var callable|null */
     private $closeHandler = null;
+
     /** @var callable|null */
     private $errorHandler = null;
 
@@ -120,6 +131,7 @@ class WebSocketClientTransport extends EventEmitter implements Transport
                 }
             } catch (\Throwable $e) {
                 $this->logger->error('Failed to send WebSocket message: ' . $e->getMessage());
+
                 throw new McpError(
                     ErrorCode::InternalError,
                     'Failed to send WebSocket message: ' . $e->getMessage(),
@@ -210,7 +222,7 @@ class WebSocketClientTransport extends EventEmitter implements Transport
         // - Ratchet/Pawl
         // - Amphp WebSocket client
 
-        return new class {
+        return new class () {
             public function send(string $data): void
             {
                 // Placeholder - would send data through actual WebSocket
@@ -291,6 +303,7 @@ class WebSocketClientTransport extends EventEmitter implements Transport
         if ($this->reconnectAttempts >= $this->options->maxReconnectAttempts) {
             $this->logger->error('Max reconnection attempts reached, giving up');
             $this->shouldReconnect = false;
+
             return;
         }
 
@@ -329,7 +342,7 @@ class WebSocketClientTransport extends EventEmitter implements Transport
         $delayWithJitter = $exponentialDelay + $jitter;
 
         // Cap at 30 seconds
-        return (int)min($delayWithJitter, 30000);
+        return (int) min($delayWithJitter, 30000);
     }
 
     /**

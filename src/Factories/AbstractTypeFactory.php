@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace MCP\Factories;
 
-use MCP\Validation\ValidationException;
 use MCP\Validation\ValidationService;
 
 /**
  * Abstract base class for type factories.
  *
  * @template T of object
+ *
  * @implements TypeFactory<T>
  */
 abstract class AbstractTypeFactory implements TypeFactory
 {
     public function __construct(
         protected readonly ?ValidationService $validationService = null
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritdoc}
@@ -25,6 +26,7 @@ abstract class AbstractTypeFactory implements TypeFactory
     public function create(array $data): object
     {
         $this->validate($data);
+
         return $this->createInstance($data);
     }
 
@@ -34,7 +36,7 @@ abstract class AbstractTypeFactory implements TypeFactory
     public function createMultiple(array $dataArray): array
     {
         return array_map(
-            fn(array $data) => $this->create($data),
+            fn (array $data) => $this->create($data),
             $dataArray
         );
     }
@@ -53,6 +55,7 @@ abstract class AbstractTypeFactory implements TypeFactory
      * Create an instance from validated data.
      *
      * @param array<string, mixed> $data
+     *
      * @return T
      */
     abstract protected function createInstance(array $data): object;
@@ -70,8 +73,10 @@ abstract class AbstractTypeFactory implements TypeFactory
      * Extract a value from data with a default.
      *
      * @template V
+     *
      * @param array<string, mixed> $data
      * @param V|null $default
+     *
      * @return V|null
      */
     protected function getValue(array $data, string $key, mixed $default = null): mixed
@@ -87,6 +92,7 @@ abstract class AbstractTypeFactory implements TypeFactory
     protected function getString(array $data, string $key, ?string $default = null): ?string
     {
         $value = $this->getValue($data, $key, $default);
+
         return is_string($value) ? $value : $default;
     }
 
@@ -98,6 +104,7 @@ abstract class AbstractTypeFactory implements TypeFactory
     protected function getBool(array $data, string $key, ?bool $default = null): ?bool
     {
         $value = $this->getValue($data, $key, $default);
+
         return is_bool($value) ? $value : $default;
     }
 
@@ -109,6 +116,7 @@ abstract class AbstractTypeFactory implements TypeFactory
     protected function getInt(array $data, string $key, ?int $default = null): ?int
     {
         $value = $this->getValue($data, $key, $default);
+
         return is_int($value) ? $value : $default;
     }
 
@@ -126,6 +134,7 @@ abstract class AbstractTypeFactory implements TypeFactory
         if (is_int($value)) {
             return (float) $value;
         }
+
         return $default;
     }
 
@@ -133,11 +142,13 @@ abstract class AbstractTypeFactory implements TypeFactory
      * Extract an array value from data.
      *
      * @param array<string, mixed> $data
+     *
      * @return array<string, mixed>|null
      */
     protected function getArray(array $data, string $key, ?array $default = null): ?array
     {
         $value = $this->getValue($data, $key, $default);
+
         return is_array($value) ? $value : $default;
     }
 }

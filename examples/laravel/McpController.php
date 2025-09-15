@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Post;
+use App\Models\User;
 use Illuminate\Http\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use MCP\Server\McpServer;
 use MCP\Types\Implementation;
 use MCP\Types\Tool;
-use MCP\Shared\StdioServerTransport;
-use App\Models\User;
-use App\Models\Post;
 
 /**
  * Example Laravel controller showing how to integrate the core PHP MCP SDK
@@ -42,7 +41,7 @@ class McpController extends Controller
     }
 
     /**
-     * Register MCP tools that use Laravel models and services
+     * Register MCP tools that use Laravel models and services.
      */
     private function registerTools(): void
     {
@@ -57,15 +56,15 @@ class McpController extends Controller
                     'properties' => [
                         'query' => [
                             'type' => 'string',
-                            'description' => 'Search query for user name or email'
+                            'description' => 'Search query for user name or email',
                         ],
                         'limit' => [
                             'type' => 'integer',
                             'description' => 'Maximum number of results',
-                            'default' => 10
-                        ]
+                            'default' => 10,
+                        ],
                     ],
-                    'required' => ['query']
+                    'required' => ['query'],
                 ]
             ),
             function (array $params) {
@@ -80,7 +79,7 @@ class McpController extends Controller
                 return [
                     'users' => $users->toArray(),
                     'count' => $users->count(),
-                    'query' => $query
+                    'query' => $query,
                 ];
             }
         );
@@ -96,31 +95,31 @@ class McpController extends Controller
                     'properties' => [
                         'title' => [
                             'type' => 'string',
-                            'description' => 'Post title'
+                            'description' => 'Post title',
                         ],
                         'content' => [
                             'type' => 'string',
-                            'description' => 'Post content'
+                            'description' => 'Post content',
                         ],
                         'user_id' => [
                             'type' => 'integer',
-                            'description' => 'Author user ID'
-                        ]
+                            'description' => 'Author user ID',
+                        ],
                     ],
-                    'required' => ['title', 'content', 'user_id']
+                    'required' => ['title', 'content', 'user_id'],
                 ]
             ),
             function (array $params) {
                 $post = Post::create([
                     'title' => $params['title'],
                     'content' => $params['content'],
-                    'user_id' => $params['user_id']
+                    'user_id' => $params['user_id'],
                 ]);
 
                 return [
                     'success' => true,
                     'post' => $post->toArray(),
-                    'message' => 'Post created successfully'
+                    'message' => 'Post created successfully',
                 ];
             }
         );
@@ -137,22 +136,22 @@ class McpController extends Controller
                         'operation' => [
                             'type' => 'string',
                             'enum' => ['get', 'put', 'forget', 'flush'],
-                            'description' => 'Cache operation to perform'
+                            'description' => 'Cache operation to perform',
                         ],
                         'key' => [
                             'type' => 'string',
-                            'description' => 'Cache key'
+                            'description' => 'Cache key',
                         ],
                         'value' => [
-                            'description' => 'Value to cache (for put operation)'
+                            'description' => 'Value to cache (for put operation)',
                         ],
                         'ttl' => [
                             'type' => 'integer',
                             'description' => 'Time to live in seconds (for put operation)',
-                            'default' => 3600
-                        ]
+                            'default' => 3600,
+                        ],
                     ],
-                    'required' => ['operation']
+                    'required' => ['operation'],
                 ]
             ),
             function (array $params) {
@@ -164,11 +163,12 @@ class McpController extends Controller
                         if (!$key) {
                             throw new \InvalidArgumentException('Key is required for get operation');
                         }
+
                         return [
                             'operation' => 'get',
                             'key' => $key,
                             'value' => cache($key),
-                            'exists' => cache()->has($key)
+                            'exists' => cache()->has($key),
                         ];
 
                     case 'put':
@@ -185,7 +185,7 @@ class McpController extends Controller
                             'key' => $key,
                             'value' => $value,
                             'ttl' => $ttl,
-                            'success' => true
+                            'success' => true,
                         ];
 
                     case 'forget':
@@ -197,15 +197,16 @@ class McpController extends Controller
                         return [
                             'operation' => 'forget',
                             'key' => $key,
-                            'success' => $success
+                            'success' => $success,
                         ];
 
                     case 'flush':
                         cache()->flush();
+
                         return [
                             'operation' => 'flush',
                             'success' => true,
-                            'message' => 'All cache cleared'
+                            'message' => 'All cache cleared',
                         ];
 
                     default:
@@ -216,7 +217,7 @@ class McpController extends Controller
     }
 
     /**
-     * Register MCP resources
+     * Register MCP resources.
      */
     private function registerResources(): void
     {
@@ -242,7 +243,7 @@ class McpController extends Controller
     }
 
     /**
-     * Handle MCP requests via HTTP
+     * Handle MCP requests via HTTP.
      */
     public function handle(Request $request): JsonResponse
     {
@@ -256,7 +257,7 @@ class McpController extends Controller
             switch ($method) {
                 case 'tools/list':
                     return response()->json([
-                        'tools' => $this->mcpServer->getTools()
+                        'tools' => $this->mcpServer->getTools(),
                     ]);
 
                 case 'tools/call':
@@ -269,14 +270,14 @@ class McpController extends Controller
                         'content' => [
                             [
                                 'type' => 'text',
-                                'text' => json_encode($result, JSON_PRETTY_PRINT)
-                            ]
-                        ]
+                                'text' => json_encode($result, JSON_PRETTY_PRINT),
+                            ],
+                        ],
                     ]);
 
                 case 'resources/list':
                     return response()->json([
-                        'resources' => $this->mcpServer->getResources()
+                        'resources' => $this->mcpServer->getResources(),
                     ]);
 
                 default:
@@ -284,8 +285,8 @@ class McpController extends Controller
                         'error' => [
                             'code' => -32601,
                             'message' => 'Method not found',
-                            'data' => ['method' => $method]
-                        ]
+                            'data' => ['method' => $method],
+                        ],
                     ], 404);
             }
         } catch (\Exception $e) {
@@ -293,14 +294,14 @@ class McpController extends Controller
                 'error' => [
                     'code' => -32603,
                     'message' => 'Internal error',
-                    'data' => ['message' => $e->getMessage()]
-                ]
+                    'data' => ['message' => $e->getMessage()],
+                ],
             ], 500);
         }
     }
 
     /**
-     * Get server information
+     * Get server information.
      */
     public function info(): JsonResponse
     {
@@ -309,7 +310,7 @@ class McpController extends Controller
             'version' => config('app.version', '1.0.0'),
             'tools_count' => count($this->mcpServer->getTools()),
             'resources_count' => count($this->mcpServer->getResources()),
-            'mcp_version' => '2024-11-05'
+            'mcp_version' => '2024-11-05',
         ]);
     }
 }

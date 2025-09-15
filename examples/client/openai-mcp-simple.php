@@ -2,19 +2,19 @@
 <?php
 
 /**
- * Simple OpenAI Tool Calling with MCP Demo
- * 
+ * Simple OpenAI Tool Calling with MCP Demo.
+ *
  * This is a simplified working example that demonstrates OpenAI function calling
  * with mock MCP tools. It shows the concept without requiring actual MCP server connection.
- * 
+ *
  * Usage:
  *   php examples/client/openai-mcp-simple.php [request]
- * 
+ *
  * Examples:
  *   php examples/client/openai-mcp-simple.php
  *   php examples/client/openai-mcp-simple.php "show me all products"
  *   php examples/client/openai-mcp-simple.php "create a feature called 'User Dashboard'"
- * 
+ *
  * Environment Variables:
  *   OPENAI_API_KEY - Your OpenAI API key (required)
  */
@@ -39,7 +39,7 @@ class SimpleOpenAIMCPDemo
     }
 
     /**
-     * Mock MCP tool definitions (in real implementation, these come from MCP server)
+     * Mock MCP tool definitions (in real implementation, these come from MCP server).
      */
     public function getMockMCPTools(): array
     {
@@ -56,11 +56,11 @@ class SimpleOpenAIMCPDemo
                                 'type' => 'integer',
                                 'description' => 'Maximum number of products to return',
                                 'minimum' => 1,
-                                'maximum' => 50
-                            ]
-                        ]
-                    ]
-                ]
+                                'maximum' => 50,
+                            ],
+                        ],
+                    ],
+                ],
             ],
             [
                 'type' => 'function',
@@ -72,20 +72,20 @@ class SimpleOpenAIMCPDemo
                         'properties' => [
                             'product_id' => [
                                 'type' => 'string',
-                                'description' => 'The ID of the product'
+                                'description' => 'The ID of the product',
                             ],
                             'name' => [
                                 'type' => 'string',
-                                'description' => 'The name of the feature'
+                                'description' => 'The name of the feature',
                             ],
                             'description' => [
                                 'type' => 'string',
-                                'description' => 'Description of the feature'
-                            ]
+                                'description' => 'Description of the feature',
+                            ],
                         ],
-                        'required' => ['product_id', 'name', 'description']
-                    ]
-                ]
+                        'required' => ['product_id', 'name', 'description'],
+                    ],
+                ],
             ],
             [
                 'type' => 'function',
@@ -97,23 +97,23 @@ class SimpleOpenAIMCPDemo
                         'properties' => [
                             'product_id' => [
                                 'type' => 'string',
-                                'description' => 'The ID of the product'
-                            ]
+                                'description' => 'The ID of the product',
+                            ],
                         ],
-                        'required' => ['product_id']
-                    ]
-                ]
-            ]
+                        'required' => ['product_id'],
+                    ],
+                ],
+            ],
         ];
     }
 
     /**
-     * Mock MCP tool execution (simulates actual MCP calls)
+     * Mock MCP tool execution (simulates actual MCP calls).
      */
     public function executeMockTool(string $toolName, array $arguments): array
     {
         echo "🔧 Executing MCP tool: {$toolName}\n";
-        echo "   Arguments: " . json_encode($arguments, JSON_PRETTY_PRINT) . "\n";
+        echo '   Arguments: ' . json_encode($arguments, JSON_PRETTY_PRINT) . "\n";
 
         switch ($toolName) {
             case 'list_products':
@@ -122,9 +122,9 @@ class SimpleOpenAIMCPDemo
                     'data' => [
                         ['id' => 'prod-1', 'name' => 'Project Management Suite', 'features' => 12],
                         ['id' => 'prod-2', 'name' => 'Customer Support Platform', 'features' => 8],
-                        ['id' => 'prod-3', 'name' => 'Analytics Dashboard', 'features' => 15]
+                        ['id' => 'prod-3', 'name' => 'Analytics Dashboard', 'features' => 15],
                     ],
-                    'message' => 'Successfully retrieved products'
+                    'message' => 'Successfully retrieved products',
                 ];
                 break;
 
@@ -136,9 +136,9 @@ class SimpleOpenAIMCPDemo
                         'product_id' => $arguments['product_id'],
                         'name' => $arguments['name'],
                         'description' => $arguments['description'],
-                        'status' => 'Planning'
+                        'status' => 'Planning',
                     ],
-                    'message' => "Successfully created feature '{$arguments['name']}'"
+                    'message' => "Successfully created feature '{$arguments['name']}'",
                 ];
                 break;
 
@@ -150,25 +150,26 @@ class SimpleOpenAIMCPDemo
                         'name' => 'Project Management Suite',
                         'description' => 'Comprehensive project management tool',
                         'feature_count' => 12,
-                        'requirement_count' => 34
+                        'requirement_count' => 34,
                     ],
-                    'message' => 'Successfully retrieved product details'
+                    'message' => 'Successfully retrieved product details',
                 ];
                 break;
 
             default:
                 $result = [
                     'success' => false,
-                    'error' => "Unknown tool: {$toolName}"
+                    'error' => "Unknown tool: {$toolName}",
                 ];
         }
 
-        echo "   ✅ Tool executed: " . $result['message'] . "\n";
+        echo '   ✅ Tool executed: ' . $result['message'] . "\n";
+
         return $result;
     }
 
     /**
-     * Process user request with OpenAI function calling
+     * Process user request with OpenAI function calling.
      */
     public function processRequest(string $message): string
     {
@@ -179,21 +180,21 @@ class SimpleOpenAIMCPDemo
                 'model' => 'gpt-4.1',
                 'messages' => [
                     ['role' => 'system', 'content' => 'You help manage products using FullCX. Use tools when needed.'],
-                    ['role' => 'user', 'content' => $message]
+                    ['role' => 'user', 'content' => $message],
                 ],
                 'tools' => $this->getMockMCPTools(),
-                'tool_choice' => 'auto'
+                'tool_choice' => 'auto',
             ]);
 
             $msg = $response->choices[0]->message;
 
             if ($msg->toolCalls) {
-                echo "🔧 OpenAI is calling " . count($msg->toolCalls) . " tool(s):\n\n";
+                echo '🔧 OpenAI is calling ' . count($msg->toolCalls) . " tool(s):\n\n";
 
                 $messages = [
                     ['role' => 'system', 'content' => 'You help manage products using FullCX.'],
                     ['role' => 'user', 'content' => $message],
-                    ['role' => 'assistant', 'content' => $msg->content, 'tool_calls' => $msg->toolCalls]
+                    ['role' => 'assistant', 'content' => $msg->content, 'tool_calls' => $msg->toolCalls],
                 ];
 
                 foreach ($msg->toolCalls as $call) {
@@ -203,7 +204,7 @@ class SimpleOpenAIMCPDemo
                     $messages[] = [
                         'role' => 'tool',
                         'tool_call_id' => $call->id,
-                        'content' => json_encode($result)
+                        'content' => json_encode($result),
                     ];
                     echo "\n";
                 }
@@ -211,7 +212,7 @@ class SimpleOpenAIMCPDemo
                 // Get final response
                 $finalResponse = $this->openai->chat()->create([
                     'model' => 'gpt-4.1',
-                    'messages' => $messages
+                    'messages' => $messages,
                 ]);
 
                 echo "🎯 Final Response:\n";
@@ -221,11 +222,13 @@ class SimpleOpenAIMCPDemo
             } else {
                 echo "💬 Direct Response:\n";
                 echo $msg->content . "\n";
+
                 return $msg->content;
             }
         } catch (\Exception $e) {
             echo "❌ Error: {$e->getMessage()}\n";
-            return "Error: " . $e->getMessage();
+
+            return 'Error: ' . $e->getMessage();
         }
     }
 }
@@ -247,14 +250,14 @@ if ($argc > 1) {
     $agent = new SimpleOpenAIMCPDemo();
 
     $demoRequests = [
-        "show me all products",
-        "get details for product prod-1",
-        "create a feature called 'Advanced Search' for product prod-1"
+        'show me all products',
+        'get details for product prod-1',
+        "create a feature called 'Advanced Search' for product prod-1",
     ];
 
     foreach ($demoRequests as $index => $request) {
-        echo "Demo " . ($index + 1) . ": {$request}\n";
-        echo str_repeat("-", 40) . "\n";
+        echo 'Demo ' . ($index + 1) . ": {$request}\n";
+        echo str_repeat('-', 40) . "\n";
         $agent->processRequest($request);
         echo "\n";
     }

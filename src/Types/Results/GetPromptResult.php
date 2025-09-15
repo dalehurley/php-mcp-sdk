@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Types\Results;
 
-use MCP\Types\Result;
 use MCP\Types\Prompts\PromptMessage;
+use MCP\Types\Result;
 
 /**
  * The server's response to a prompts/get request from the client.
@@ -34,7 +34,7 @@ final class GetPromptResult extends Result
         }
 
         $messages = array_map(
-            fn(array $item) => PromptMessage::fromArray($item),
+            fn (array $item) => PromptMessage::fromArray($item),
             $data['messages']
         );
 
@@ -77,7 +77,7 @@ final class GetPromptResult extends Result
         $data = parent::jsonSerialize();
 
         $data['messages'] = array_map(
-            fn(PromptMessage $message) => $message->jsonSerialize(),
+            fn (PromptMessage $message) => $message->jsonSerialize(),
             $this->messages
         );
 

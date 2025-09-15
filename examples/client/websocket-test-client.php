@@ -6,16 +6,15 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 /**
- * Simple WebSocket Test Client
- * 
+ * Simple WebSocket Test Client.
+ *
  * This is a basic WebSocket client to test connectivity with the WebSocket MCP server.
  * This demonstrates how to connect to the WebSocket server and send MCP messages.
- * 
+ *
  * Usage:
  *   1. Start the WebSocket server: php examples/server/websocket-server.php
  *   2. Run this client: php examples/client/websocket-test-client.php
  */
-
 echo "🔌 WebSocket MCP Test Client\n";
 echo "============================\n\n";
 
@@ -40,13 +39,13 @@ $initializeRequest = [
     'params' => [
         'protocolVersion' => '2024-11-05',
         'capabilities' => [
-            'tools' => []
+            'tools' => [],
         ],
         'clientInfo' => [
             'name' => 'WebSocket Test Client',
-            'version' => '1.0.0'
-        ]
-    ]
+            'version' => '1.0.0',
+        ],
+    ],
 ];
 
 echo "1. Initialize Request:\n";
@@ -57,7 +56,7 @@ $listToolsRequest = [
     'jsonrpc' => '2.0',
     'id' => 2,
     'method' => 'tools/list',
-    'params' => []
+    'params' => [],
 ];
 
 echo "2. List Tools Request:\n";
@@ -71,9 +70,9 @@ $callToolRequest = [
     'params' => [
         'name' => 'echo',
         'arguments' => [
-            'text' => 'Hello from WebSocket client!'
-        ]
-    ]
+            'text' => 'Hello from WebSocket client!',
+        ],
+    ],
 ];
 
 echo "3. Call Tool Request (echo):\n";
@@ -86,8 +85,8 @@ $timeToolRequest = [
     'method' => 'tools/call',
     'params' => [
         'name' => 'time',
-        'arguments' => []
-    ]
+        'arguments' => [],
+    ],
 ];
 
 echo "4. Call Tool Request (time):\n";
@@ -103,9 +102,9 @@ $mathToolRequest = [
         'arguments' => [
             'operation' => 'add',
             'a' => 42,
-            'b' => 8
-        ]
-    ]
+            'b' => 8,
+        ],
+    ],
 ];
 
 echo "5. Call Tool Request (math):\n";
@@ -118,8 +117,8 @@ $connectionsRequest = [
     'method' => 'tools/call',
     'params' => [
         'name' => 'connections',
-        'arguments' => []
-    ]
+        'arguments' => [],
+    ],
 ];
 
 echo "6. Call Tool Request (connections):\n";
@@ -130,7 +129,7 @@ $listResourcesRequest = [
     'jsonrpc' => '2.0',
     'id' => 7,
     'method' => 'resources/list',
-    'params' => []
+    'params' => [],
 ];
 
 echo "7. List Resources Request:\n";
@@ -142,8 +141,8 @@ $readResourceRequest = [
     'id' => 8,
     'method' => 'resources/read',
     'params' => [
-        'uri' => 'server-info'
-    ]
+        'uri' => 'server-info',
+    ],
 ];
 
 echo "8. Read Resource Request:\n";
@@ -167,51 +166,51 @@ echo "📚 Example browser WebSocket client:\n";
 echo "=====================================\n";
 
 $jsExample = <<<'JS'
-// Browser WebSocket client example
-const ws = new WebSocket('ws://127.0.0.1:8080');
+    // Browser WebSocket client example
+    const ws = new WebSocket('ws://127.0.0.1:8080');
 
-ws.onopen = function() {
-    console.log('Connected to WebSocket MCP server');
-    
-    // Send initialize request
-    ws.send(JSON.stringify({
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'initialize',
-        params: {
-            protocolVersion: '2024-11-05',
-            capabilities: { tools: [] },
-            clientInfo: { name: 'Browser Client', version: '1.0.0' }
-        }
-    }));
-};
+    ws.onopen = function() {
+        console.log('Connected to WebSocket MCP server');
+        
+        // Send initialize request
+        ws.send(JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'initialize',
+            params: {
+                protocolVersion: '2024-11-05',
+                capabilities: { tools: [] },
+                clientInfo: { name: 'Browser Client', version: '1.0.0' }
+            }
+        }));
+    };
 
-ws.onmessage = function(event) {
-    const response = JSON.parse(event.data);
-    console.log('Received:', response);
-};
+    ws.onmessage = function(event) {
+        const response = JSON.parse(event.data);
+        console.log('Received:', response);
+    };
 
-ws.onerror = function(error) {
-    console.error('WebSocket error:', error);
-};
+    ws.onerror = function(error) {
+        console.error('WebSocket error:', error);
+    };
 
-ws.onclose = function() {
-    console.log('WebSocket connection closed');
-};
+    ws.onclose = function() {
+        console.log('WebSocket connection closed');
+    };
 
-// Send a tool call after initialization
-setTimeout(() => {
-    ws.send(JSON.stringify({
-        jsonrpc: '2.0',
-        id: 2,
-        method: 'tools/call',
-        params: {
-            name: 'echo',
-            arguments: { text: 'Hello from browser!' }
-        }
-    }));
-}, 1000);
-JS;
+    // Send a tool call after initialization
+    setTimeout(() => {
+        ws.send(JSON.stringify({
+            jsonrpc: '2.0',
+            id: 2,
+            method: 'tools/call',
+            params: {
+                name: 'echo',
+                arguments: { text: 'Hello from browser!' }
+            }
+        }));
+    }, 1000);
+    JS;
 
 echo $jsExample . "\n\n";
 

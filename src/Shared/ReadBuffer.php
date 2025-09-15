@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace MCP\Shared;
 
-use MCP\Types\JsonRpc\JSONRPCMessage;
-use MCP\Types\JsonRpc\JSONRPCRequest;
-use MCP\Types\JsonRpc\JSONRPCNotification;
-use MCP\Types\JsonRpc\JSONRPCResponse;
 use MCP\Types\JsonRpc\JSONRPCError;
+use MCP\Types\JsonRpc\JSONRPCMessage;
+use MCP\Types\JsonRpc\JSONRPCNotification;
+use MCP\Types\JsonRpc\JSONRPCRequest;
+use MCP\Types\JsonRpc\JSONRPCResponse;
 use MCP\Validation\ValidationException;
 
 /**
@@ -100,7 +100,9 @@ class ReadBuffer
      * Deserialize a JSON string into a JSON-RPC message.
      *
      * @param string $json
+     *
      * @return JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError
+     *
      * @throws ValidationException
      */
     public static function deserializeMessage(string $json): JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError
@@ -108,11 +110,11 @@ class ReadBuffer
         $data = json_decode($json, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new ValidationException("Invalid JSON: " . json_last_error_msg());
+            throw new ValidationException('Invalid JSON: ' . json_last_error_msg());
         }
 
         if (!is_array($data)) {
-            throw new ValidationException("JSON must decode to an object");
+            throw new ValidationException('JSON must decode to an object');
         }
 
         return JSONRPCMessage::fromArray($data);
@@ -122,7 +124,9 @@ class ReadBuffer
      * Serialize a JSON-RPC message to a string with newline delimiter.
      *
      * @param JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError|array $message
+     *
      * @return string
+     *
      * @throws \RuntimeException
      */
     public static function serializeMessage(JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError|array $message): string
@@ -137,9 +141,10 @@ class ReadBuffer
 
         if ($json === false) {
             throw new \RuntimeException(
-                "Failed to encode JSON: " . json_last_error_msg()
+                'Failed to encode JSON: ' . json_last_error_msg()
             );
         }
+
         return $json . "\n";
     }
 }

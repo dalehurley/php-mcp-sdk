@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Auth;
 
-use PHPUnit\Framework\TestCase;
-use MCP\Client\Auth\OAuthClient;
 use MCP\Client\Auth\InMemoryTokenStorage;
+use MCP\Client\Auth\OAuthClient;
+use PHPUnit\Framework\TestCase;
 
 class OAuthFlowTest extends TestCase
 {

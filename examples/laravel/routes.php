@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\McpController;
+use Illuminate\Support\Facades\Route;
 
 /**
- * Example Laravel routes for MCP integration
+ * Example Laravel routes for MCP integration.
  *
  * This file shows how to set up routes for handling MCP requests
  * when using the core PHP MCP SDK with Laravel.
@@ -28,7 +28,7 @@ Route::prefix('mcp')->group(function () {
             'status' => 'healthy',
             'timestamp' => now()->toISOString(),
             'version' => config('app.version', '1.0.0'),
-            'mcp_version' => '2024-11-05'
+            'mcp_version' => '2024-11-05',
         ]);
     })->name('mcp.health');
 

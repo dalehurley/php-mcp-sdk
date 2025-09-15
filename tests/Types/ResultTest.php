@@ -32,7 +32,7 @@ class ResultTest extends TestCase
         $data = [
             '_meta' => ['session' => '12345'],
             'status' => 'success',
-            'count' => 10
+            'count' => 10,
         ];
 
         $result = Result::fromArray($data);
@@ -45,7 +45,7 @@ class ResultTest extends TestCase
     {
         $data = [
             'status' => 'success',
-            'items' => ['a', 'b', 'c']
+            'items' => ['a', 'b', 'c'],
         ];
 
         $result = Result::fromArray($data);

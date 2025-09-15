@@ -12,7 +12,9 @@ use MCP\Types\Request;
  */
 final class PingRequest extends Request
 {
-    public const METHOD = 'ping';        /**
+    public const METHOD = 'ping';
+
+    /**
      * @param array<string, mixed>|null|string $methodOrParams For backward compatibility, can be params array or method string
      * @param array<string, mixed>|null $params Only used when first parameter is method string
      */

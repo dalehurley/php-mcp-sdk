@@ -15,7 +15,8 @@ class Request implements \JsonSerializable
     public function __construct(
         private readonly string $method,
         private readonly ?array $params = null
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

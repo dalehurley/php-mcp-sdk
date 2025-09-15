@@ -2,8 +2,8 @@
 <?php
 
 /**
- * HTTP Client Example
- * 
+ * HTTP Client Example.
+ *
  * This example demonstrates how to:
  * - Connect to MCP servers via HTTP transport
  * - Handle session management
@@ -14,14 +14,13 @@
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use function Amp\async;
+
 use MCP\Client\Client;
 use MCP\Client\ClientOptions;
 use MCP\Client\Transport\StreamableHttpClientTransport;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ClientCapabilities;
-use GuzzleHttp\Client as HttpClient;
-use function Amp\async;
-use function Amp\delay;
+use MCP\Types\Implementation;
 
 // HTTP server configuration
 $serverConfig = [
@@ -29,11 +28,11 @@ $serverConfig = [
     'endpoints' => [
         'mcp' => '/mcp',
         'sse' => '/sse',
-        'messages' => '/messages'
+        'messages' => '/messages',
     ],
     'timeout' => 30,
     'retry_attempts' => 3,
-    'retry_delay' => 2000 // milliseconds
+    'retry_delay' => 2000, // milliseconds
 ];
 
 async(function () use ($serverConfig) {
@@ -66,14 +65,14 @@ async(function () use ($serverConfig) {
 
         echo "✅ HTTP client demo completed!\n";
     } catch (\Throwable $e) {
-        echo "❌ Error: " . $e->getMessage() . "\n";
+        echo '❌ Error: ' . $e->getMessage() . "\n";
         echo $e->getTraceAsString() . "\n";
         exit(1);
     }
 })->await();
 
 /**
- * Demonstrate Streamable HTTP transport
+ * Demonstrate Streamable HTTP transport.
  */
 function demonstrateStreamableHttp(Client $client, array $config): \Amp\Future
 {
@@ -87,7 +86,7 @@ function demonstrateStreamableHttp(Client $client, array $config): \Amp\Future
             $options = new \MCP\Client\Transport\StreamableHttpClientTransportOptions(
                 headers: [
                     'User-Agent' => 'PHP-MCP-HTTP-Client/1.0.0',
-                    'Accept' => 'application/json'
+                    'Accept' => 'application/json',
                 ]
             );
             $transport = new StreamableHttpClientTransport($url, $options);
@@ -106,13 +105,13 @@ function demonstrateStreamableHttp(Client $client, array $config): \Amp\Future
             $client->close()->await();
             echo "✅ Streamable HTTP demo completed\n\n";
         } catch (\Exception $e) {
-            echo "❌ Streamable HTTP error: " . $e->getMessage() . "\n\n";
+            echo '❌ Streamable HTTP error: ' . $e->getMessage() . "\n\n";
         }
     });
 }
 
 /**
- * Demonstrate SSE transport (fallback mode)
+ * Demonstrate SSE transport (fallback mode).
  */
 function demonstrateSseTransport(Client $client, array $config): \Amp\Future
 {
@@ -140,79 +139,83 @@ function demonstrateSseTransport(Client $client, array $config): \Amp\Future
             $client->close()->await();
             echo "✅ StreamableHttp demo completed\n\n";
         } catch (\Exception $e) {
-            echo "❌ SSE transport error: " . $e->getMessage() . "\n\n";
+            echo '❌ SSE transport error: ' . $e->getMessage() . "\n\n";
         }
     });
 }
 
 /**
- * Test basic MCP operations
+ * Test basic MCP operations.
  */
 function testBasicOperations(Client $client, string $transportType): \Amp\Future
 {
     return async(function () use ($client, $transportType) {
         echo "🧪 Testing Basic Operations ($transportType)\n";
-        echo str_repeat("-", 40) . "\n";
+        echo str_repeat('-', 40) . "\n";
 
         // List tools
         echo "📋 Listing tools...\n";
+
         try {
             $tools = $client->listTools()->await();
-            echo "   Found " . count($tools->getTools()) . " tools:\n";
+            echo '   Found ' . count($tools->getTools()) . " tools:\n";
             foreach ($tools->getTools() as $tool) {
                 echo "   - {$tool->getName()}: {$tool->getDescription()}\n";
             }
             echo "\n";
         } catch (\Exception $e) {
-            echo "   ❌ Failed to list tools: " . $e->getMessage() . "\n\n";
+            echo '   ❌ Failed to list tools: ' . $e->getMessage() . "\n\n";
         }
 
         // List resources
         echo "📁 Listing resources...\n";
+
         try {
             $resources = $client->listResources()->await();
-            echo "   Found " . count($resources->getResources()) . " resources:\n";
+            echo '   Found ' . count($resources->getResources()) . " resources:\n";
             foreach ($resources->getResources() as $resource) {
                 echo "   - {$resource->getName()}: {$resource->getUri()}\n";
             }
             echo "\n";
         } catch (\Exception $e) {
-            echo "   ❌ Failed to list resources: " . $e->getMessage() . "\n\n";
+            echo '   ❌ Failed to list resources: ' . $e->getMessage() . "\n\n";
         }
 
         // List prompts
         echo "💬 Listing prompts...\n";
+
         try {
             $prompts = $client->listPrompts()->await();
-            echo "   Found " . count($prompts->getPrompts()) . " prompts:\n";
+            echo '   Found ' . count($prompts->getPrompts()) . " prompts:\n";
             foreach ($prompts->getPrompts() as $prompt) {
                 echo "   - {$prompt->getName()}: {$prompt->getDescription()}\n";
             }
             echo "\n";
         } catch (\Exception $e) {
-            echo "   ❌ Failed to list prompts: " . $e->getMessage() . "\n\n";
+            echo '   ❌ Failed to list prompts: ' . $e->getMessage() . "\n\n";
         }
 
         // Test tool call
         echo "🔧 Testing tool call...\n";
+
         try {
             // Try to call a common tool (this will depend on the server)
             $result = $client->callToolByName('echo', ['message' => "Hello from $transportType!"])->await();
 
             if ($result->isError()) {
-                echo "   ❌ Tool call failed: " . getResultText($result) . "\n";
+                echo '   ❌ Tool call failed: ' . getResultText($result) . "\n";
             } else {
-                echo "   ✅ Tool call successful: " . getResultText($result) . "\n";
+                echo '   ✅ Tool call successful: ' . getResultText($result) . "\n";
             }
             echo "\n";
         } catch (\Exception $e) {
-            echo "   ⚠️  Tool call not available or failed: " . $e->getMessage() . "\n\n";
+            echo '   ⚠️  Tool call not available or failed: ' . $e->getMessage() . "\n\n";
         }
     });
 }
 
 /**
- * Test real-time features with Streamable HTTP
+ * Test real-time features with Streamable HTTP.
  */
 function testRealtimeFeatures(Client $client): \Amp\Future
 {
@@ -222,28 +225,30 @@ function testRealtimeFeatures(Client $client): \Amp\Future
 
         // Test session persistence
         echo "🔄 Testing session persistence...\n";
+
         try {
             // Session info would be managed by the transport layer
             echo "   ℹ️  Session info managed by transport layer\n";
             echo "\n";
         } catch (\Exception $e) {
-            echo "   ⚠️  Session info not supported: " . $e->getMessage() . "\n\n";
+            echo '   ⚠️  Session info not supported: ' . $e->getMessage() . "\n\n";
         }
 
         // Test notification subscription
         echo "🔔 Testing notification subscription...\n";
+
         try {
             // Note: Resource subscription would use server-specific subscription methods
             echo "   ℹ️  Resource subscription not implemented in this demo\n";
             echo "\n";
         } catch (\Exception $e) {
-            echo "   ⚠️  Notification subscription not supported: " . $e->getMessage() . "\n\n";
+            echo '   ⚠️  Notification subscription not supported: ' . $e->getMessage() . "\n\n";
         }
     });
 }
 
 /**
- * Test notification stream with SSE
+ * Test notification stream with SSE.
  */
 function testNotificationStream(Client $client): \Amp\Future
 {
@@ -258,11 +263,11 @@ function testNotificationStream(Client $client): \Amp\Future
             $result = $client->callToolByName('start-notification-stream', [
                 'interval' => 1000,  // 1 second
                 'count' => 5,        // 5 notifications
-                'message' => 'SSE Test Notification'
+                'message' => 'SSE Test Notification',
             ])->await();
 
             if ($result->isError()) {
-                echo "   ❌ Failed to start notification stream: " . getResultText($result) . "\n";
+                echo '   ❌ Failed to start notification stream: ' . getResultText($result) . "\n";
             } else {
                 echo "   ✅ Notification stream started\n";
                 echo "   ⏳ Waiting for notifications (6 seconds)...\n";
@@ -270,13 +275,13 @@ function testNotificationStream(Client $client): \Amp\Future
             }
             echo "\n";
         } catch (\Exception $e) {
-            echo "   ⚠️  Notification stream not available: " . $e->getMessage() . "\n\n";
+            echo '   ⚠️  Notification stream not available: ' . $e->getMessage() . "\n\n";
         }
     });
 }
 
 /**
- * Demonstrate session management
+ * Demonstrate session management.
  */
 function demonstrateSessionManagement(Client $client, array $config): \Amp\Future
 {
@@ -304,13 +309,13 @@ function demonstrateSessionManagement(Client $client, array $config): \Amp\Futur
             $client->close()->await();
             echo "✅ Session management demo completed\n\n";
         } catch (\Exception $e) {
-            echo "❌ Session management error: " . $e->getMessage() . "\n\n";
+            echo '❌ Session management error: ' . $e->getMessage() . "\n\n";
         }
     });
 }
 
 /**
- * Test session-specific operations
+ * Test session-specific operations.
  */
 function testSessionOperations(Client $client): \Amp\Future
 {
@@ -320,12 +325,13 @@ function testSessionOperations(Client $client): \Amp\Future
 
         // Test session state
         echo "📊 Checking session state...\n";
+
         try {
             // Session state would be managed by the transport layer
             echo "   ℹ️  Session state managed by transport layer\n";
             echo "\n";
         } catch (\Exception $e) {
-            echo "   ⚠️  Session state not supported: " . $e->getMessage() . "\n\n";
+            echo '   ⚠️  Session state not supported: ' . $e->getMessage() . "\n\n";
         }
 
         // Test session persistence across operations
@@ -334,7 +340,7 @@ function testSessionOperations(Client $client): \Amp\Future
             try {
                 echo "   Operation $i: ";
                 $result = $client->callToolByName('echo', ['message' => "Session test $i"])->await();
-                echo ($result->isError() ? "❌ Failed" : "✅ Success") . "\n";
+                echo ($result->isError() ? '❌ Failed' : '✅ Success') . "\n";
                 \Amp\delay(1000);
             } catch (\Exception $e) {
                 echo "❌ Error\n";
@@ -345,7 +351,7 @@ function testSessionOperations(Client $client): \Amp\Future
 }
 
 /**
- * Test connection recovery
+ * Test connection recovery.
  */
 function testConnectionRecovery(Client $client, $transport, array $config): \Amp\Future
 {
@@ -372,7 +378,7 @@ function testConnectionRecovery(Client $client, $transport, array $config): \Amp
                 echo "   ❌ Connection recovery failed\n";
             }
         } catch (\Exception $e) {
-            echo "   ⚠️  Recovery test not supported: " . $e->getMessage() . "\n";
+            echo '   ⚠️  Recovery test not supported: ' . $e->getMessage() . "\n";
         }
 
         echo "\n";
@@ -380,7 +386,7 @@ function testConnectionRecovery(Client $client, $transport, array $config): \Amp
 }
 
 /**
- * Demonstrate multiple concurrent connections
+ * Demonstrate multiple concurrent connections.
  */
 function demonstrateMultipleConnections(array $config): \Amp\Future
 {
@@ -424,7 +430,7 @@ function demonstrateMultipleConnections(array $config): \Amp\Future
 
             foreach ($results as $i => $result) {
                 $clientNum = $i + 1;
-                echo "   Client #$clientNum: " . ($result->isError() ? "❌ Error" : "✅ Success") . "\n";
+                echo "   Client #$clientNum: " . ($result->isError() ? '❌ Error' : '✅ Success') . "\n";
             }
 
             // Close all connections
@@ -435,7 +441,7 @@ function demonstrateMultipleConnections(array $config): \Amp\Future
 
             echo "✅ Multiple connections demo completed\n\n";
         } catch (\Exception $e) {
-            echo "❌ Multiple connections error: " . $e->getMessage() . "\n\n";
+            echo '❌ Multiple connections error: ' . $e->getMessage() . "\n\n";
 
             // Cleanup
             foreach ($clients as $client) {
@@ -450,7 +456,7 @@ function demonstrateMultipleConnections(array $config): \Amp\Future
 }
 
 /**
- * Extract text content from a result
+ * Extract text content from a result.
  */
 function getResultText($result): string
 {
@@ -476,7 +482,7 @@ function getResultText($result): string
 }
 
 /**
- * Mock HTTP server for testing (if no real server is available)
+ * Mock HTTP server for testing (if no real server is available).
  */
 function startMockHttpServer(int $port = 3000): void
 {

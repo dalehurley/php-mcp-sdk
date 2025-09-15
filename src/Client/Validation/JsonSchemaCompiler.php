@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace MCP\Client\Validation;
 
+use function Amp\async;
+
 use Amp\Future;
-use MCP\Types\McpError;
 use MCP\Types\ErrorCode;
 
-use function Amp\async;
+use MCP\Types\McpError;
 
 /**
  * Compiles JSON schemas into optimized validators for better performance.
@@ -24,7 +25,8 @@ class JsonSchemaCompiler
     public function __construct(
         private readonly ?object $cache = null,
         private readonly int $cacheTimeout = 3600
-    ) {}
+    ) {
+    }
 
     /**
      * Compile a JSON schema into an optimized validator.
@@ -44,6 +46,7 @@ class JsonSchemaCompiler
                 $cached = $this->cache->get("compiled_validator_{$schemaHash}");
                 if ($cached instanceof CompiledValidatorInterface) {
                     $this->compiledValidators[$schemaHash] = $cached;
+
                     return $cached;
                 }
             } catch (\Throwable $e) {

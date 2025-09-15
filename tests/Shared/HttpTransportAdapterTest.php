@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Shared;
 
-use PHPUnit\Framework\TestCase;
 use MCP\Shared\HttpTransportAdapter;
+use PHPUnit\Framework\TestCase;
 
 class HttpTransportAdapterTest extends TestCase
 {

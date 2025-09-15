@@ -34,8 +34,8 @@ class RequestTest extends TestCase
             'method' => 'tools/list',
             'params' => [
                 'filter' => 'active',
-                '_meta' => ['progressToken' => 'token-123']
-            ]
+                '_meta' => ['progressToken' => 'token-123'],
+            ],
         ];
 
         $request = Request::fromArray($data);

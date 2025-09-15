@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use function Amp\async;
+
 use Amp\Future;
 use MCP\Client\Auth\FileTokenStorage;
 use MCP\Client\Auth\OAuthClient;
@@ -12,17 +14,14 @@ use MCP\Client\Auth\OAuthUtils;
 use MCP\Client\Client;
 use MCP\Client\ClientOptions;
 use MCP\Client\Transport\StdioClientTransport;
-use MCP\Shared\OAuthClientInformation;
 use MCP\Shared\OAuthClientInformationFull;
 use MCP\Shared\OAuthClientMetadata;
 use MCP\Shared\OAuthTokens;
 use MCP\Types\Capabilities\ClientCapabilities;
 use MCP\Types\Implementation;
 use Monolog\Handler\StreamHandler;
-use Monolog\Logger;
 
-use function Amp\async;
-use function Amp\delay;
+use Monolog\Logger;
 
 /**
  * Example OAuth Client Provider implementation.
@@ -30,14 +29,17 @@ use function Amp\delay;
 class ExampleOAuthProvider implements OAuthClientProvider
 {
     private ?OAuthClientInformationFull $clientInfo = null;
+
     private ?OAuthTokens $tokens = null;
+
     private ?string $codeVerifier = null;
 
     public function __construct(
         private readonly string $redirectUrl = 'http://localhost:8080/callback',
         private readonly string $clientId = 'mcp-client',
         private readonly ?string $clientSecret = null
-    ) {}
+    ) {
+    }
 
     public function getRedirectUrl(): string
     {
@@ -112,7 +114,7 @@ class ExampleOAuthProvider implements OAuthClientProvider
         return async(function () use ($authorizationUrl) {
             echo "Please visit this URL to authorize the application:\n";
             echo "{$authorizationUrl}\n";
-            echo "After authorization, enter the authorization code: ";
+            echo 'After authorization, enter the authorization code: ';
 
             // In a real application, this would handle the redirect properly
             $authCode = trim(fgets(STDIN) ?: '');
@@ -260,13 +262,13 @@ function runEnhancedOAuthExample(): void
             echo "\nCalling tool: {$firstTool->getName()}\n";
 
             $toolResult = $client->callToolByName($firstTool->getName(), [])->await();
-            echo "Tool result: " . json_encode($toolResult->getContent(), JSON_PRETTY_PRINT) . "\n";
+            echo 'Tool result: ' . json_encode($toolResult->getContent(), JSON_PRETTY_PRINT) . "\n";
         }
 
         // Demonstrate middleware in action
         echo "\nMiddleware statistics:\n";
         echo "- Middleware count: {$client->getMiddlewareCount()}\n";
-        echo "- Has middleware: " . ($client->hasMiddleware() ? 'Yes' : 'No') . "\n";
+        echo '- Has middleware: ' . ($client->hasMiddleware() ? 'Yes' : 'No') . "\n";
     } catch (\Throwable $e) {
         echo "Error: {$e->getMessage()}\n";
 

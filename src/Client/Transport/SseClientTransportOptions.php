@@ -7,7 +7,7 @@ namespace MCP\Client\Transport;
 use Amp\Http\Client\HttpClient;
 
 /**
- * Configuration options for SSE client transport
+ * Configuration options for SSE client transport.
  *
  * @deprecated Use StreamableHttpClientTransportOptions instead
  */

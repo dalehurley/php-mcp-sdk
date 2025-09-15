@@ -12,7 +12,9 @@ use MCP\Types\Request;
  */
 final class UnsubscribeRequest extends Request
 {
-    public const METHOD = 'resources/unsubscribe';        /**
+    public const METHOD = 'resources/unsubscribe';
+
+    /**
      * @param array<string, mixed>|null|string $methodOrParams For backward compatibility, can be params array or method string
      * @param array<string, mixed>|null $params Only used when first parameter is method string
      */

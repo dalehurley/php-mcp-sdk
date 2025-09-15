@@ -4,44 +4,34 @@ declare(strict_types=1);
 
 namespace MCP\Server;
 
+use function Amp\async;
+
 use MCP\Shared\Protocol;
-use MCP\Shared\ProtocolOptions;
-use MCP\Shared\Transport;
-use MCP\Server\ServerOptions;
 use MCP\Shared\RequestHandlerExtra;
 use MCP\Shared\RequestOptions;
 
-use function MCP\Shared\mergeCapabilities;
-
-use MCP\Types\Implementation;
-use MCP\Types\Protocol as ProtocolConstants;
-use MCP\Types\Capabilities\ServerCapabilities;
+use MCP\Shared\Transport;
 use MCP\Types\Capabilities\ClientCapabilities;
-use MCP\Types\Notification;
-use MCP\Types\Request;
-use MCP\Types\Result;
-use MCP\Types\McpError;
-use MCP\Types\ErrorCode;
+use MCP\Types\Capabilities\ServerCapabilities;
+use MCP\Types\Implementation;
 use MCP\Types\LoggingLevel;
-use MCP\Types\ServerRequest;
-use MCP\Types\ServerNotification;
-use MCP\Types\ServerResult;
-use MCP\Types\Requests\InitializeRequest;
-use MCP\Types\Requests\SetLevelRequest;
-use MCP\Types\Requests\CreateMessageRequest;
-use MCP\Types\Requests\ElicitRequest;
-use MCP\Types\Requests\ListRootsRequest;
-use MCP\Types\Results\InitializeResult;
-use MCP\Types\Results\CreateMessageResult;
-use MCP\Types\Results\ElicitResult;
-use MCP\Types\Results\ListRootsResult;
+use MCP\Types\Notification;
 use MCP\Types\Notifications\InitializedNotification;
 use MCP\Types\Notifications\ResourceUpdatedNotification;
-use MCP\Types\JsonRpc\JSONRPCRequest;
-use MCP\Validation\ValidationService;
+use MCP\Types\Protocol as ProtocolConstants;
+use MCP\Types\Request;
+use MCP\Types\Requests\CreateMessageRequest;
+use MCP\Types\Requests\ElicitRequest;
+use MCP\Types\Requests\InitializeRequest;
+use MCP\Types\Requests\ListRootsRequest;
+use MCP\Types\Requests\SetLevelRequest;
+use MCP\Types\Result;
+use MCP\Types\Results\InitializeResult;
+use MCP\Types\ServerNotification;
+use MCP\Types\ServerRequest;
+use MCP\Types\ServerResult;
 
-use function Amp\async;
-use function Amp\Future\await;
+use MCP\Validation\ValidationService;
 
 /**
  * An MCP server on top of a pluggable transport.
@@ -51,21 +41,25 @@ use function Amp\Future\await;
  * @template RequestT of Request
  * @template NotificationT of Notification
  * @template ResultT of Result
+ *
  * @extends Protocol<ServerRequest|RequestT, ServerNotification|NotificationT, ServerResult|ResultT>
  */
 class Server extends Protocol
 {
     private ?ClientCapabilities $_clientCapabilities = null;
+
     private ?Implementation $_clientVersion = null;
+
     private ServerCapabilities $_capabilities;
+
     private ?string $_instructions;
 
     /** @var array<string, LoggingLevel> Map log levels by session id */
     private array $_loggingLevels = [];
 
-
     /**
      * Callback for when initialization has fully completed (i.e., the client has sent an `initialized` notification).
+     *
      * @var callable|null
      */
     public $oninitialized = null;
@@ -80,7 +74,6 @@ class Server extends Protocol
         parent::__construct($options);
         $this->_capabilities = $options?->capabilities ?? new ServerCapabilities();
         $this->_instructions = $options?->instructions;
-
 
         // Set up initialization handlers
         $this->setRequestHandler(
@@ -119,7 +112,7 @@ class Server extends Protocol
     }
 
     /**
-     * Check if a message with the given level is ignored for the given session id
+     * Check if a message with the given level is ignored for the given session id.
      */
     private function isMessageIgnored(LoggingLevel $level, string $sessionId): bool
     {
@@ -139,7 +132,7 @@ class Server extends Protocol
     public function registerCapabilities(ServerCapabilities $capabilities): void
     {
         if ($this->getTransport() !== null) {
-            throw new \Error("Cannot register capabilities after connecting to transport");
+            throw new \Error('Cannot register capabilities after connecting to transport');
         }
 
         $this->_capabilities = \MCP\Shared\mergeCapabilities($this->_capabilities, $capabilities);
@@ -261,7 +254,7 @@ class Server extends Protocol
     }
 
     /**
-     * Handle the initialize request from the client
+     * Handle the initialize request from the client.
      */
     private function _oninitialize(InitializeRequest $request): InitializeResult
     {
@@ -299,7 +292,7 @@ class Server extends Protocol
     }
 
     /**
-     * Get the current server capabilities
+     * Get the current server capabilities.
      */
     private function getCapabilities(): ServerCapabilities
     {
@@ -307,7 +300,7 @@ class Server extends Protocol
     }
 
     /**
-     * Send a ping request to the client
+     * Send a ping request to the client.
      */
     public function ping(): \Amp\Future
     {
@@ -319,13 +312,14 @@ class Server extends Protocol
     }
 
     /**
-     * Request the client to create a message
+     * Request the client to create a message.
      */
     public function createMessage(
         array $params,
         ?RequestOptions $options = null
     ): \Amp\Future {
         $validationService = new ValidationService();
+
         return $this->request(
             CreateMessageRequest::fromArray(['params' => $params]),
             $validationService,
@@ -334,7 +328,7 @@ class Server extends Protocol
     }
 
     /**
-     * Request the client to elicit input from the user
+     * Request the client to elicit input from the user.
      */
     public function elicitInput(
         array $params,
@@ -362,13 +356,14 @@ class Server extends Protocol
     }
 
     /**
-     * Request the client to list roots
+     * Request the client to list roots.
      */
     public function listRoots(
         ?array $params = null,
         ?RequestOptions $options = null
     ): \Amp\Future {
         $validationService = new ValidationService();
+
         return $this->request(
             ListRootsRequest::fromArray(['params' => $params]),
             $validationService,
@@ -378,7 +373,7 @@ class Server extends Protocol
 
     /**
      * Sends a logging message to the client, if connected.
-     * Note: You only need to send the parameters object, not the entire JSON RPC message
+     * Note: You only need to send the parameters object, not the entire JSON RPC message.
      *
      * @param array{level: string, logger?: string, data?: mixed, timestamp?: string} $params
      * @param string|null $sessionId optional for stateless and backward compatibility
@@ -405,7 +400,7 @@ class Server extends Protocol
     }
 
     /**
-     * Send a resource updated notification
+     * Send a resource updated notification.
      */
     public function sendResourceUpdated(array $params): \Amp\Future
     {
@@ -415,7 +410,7 @@ class Server extends Protocol
     }
 
     /**
-     * Send a resource list changed notification
+     * Send a resource list changed notification.
      */
     public function sendResourceListChanged(): \Amp\Future
     {
@@ -425,7 +420,7 @@ class Server extends Protocol
     }
 
     /**
-     * Send a tool list changed notification
+     * Send a tool list changed notification.
      */
     public function sendToolListChanged(): \Amp\Future
     {
@@ -435,7 +430,7 @@ class Server extends Protocol
     }
 
     /**
-     * Send a prompt list changed notification
+     * Send a prompt list changed notification.
      */
     public function sendPromptListChanged(): \Amp\Future
     {

@@ -16,7 +16,8 @@ class Result implements \JsonSerializable
     public function __construct(
         private readonly ?array $_meta = null,
         private readonly array $additionalProperties = []
-    ) {}
+    ) {
+    }
 
     /**
      * Create from an array of data.

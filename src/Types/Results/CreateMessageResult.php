@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace MCP\Types\Results;
 
-use MCP\Types\Result;
-use MCP\Types\Content\ContentBlock;
-use MCP\Types\Content\TextContent;
-use MCP\Types\Content\ImageContent;
 use MCP\Types\Content\AudioContent;
+use MCP\Types\Content\ContentBlock;
+use MCP\Types\Content\ImageContent;
+use MCP\Types\Content\TextContent;
+use MCP\Types\Result;
 
 /**
  * The client's response to a sampling/create_message request from the server.

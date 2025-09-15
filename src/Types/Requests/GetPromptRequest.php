@@ -11,7 +11,9 @@ use MCP\Types\Request;
  */
 final class GetPromptRequest extends Request
 {
-    public const METHOD = 'prompts/get';        /**
+    public const METHOD = 'prompts/get';
+
+    /**
      * @param array<string, mixed>|null|string $methodOrParams For backward compatibility, can be params array or method string
      * @param array<string, mixed>|null $params Only used when first parameter is method string
      */
@@ -79,6 +81,7 @@ final class GetPromptRequest extends Request
                     $arguments[$key] = $value;
                 }
             }
+
             return $arguments;
         }
 

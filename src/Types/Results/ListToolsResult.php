@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace MCP\Types\Results;
 
+use MCP\Types\Cursor;
 use MCP\Types\PaginatedResult;
 use MCP\Types\Tools\Tool;
-use MCP\Types\Cursor;
 
 /**
  * The server's response to a tools/list request from the client.
@@ -35,7 +35,7 @@ final class ListToolsResult extends PaginatedResult
         }
 
         $tools = array_map(
-            fn(array $item) => Tool::fromArray($item),
+            fn (array $item) => Tool::fromArray($item),
             $data['tools']
         );
 
@@ -75,7 +75,7 @@ final class ListToolsResult extends PaginatedResult
     {
         $data = parent::jsonSerialize();
         $data['tools'] = array_map(
-            fn(Tool $tool) => $tool->jsonSerialize(),
+            fn (Tool $tool) => $tool->jsonSerialize(),
             $this->tools
         );
 

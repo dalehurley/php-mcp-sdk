@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace MCP\Types\Results;
 
+use MCP\Types\Cursor;
 use MCP\Types\PaginatedResult;
 use MCP\Types\Prompts\Prompt;
-use MCP\Types\Cursor;
 
 /**
  * The server's response to a prompts/list request from the client.
@@ -35,7 +35,7 @@ final class ListPromptsResult extends PaginatedResult
         }
 
         $prompts = array_map(
-            fn(array $item) => Prompt::fromArray($item),
+            fn (array $item) => Prompt::fromArray($item),
             $data['prompts']
         );
 
@@ -73,7 +73,7 @@ final class ListPromptsResult extends PaginatedResult
     {
         $data = parent::jsonSerialize();
         $data['prompts'] = array_map(
-            fn(Prompt $prompt) => $prompt->jsonSerialize(),
+            fn (Prompt $prompt) => $prompt->jsonSerialize(),
             $this->prompts
         );
 

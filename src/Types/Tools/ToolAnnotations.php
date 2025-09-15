@@ -69,7 +69,7 @@ final class ToolAnnotations implements \JsonSerializable
 
     /**
      * Get whether the tool does not modify its environment.
-     * Default: false
+     * Default: false.
      */
     public function getReadOnlyHint(): ?bool
     {
@@ -79,7 +79,7 @@ final class ToolAnnotations implements \JsonSerializable
     /**
      * Get whether the tool may perform destructive updates.
      * (Meaningful only when readOnlyHint == false)
-     * Default: true
+     * Default: true.
      */
     public function getDestructiveHint(): ?bool
     {
@@ -90,7 +90,7 @@ final class ToolAnnotations implements \JsonSerializable
      * Get whether calling the tool repeatedly with the same arguments
      * will have no additional effect.
      * (Meaningful only when readOnlyHint == false)
-     * Default: false
+     * Default: false.
      */
     public function getIdempotentHint(): ?bool
     {
@@ -99,7 +99,7 @@ final class ToolAnnotations implements \JsonSerializable
 
     /**
      * Get whether this tool may interact with an "open world" of external entities.
-     * Default: true
+     * Default: true.
      */
     public function getOpenWorldHint(): ?bool
     {

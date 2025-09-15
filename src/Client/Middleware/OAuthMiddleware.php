@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace MCP\Client\Middleware;
 
+use function Amp\async;
+
 use Amp\Future;
 use MCP\Client\Auth\Exceptions\UnauthorizedException;
 use MCP\Client\Auth\OAuthClientProvider;
 use MCP\Client\Auth\OAuthUtils;
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 
-use function Amp\async;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Middleware that handles OAuth authentication automatically.
@@ -27,7 +28,8 @@ class OAuthMiddleware implements MiddlewareInterface
     public function __construct(
         private readonly OAuthClientProvider $provider,
         private readonly ?string $baseUrl = null
-    ) {}
+    ) {
+    }
 
     public function process(RequestInterface $request, callable $next): Future
     {
@@ -106,6 +108,7 @@ class OAuthMiddleware implements MiddlewareInterface
                 throw $e;
             } catch (\Throwable $e) {
                 $previous = $e instanceof \Exception ? $e : null;
+
                 throw new UnauthorizedException(
                     "Failed to re-authenticate: {$e->getMessage()}",
                     null,
@@ -173,6 +176,7 @@ class OAuthMiddleware implements MiddlewareInterface
                 $refreshedTokens = $this->refreshTokenIfPossible($tokens)->await();
                 if ($refreshedTokens && $refreshedTokens !== $tokens) {
                     $this->provider->storeTokens($refreshedTokens)->await();
+
                     return 'AUTHORIZED';
                 }
             }

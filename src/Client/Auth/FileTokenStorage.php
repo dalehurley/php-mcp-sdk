@@ -82,6 +82,7 @@ final class FileTokenStorage implements TokenStorage
     private function getTokenFilename(string $clientId): string
     {
         $safeClientId = preg_replace('/[^a-zA-Z0-9_-]/', '_', $clientId);
+
         return $this->storageDir . "/tokens_{$safeClientId}.json";
     }
 }

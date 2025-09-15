@@ -2,20 +2,20 @@
 <?php
 
 /**
- * Weather Client Example
- * 
+ * Weather Client Example.
+ *
  * Demonstrates how to create a client that connects to external APIs
  * and provides weather information through MCP tools.
- * 
+ *
  * This example shows:
  * - HTTP API integration
  * - Error handling with external services
  * - Data transformation and presentation
  * - Configuration management
- * 
+ *
  * Note: This is a mock example that simulates weather API calls.
  * In production, you'd integrate with real weather services like OpenWeatherMap.
- * 
+ *
  * Usage:
  *   php weather-client.php
  */
@@ -46,7 +46,7 @@ $mockWeatherData = [
         'condition' => 'Cloudy',
         'humidity' => 78,
         'wind_speed' => 12,
-        'pressure' => 1013
+        'pressure' => 1013,
     ],
     'paris' => [
         'city' => 'Paris',
@@ -55,7 +55,7 @@ $mockWeatherData = [
         'condition' => 'Sunny',
         'humidity' => 65,
         'wind_speed' => 8,
-        'pressure' => 1020
+        'pressure' => 1020,
     ],
     'tokyo' => [
         'city' => 'Tokyo',
@@ -64,7 +64,7 @@ $mockWeatherData = [
         'condition' => 'Partly Cloudy',
         'humidity' => 70,
         'wind_speed' => 15,
-        'pressure' => 1018
+        'pressure' => 1018,
     ],
     'new york' => [
         'city' => 'New York',
@@ -73,8 +73,8 @@ $mockWeatherData = [
         'condition' => 'Rainy',
         'humidity' => 85,
         'wind_speed' => 18,
-        'pressure' => 1008
-    ]
+        'pressure' => 1008,
+    ],
 ];
 
 // Tool: Get current weather
@@ -86,16 +86,16 @@ $server->addTool(
         'properties' => [
             'city' => [
                 'type' => 'string',
-                'description' => 'Name of the city to get weather for'
+                'description' => 'Name of the city to get weather for',
             ],
             'units' => [
                 'type' => 'string',
                 'enum' => ['celsius', 'fahrenheit'],
                 'description' => 'Temperature units (default: celsius)',
-                'default' => 'celsius'
-            ]
+                'default' => 'celsius',
+            ],
         ],
-        'required' => ['city']
+        'required' => ['city'],
     ],
     handler: function (array $args) use ($mockWeatherData): array {
         $city = strtolower(trim($args['city']));
@@ -133,9 +133,9 @@ $server->addTool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $weatherReport
-                ]
-            ]
+                    'text' => $weatherReport,
+                ],
+            ],
         ];
     }
 );
@@ -149,10 +149,10 @@ $server->addTool(
         'properties' => [
             'city' => [
                 'type' => 'string',
-                'description' => 'Name of the city to get forecast for'
-            ]
+                'description' => 'Name of the city to get forecast for',
+            ],
         ],
-        'required' => ['city']
+        'required' => ['city'],
     ],
     handler: function (array $args) use ($mockWeatherData): array {
         $city = strtolower(trim($args['city']));
@@ -185,9 +185,9 @@ $server->addTool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $forecast
-                ]
-            ]
+                    'text' => $forecast,
+                ],
+            ],
         ];
     }
 );
@@ -201,14 +201,14 @@ $server->addTool(
         'properties' => [
             'city1' => [
                 'type' => 'string',
-                'description' => 'First city to compare'
+                'description' => 'First city to compare',
             ],
             'city2' => [
                 'type' => 'string',
-                'description' => 'Second city to compare'
-            ]
+                'description' => 'Second city to compare',
+            ],
         ],
-        'required' => ['city1', 'city2']
+        'required' => ['city1', 'city2'],
     ],
     handler: function (array $args) use ($mockWeatherData): array {
         $city1 = strtolower(trim($args['city1']));
@@ -265,9 +265,9 @@ $server->addTool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $comparison
-                ]
-            ]
+                    'text' => $comparison,
+                ],
+            ],
         ];
     }
 );
@@ -284,13 +284,13 @@ $server->addResource(
             $cities[] = [
                 'key' => $key,
                 'name' => $data['city'],
-                'country' => $data['country']
+                'country' => $data['country'],
             ];
         }
 
         return json_encode([
             'available_cities' => $cities,
-            'note' => 'This is mock weather data for demonstration purposes'
+            'note' => 'This is mock weather data for demonstration purposes',
         ], JSON_PRETTY_PRINT);
     }
 );
@@ -334,9 +334,9 @@ $server->addPrompt(
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => 'How do I get weather information?'
-                        ]
-                    ]
+                            'text' => 'How do I get weather information?',
+                        ],
+                    ],
                 ],
                 [
                     'role' => 'assistant',
@@ -356,11 +356,11 @@ $server->addPrompt(
                                 "**Temperature Units:**\n" .
                                 "• celsius (default)\n" .
                                 "• fahrenheit\n\n" .
-                                "Try: 'What's the weather like in London?'"
-                        ]
-                    ]
-                ]
-            ]
+                                "Try: 'What's the weather like in London?'",
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 );

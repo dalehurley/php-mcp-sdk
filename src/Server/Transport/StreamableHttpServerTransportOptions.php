@@ -7,31 +7,33 @@ namespace MCP\Server\Transport;
 use Amp\Future;
 
 /**
- * Interface for resumability support via event storage
+ * Interface for resumability support via event storage.
  */
 interface EventStore
 {
     /**
-     * Stores an event for later retrieval
+     * Stores an event for later retrieval.
      *
      * @param string $streamId ID of the stream the event belongs to
      * @param \MCP\Types\JsonRpc\JSONRPCMessage $message The JSON-RPC message to store
+     *
      * @return Future<string> The generated event ID for the stored event
      */
     public function storeEvent(string $streamId, \MCP\Types\JsonRpc\JSONRPCMessage $message): Future;
 
     /**
-     * Replay events after a specific event ID
+     * Replay events after a specific event ID.
      *
      * @param string $lastEventId The last event ID received by client
      * @param callable(string, \MCP\Types\JsonRpc\JSONRPCMessage): Future<void> $send Callback to send events
+     *
      * @return Future<string> The stream ID
      */
     public function replayEventsAfter(string $lastEventId, callable $send): Future;
 }
 
 /**
- * Configuration options for StreamableHttpServerTransport
+ * Configuration options for StreamableHttpServerTransport.
  */
 class StreamableHttpServerTransportOptions
 {

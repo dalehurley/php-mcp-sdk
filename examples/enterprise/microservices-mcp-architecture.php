@@ -2,8 +2,8 @@
 <?php
 
 /**
- * Microservices MCP Architecture Example
- * 
+ * Microservices MCP Architecture Example.
+ *
  * This example demonstrates how to build a microservices architecture using MCP.
  * It includes:
  * - Service discovery and registration
@@ -12,26 +12,28 @@
  * - Circuit breaker pattern
  * - Distributed logging and tracing
  * - API Gateway pattern
- * 
+ *
  * This server acts as both a service registry and an API gateway,
  * orchestrating multiple MCP microservices.
- * 
+ *
  * Usage:
  *   php microservices-mcp-architecture.php
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
 use MCP\Server\Transport\StdioServerTransport;
 use MCP\Types\Implementation;
 use MCP\Types\McpError;
-use function Amp\async;
 
 // Service Registry for managing microservices
 class ServiceRegistry
 {
     private array $services = [];
+
     private array $healthChecks = [];
 
     public function register(string $serviceName, array $config): void
@@ -44,7 +46,7 @@ class ServiceRegistry
             'last_health_check' => null,
             'health_status' => 'unknown',
             'request_count' => 0,
-            'error_count' => 0
+            'error_count' => 0,
         ];
 
         echo "🔧 Service registered: {$serviceName}\n";
@@ -94,7 +96,9 @@ class ServiceRegistry
 class CircuitBreaker
 {
     private array $circuits = [];
+
     private int $failureThreshold;
+
     private int $timeout;
 
     public function __construct(int $failureThreshold = 5, int $timeout = 60)
@@ -112,7 +116,7 @@ class CircuitBreaker
                 'state' => 'closed',
                 'failures' => 0,
                 'last_failure' => null,
-                'last_success' => time()
+                'last_success' => time(),
             ];
         }
 
@@ -154,7 +158,7 @@ class CircuitBreaker
             'state' => 'closed',
             'failures' => 0,
             'last_failure' => null,
-            'last_success' => null
+            'last_success' => null,
         ];
     }
 
@@ -168,6 +172,7 @@ class CircuitBreaker
 class LoadBalancer
 {
     private array $strategies = ['round_robin', 'least_connections', 'random'];
+
     private array $counters = [];
 
     public function selectService(array $services, string $strategy = 'round_robin'): ?array
@@ -230,28 +235,28 @@ $serviceRegistry->register('user-service', [
     'description' => 'User management service',
     'endpoints' => ['create_user', 'get_user', 'update_user', 'delete_user'],
     'version' => '1.2.0',
-    'instances' => ['user-service-1', 'user-service-2']
+    'instances' => ['user-service-1', 'user-service-2'],
 ]);
 
 $serviceRegistry->register('order-service', [
     'description' => 'Order processing service',
     'endpoints' => ['create_order', 'get_order', 'process_payment', 'update_status'],
     'version' => '2.1.0',
-    'instances' => ['order-service-1', 'order-service-2', 'order-service-3']
+    'instances' => ['order-service-1', 'order-service-2', 'order-service-3'],
 ]);
 
 $serviceRegistry->register('inventory-service', [
     'description' => 'Inventory management service',
     'endpoints' => ['check_stock', 'reserve_items', 'release_items', 'update_inventory'],
     'version' => '1.0.5',
-    'instances' => ['inventory-service-1']
+    'instances' => ['inventory-service-1'],
 ]);
 
 $serviceRegistry->register('notification-service', [
     'description' => 'Notification and messaging service',
     'endpoints' => ['send_email', 'send_sms', 'push_notification', 'get_templates'],
     'version' => '3.0.1',
-    'instances' => ['notification-service-1', 'notification-service-2']
+    'instances' => ['notification-service-1', 'notification-service-2'],
 ]);
 
 // Simulate health status
@@ -279,9 +284,9 @@ $server->tool(
             'filter_healthy' => [
                 'type' => 'boolean',
                 'description' => 'Only return healthy services',
-                'default' => true
-            ]
-        ]
+                'default' => true,
+            ],
+        ],
     ],
     function (array $args) use ($serviceRegistry): array {
         $filterHealthy = $args['filter_healthy'] ?? true;
@@ -299,7 +304,7 @@ $server->tool(
                 $healthIcon = $service['health_status'] === 'healthy' ? '✅' : '❌';
                 $serviceList .= "{$healthIcon} **{$service['name']}** (v{$service['config']['version']})\n";
                 $serviceList .= "   Description: {$service['config']['description']}\n";
-                $serviceList .= "   Instances: " . count($service['config']['instances']) . "\n";
+                $serviceList .= '   Instances: ' . count($service['config']['instances']) . "\n";
                 $serviceList .= "   Requests: {$service['request_count']}, Errors: {$service['error_count']}\n";
                 $serviceList .= "   Health: {$service['health_status']}\n\n";
             }
@@ -309,9 +314,9 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $serviceList
-                ]
-            ]
+                    'text' => $serviceList,
+                ],
+            ],
         ];
     }
 );
@@ -325,25 +330,25 @@ $server->tool(
         'properties' => [
             'service_name' => [
                 'type' => 'string',
-                'description' => 'Target service name'
+                'description' => 'Target service name',
             ],
             'endpoint' => [
                 'type' => 'string',
-                'description' => 'Service endpoint to call'
+                'description' => 'Service endpoint to call',
             ],
             'payload' => [
                 'type' => 'object',
                 'description' => 'Request payload',
-                'additionalProperties' => true
+                'additionalProperties' => true,
             ],
             'load_balancing' => [
                 'type' => 'string',
                 'enum' => ['round_robin', 'least_connections', 'random'],
                 'description' => 'Load balancing strategy',
-                'default' => 'round_robin'
-            ]
+                'default' => 'round_robin',
+            ],
         ],
-        'required' => ['service_name', 'endpoint']
+        'required' => ['service_name', 'endpoint'],
     ],
     function (array $args) use ($serviceRegistry, $circuitBreaker, $loadBalancer): array {
         $serviceName = $args['service_name'];
@@ -380,35 +385,35 @@ $server->tool(
                     'create_user' => [
                         'user_id' => rand(1000, 9999),
                         'status' => 'created',
-                        'service_instance' => $selectedInstance ?? 'unknown'
+                        'service_instance' => $selectedInstance ?? 'unknown',
                     ],
                     'get_user' => [
                         'user_id' => $payload['user_id'] ?? 1234,
                         'name' => 'John Doe',
                         'email' => 'john@example.com',
-                        'service_instance' => $selectedInstance ?? 'unknown'
+                        'service_instance' => $selectedInstance ?? 'unknown',
                     ],
                     'create_order' => [
                         'order_id' => rand(10000, 99999),
                         'status' => 'pending',
                         'total' => $payload['total'] ?? 99.99,
-                        'service_instance' => $selectedInstance ?? 'unknown'
+                        'service_instance' => $selectedInstance ?? 'unknown',
                     ],
                     'check_stock' => [
                         'item_id' => $payload['item_id'] ?? 'ITEM-001',
                         'available' => rand(0, 100),
                         'reserved' => rand(0, 20),
-                        'service_instance' => $selectedInstance ?? 'unknown'
+                        'service_instance' => $selectedInstance ?? 'unknown',
                     ],
                     'send_email' => [
                         'message_id' => uniqid(),
                         'status' => 'sent',
                         'recipient' => $payload['recipient'] ?? 'user@example.com',
-                        'service_instance' => $selectedInstance ?? 'unknown'
+                        'service_instance' => $selectedInstance ?? 'unknown',
                     ],
                     default => [
                         'message' => "Endpoint '{$endpoint}' called successfully",
-                        'service_instance' => $selectedInstance ?? 'unknown'
+                        'service_instance' => $selectedInstance ?? 'unknown',
                     ]
                 };
             });
@@ -421,9 +426,9 @@ $server->tool(
                     [
                         'type' => 'text',
                         'text' => "🚀 Request routed successfully to {$serviceName}::{$endpoint}\n\n" .
-                            "Response:\n" . json_encode($result, JSON_PRETTY_PRINT)
-                    ]
-                ]
+                            "Response:\n" . json_encode($result, JSON_PRETTY_PRINT),
+                    ],
+                ],
             ];
         } catch (Exception $e) {
             // Record error
@@ -436,10 +441,10 @@ $server->tool(
                         'text' => "❌ Request failed: {$e->getMessage()}\n\n" .
                             "Service: {$serviceName}\n" .
                             "Endpoint: {$endpoint}\n" .
-                            "Circuit Breaker Status: " .
-                            json_encode($circuitBreaker->getCircuitStatus($serviceName), JSON_PRETTY_PRINT)
-                    ]
-                ]
+                            'Circuit Breaker Status: ' .
+                            json_encode($circuitBreaker->getCircuitStatus($serviceName), JSON_PRETTY_PRINT),
+                    ],
+                ],
             ];
         }
     }
@@ -451,7 +456,7 @@ $server->tool(
     'Get circuit breaker status for all services',
     [
         'type' => 'object',
-        'properties' => []
+        'properties' => [],
     ],
     function (array $args) use ($circuitBreaker): array {
         $circuits = $circuitBreaker->getAllCircuits();
@@ -470,8 +475,8 @@ $server->tool(
 
                 $status .= "{$stateIcon} **{$serviceName}**: {$circuit['state']}\n";
                 $status .= "   Failures: {$circuit['failures']}\n";
-                $status .= "   Last Failure: " . ($circuit['last_failure'] ? date('c', $circuit['last_failure']) : 'None') . "\n";
-                $status .= "   Last Success: " . ($circuit['last_success'] ? date('c', $circuit['last_success']) : 'None') . "\n\n";
+                $status .= '   Last Failure: ' . ($circuit['last_failure'] ? date('c', $circuit['last_failure']) : 'None') . "\n";
+                $status .= '   Last Success: ' . ($circuit['last_success'] ? date('c', $circuit['last_success']) : 'None') . "\n\n";
             }
         }
 
@@ -479,9 +484,9 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $status
-                ]
-            ]
+                    'text' => $status,
+                ],
+            ],
         ];
     }
 );
@@ -493,7 +498,7 @@ $server->resource(
     [
         'title' => 'Microservices Architecture Topology',
         'description' => 'Visual representation of the microservices architecture',
-        'mimeType' => 'application/json'
+        'mimeType' => 'application/json',
     ],
     function () use ($serviceRegistry): string {
         $topology = [
@@ -502,24 +507,24 @@ $server->resource(
             'components' => [
                 'api_gateway' => [
                     'role' => 'entry_point',
-                    'responsibilities' => ['routing', 'load_balancing', 'circuit_breaking', 'service_discovery']
+                    'responsibilities' => ['routing', 'load_balancing', 'circuit_breaking', 'service_discovery'],
                 ],
                 'service_registry' => [
                     'role' => 'service_discovery',
-                    'responsibilities' => ['service_registration', 'health_monitoring', 'service_lookup']
+                    'responsibilities' => ['service_registration', 'health_monitoring', 'service_lookup'],
                 ],
-                'services' => $serviceRegistry->getAllServices()
+                'services' => $serviceRegistry->getAllServices(),
             ],
             'communication_patterns' => [
                 'synchronous' => 'MCP protocol',
                 'load_balancing' => ['round_robin', 'least_connections', 'random'],
-                'fault_tolerance' => 'circuit_breaker'
+                'fault_tolerance' => 'circuit_breaker',
             ],
             'deployment' => [
                 'containerization' => 'Docker',
                 'orchestration' => 'Kubernetes',
-                'service_mesh' => 'Optional (Istio/Linkerd)'
-            ]
+                'service_mesh' => 'Optional (Istio/Linkerd)',
+            ],
         ];
 
         return json_encode($topology, JSON_PRETTY_PRINT);
@@ -539,9 +544,9 @@ $server->prompt(
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => 'How does this microservices architecture work?'
-                        ]
-                    ]
+                            'text' => 'How does this microservices architecture work?',
+                        ],
+                    ],
                 ],
                 [
                     'role' => 'assistant',
@@ -568,11 +573,11 @@ $server->prompt(
                                 "• Load Balancing (Round Robin, Least Connections)\n" .
                                 "• Circuit Breaker for fault tolerance\n" .
                                 "• Health monitoring\n\n" .
-                                "Try: 'Use discover_services to see all available services'"
-                        ]
-                    ]
-                ]
-            ]
+                                "Try: 'Use discover_services to see all available services'",
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 );
@@ -580,8 +585,8 @@ $server->prompt(
 // Start the API Gateway
 async(function () use ($server, $serviceRegistry) {
     echo "🏗️ Microservices API Gateway starting...\n";
-    echo "📋 Registered services: " . count($serviceRegistry->getAllServices()) . "\n";
-    echo "🟢 Healthy services: " . count($serviceRegistry->getHealthyServices()) . "\n";
+    echo '📋 Registered services: ' . count($serviceRegistry->getAllServices()) . "\n";
+    echo '🟢 Healthy services: ' . count($serviceRegistry->getHealthyServices()) . "\n";
     echo "🛠️  Available tools: discover_services, route_request, circuit_status\n";
     echo "🔗 Architecture: API Gateway + Service Discovery + Circuit Breaker\n" . PHP_EOL;
 

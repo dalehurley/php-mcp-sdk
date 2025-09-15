@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Shared;
 
 /**
- * RFC 8414 OAuth 2.0 Authorization Server Metadata
+ * RFC 8414 OAuth 2.0 Authorization Server Metadata.
  */
 class OAuthMetadata implements \JsonSerializable
 {

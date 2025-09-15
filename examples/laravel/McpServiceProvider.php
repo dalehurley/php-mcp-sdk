@@ -58,7 +58,7 @@ class McpServiceProvider extends ServiceProvider
     {
         return [
             McpServer::class,
-            'mcp.server'
+            'mcp.server',
         ];
     }
 }

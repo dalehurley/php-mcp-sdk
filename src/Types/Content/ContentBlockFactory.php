@@ -41,12 +41,13 @@ final class ContentBlockFactory
      * Create multiple ContentBlocks from an array of data.
      *
      * @param array<array<string, mixed>> $dataArray
+     *
      * @return ContentBlock[]
      */
     public static function fromArrayMultiple(array $dataArray): array
     {
         return array_map(
-            fn(array $data) => self::fromArray($data),
+            fn (array $data) => self::fromArray($data),
             $dataArray
         );
     }

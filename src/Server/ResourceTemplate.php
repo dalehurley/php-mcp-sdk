@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace MCP\Server;
 
-use MCP\Shared\UriTemplate;
-use MCP\Server\ResourceMetadata;
 use MCP\Shared\RequestHandlerExtra;
-use MCP\Types\ServerRequest;
-use MCP\Types\ServerNotification;
+use MCP\Shared\UriTemplate;
 use MCP\Types\Results\ListResourcesResult;
-use MCP\Types\Results\ReadResourceResult;
+use MCP\Types\ServerNotification;
+use MCP\Types\ServerRequest;
 
 /**
  * A callback to complete one variable within a resource template's URI template.
  *
  * @param string $value The current value to complete
  * @param array{arguments?: array<string, string>}|null $context The completion context
+ *
  * @return array<string>|\Amp\Future<array<string>> The completion suggestions
  */
 interface CompleteResourceTemplateCallback
@@ -28,6 +27,7 @@ interface CompleteResourceTemplateCallback
  * Callback to list all resources matching a given template.
  *
  * @param RequestHandlerExtra<ServerRequest, ServerNotification> $extra
+ *
  * @return ListResourcesResult|\Amp\Future<ListResourcesResult>
  */
 interface ListResourcesCallback

@@ -6,10 +6,10 @@ namespace MCP\Tests\Shared;
 
 use MCP\Shared\ReadBuffer;
 use MCP\Shared\Stdio;
-use MCP\Types\JsonRpc\JSONRPCRequest;
-use MCP\Types\JsonRpc\JSONRPCNotification;
-use MCP\Types\JsonRpc\JSONRPCResponse;
 use MCP\Types\JsonRpc\JSONRPCError;
+use MCP\Types\JsonRpc\JSONRPCNotification;
+use MCP\Types\JsonRpc\JSONRPCRequest;
+use MCP\Types\JsonRpc\JSONRPCResponse;
 use MCP\Types\RequestId;
 use MCP\Types\Result;
 use MCP\Validation\ValidationException;
@@ -198,7 +198,7 @@ class StdioTest extends TestCase
             'jsonrpc' => '2.0',
             'id' => 123,
             'method' => 'test',
-            'params' => ['key' => 'value']
+            'params' => ['key' => 'value'],
         ];
 
         $serialized = ReadBuffer::serializeMessage($message);
@@ -212,7 +212,7 @@ class StdioTest extends TestCase
         $message = [
             'jsonrpc' => '2.0',
             'method' => 'test',
-            'params' => ['text' => 'Hello 世界']
+            'params' => ['text' => 'Hello 世界'],
         ];
 
         $serialized = ReadBuffer::serializeMessage($message);
@@ -226,7 +226,7 @@ class StdioTest extends TestCase
         $message = [
             'jsonrpc' => '2.0',
             'method' => 'test',
-            'params' => ['path' => '/path/to/file', 'url' => 'https://example.com']
+            'params' => ['path' => '/path/to/file', 'url' => 'https://example.com'],
         ];
 
         $serialized = ReadBuffer::serializeMessage($message);

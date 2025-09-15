@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace MCP\Server\Transport;
 
-use MCP\Shared\Transport;
-use MCP\Shared\ReadBuffer;
-use Amp\ByteStream\ReadableStream;
-use Amp\ByteStream\WritableStream;
-
+use function Amp\async;
 use function Amp\ByteStream\getStdin;
 use function Amp\ByteStream\getStdout;
 
-use Amp\Future;
-use Amp\DeferredFuture;
+use Amp\ByteStream\ReadableStream;
+
+use Amp\ByteStream\WritableStream;
 use Amp\DeferredCancellation;
 
-use function Amp\async;
+use Amp\Future;
+use MCP\Shared\ReadBuffer;
+
+use MCP\Shared\Transport;
 
 /**
  * Server transport for stdio: this communicates with a MCP client by reading
@@ -25,8 +25,11 @@ use function Amp\async;
 class StdioServerTransport implements Transport
 {
     private ReadBuffer $_readBuffer;
+
     private bool $_started = false;
+
     private ReadableStream $_stdin;
+
     private WritableStream $_stdout;
 
     /** @var callable(array): void|null */
@@ -86,8 +89,8 @@ class StdioServerTransport implements Transport
         return async(function () {
             if ($this->_started) {
                 throw new \RuntimeException(
-                    "StdioServerTransport already started! If using Server class, " .
-                        "note that connect() calls start() automatically."
+                    'StdioServerTransport already started! If using Server class, ' .
+                        'note that connect() calls start() automatically.'
                 );
             }
 
@@ -121,7 +124,7 @@ class StdioServerTransport implements Transport
     }
 
     /**
-     * Process buffered data and emit complete messages
+     * Process buffered data and emit complete messages.
      */
     private function processReadBuffer(): void
     {
@@ -156,6 +159,7 @@ class StdioServerTransport implements Transport
                 if ($this->onerror !== null) {
                     ($this->onerror)($e);
                 }
+
                 throw $e;
             }
         });

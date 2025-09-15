@@ -33,6 +33,7 @@ class Implementation implements \JsonSerializable
 
     /**
      * Convert to array for JSON serialization.
+     *
      * @return array{name: string, version: string, title?: string}
      */
     public function toArray(): array
@@ -51,6 +52,7 @@ class Implementation implements \JsonSerializable
 
     /**
      * Create from array.
+     *
      * @param array{name?: string, version?: string, title?: string} $data
      */
     public static function fromArray(array $data): self

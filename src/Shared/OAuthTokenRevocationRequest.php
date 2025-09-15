@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Shared;
 
 /**
- * OAuth 2.0 token revocation request
+ * OAuth 2.0 token revocation request.
  */
 final readonly class OAuthTokenRevocationRequest
 {

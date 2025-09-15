@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Utils;
 
-use MCP\Utils\JsonSchemaValidator;
 use MCP\Types\McpError;
-use MCP\Types\ErrorCode;
+use MCP\Utils\JsonSchemaValidator;
 use PHPUnit\Framework\TestCase;
 
 class JsonSchemaValidatorTest extends TestCase
@@ -17,9 +16,9 @@ class JsonSchemaValidatorTest extends TestCase
             'type' => 'object',
             'properties' => [
                 'name' => ['type' => 'string'],
-                'age' => ['type' => 'integer']
+                'age' => ['type' => 'integer'],
             ],
-            'required' => ['name']
+            'required' => ['name'],
         ];
 
         $validData = ['name' => 'John', 'age' => 30];
@@ -35,9 +34,9 @@ class JsonSchemaValidatorTest extends TestCase
             'type' => 'object',
             'properties' => [
                 'name' => ['type' => 'string'],
-                'age' => ['type' => 'integer']
+                'age' => ['type' => 'integer'],
             ],
-            'required' => ['name']
+            'required' => ['name'],
         ];
 
         $invalidData = ['age' => 30]; // Missing required 'name'
@@ -64,8 +63,8 @@ class JsonSchemaValidatorTest extends TestCase
             'type' => 'object',
             'properties' => [
                 'prop1' => ['type' => 'string'],
-                'prop2' => ['type' => 'number']
-            ]
+                'prop2' => ['type' => 'number'],
+            ],
         ];
 
         // Valid object
@@ -80,7 +79,7 @@ class JsonSchemaValidatorTest extends TestCase
     {
         $schema = [
             'type' => 'array',
-            'items' => ['type' => 'string']
+            'items' => ['type' => 'string'],
         ];
 
         // Valid array
@@ -97,7 +96,7 @@ class JsonSchemaValidatorTest extends TestCase
             'type' => 'array',
             'items' => ['type' => 'string'],
             'minItems' => 2,
-            'maxItems' => 4
+            'maxItems' => 4,
         ];
 
         // Valid array
@@ -114,7 +113,7 @@ class JsonSchemaValidatorTest extends TestCase
         $schema = [
             'type' => 'string',
             'minLength' => 3,
-            'maxLength' => 10
+            'maxLength' => 10,
         ];
 
         // Valid string
@@ -130,7 +129,7 @@ class JsonSchemaValidatorTest extends TestCase
     {
         $schema = [
             'type' => 'string',
-            'pattern' => '^[a-z]+$'
+            'pattern' => '^[a-z]+$',
         ];
 
         // Valid string
@@ -146,7 +145,7 @@ class JsonSchemaValidatorTest extends TestCase
     {
         $schema = [
             'type' => 'string',
-            'enum' => ['red', 'green', 'blue']
+            'enum' => ['red', 'green', 'blue'],
         ];
 
         // Valid enum value
@@ -163,7 +162,7 @@ class JsonSchemaValidatorTest extends TestCase
         $schema = [
             'type' => 'number',
             'minimum' => 0,
-            'maximum' => 100
+            'maximum' => 100,
         ];
 
         // Valid number
@@ -194,9 +193,9 @@ class JsonSchemaValidatorTest extends TestCase
         $schema = [
             'type' => 'object',
             'properties' => [
-                'allowed' => ['type' => 'string']
+                'allowed' => ['type' => 'string'],
             ],
-            'additionalProperties' => false
+            'additionalProperties' => false,
         ];
 
         // Valid - only allowed properties
@@ -221,7 +220,7 @@ class JsonSchemaValidatorTest extends TestCase
         $expected = [
             'type' => 'object',
             'properties' => ['name' => ['type' => 'string']],
-            'additionalProperties' => false
+            'additionalProperties' => false,
         ];
         $this->assertEquals($expected, $result);
 
@@ -234,7 +233,7 @@ class JsonSchemaValidatorTest extends TestCase
         $expected = [
             'type' => 'object',
             'properties' => [],
-            'additionalProperties' => false
+            'additionalProperties' => false,
         ];
         $this->assertEquals($expected, $result);
     }
@@ -246,17 +245,17 @@ class JsonSchemaValidatorTest extends TestCase
             'properties' => [
                 'name' => [
                     'type' => 'string',
-                    'description' => 'The name parameter'
+                    'description' => 'The name parameter',
                 ],
                 'age' => [
                     'type' => 'integer',
-                    'description' => 'The age parameter'
+                    'description' => 'The age parameter',
                 ],
                 'optional' => [
-                    'type' => 'string'
-                ]
+                    'type' => 'string',
+                ],
             ],
-            'required' => ['name', 'age']
+            'required' => ['name', 'age'],
         ];
 
         $arguments = JsonSchemaValidator::extractPromptArguments($schema);
@@ -264,7 +263,7 @@ class JsonSchemaValidatorTest extends TestCase
         $this->assertCount(3, $arguments);
 
         // Check name argument
-        $nameArgs = array_filter($arguments, fn($arg) => $arg['name'] === 'name');
+        $nameArgs = array_filter($arguments, fn ($arg) => $arg['name'] === 'name');
         $nameArg = reset($nameArgs);
         $this->assertNotFalse($nameArg, 'Name argument should exist');
         $this->assertEquals('name', $nameArg['name']);
@@ -273,7 +272,7 @@ class JsonSchemaValidatorTest extends TestCase
         $this->assertTrue($nameArg['required']);
 
         // Check age argument
-        $ageArgs = array_filter($arguments, fn($arg) => $arg['name'] === 'age');
+        $ageArgs = array_filter($arguments, fn ($arg) => $arg['name'] === 'age');
         $ageArg = reset($ageArgs); // Get first element
         $this->assertNotFalse($ageArg, 'Age argument should exist');
         $this->assertEquals('age', $ageArg['name']);
@@ -281,7 +280,7 @@ class JsonSchemaValidatorTest extends TestCase
         $this->assertTrue($ageArg['required']);
 
         // Check optional argument
-        $optionalArgs = array_filter($arguments, fn($arg) => $arg['name'] === 'optional');
+        $optionalArgs = array_filter($arguments, fn ($arg) => $arg['name'] === 'optional');
         $optionalArg = reset($optionalArgs);
         $this->assertNotFalse($optionalArg, 'Optional argument should exist');
         $this->assertEquals('optional', $optionalArg['name']);
@@ -294,8 +293,8 @@ class JsonSchemaValidatorTest extends TestCase
             'type' => 'object',
             'properties' => [
                 'field1' => ['type' => 'string'],
-                'field2' => ['type' => 'number']
-            ]
+                'field2' => ['type' => 'number'],
+            ],
         ];
 
         $field1 = JsonSchemaValidator::getSchemaField($schema, 'field1');
@@ -317,28 +316,28 @@ class JsonSchemaValidatorTest extends TestCase
                     'type' => 'object',
                     'properties' => [
                         'name' => ['type' => 'string'],
-                        'email' => ['type' => 'string']
+                        'email' => ['type' => 'string'],
                     ],
-                    'required' => ['name']
-                ]
+                    'required' => ['name'],
+                ],
             ],
-            'required' => ['user']
+            'required' => ['user'],
         ];
 
         // Valid nested object
         $validData = [
             'user' => [
                 'name' => 'John',
-                'email' => 'john@example.com'
-            ]
+                'email' => 'john@example.com',
+            ],
         ];
         JsonSchemaValidator::validate($validData, $schema);
 
         // Invalid nested object - missing required field
         $invalidData = [
             'user' => [
-                'email' => 'john@example.com'
-            ]
+                'email' => 'john@example.com',
+            ],
         ];
 
         $this->expectException(McpError::class);
@@ -354,23 +353,23 @@ class JsonSchemaValidatorTest extends TestCase
                 'type' => 'object',
                 'properties' => [
                     'id' => ['type' => 'integer'],
-                    'name' => ['type' => 'string']
+                    'name' => ['type' => 'string'],
                 ],
-                'required' => ['id']
-            ]
+                'required' => ['id'],
+            ],
         ];
 
         // Valid array of objects
         $validData = [
             ['id' => 1, 'name' => 'First'],
-            ['id' => 2, 'name' => 'Second']
+            ['id' => 2, 'name' => 'Second'],
         ];
         JsonSchemaValidator::validate($validData, $schema);
 
         // Invalid - missing required field in array item
         $invalidData = [
             ['id' => 1, 'name' => 'First'],
-            ['name' => 'Second'] // Missing id
+            ['name' => 'Second'], // Missing id
         ];
 
         $this->expectException(McpError::class);

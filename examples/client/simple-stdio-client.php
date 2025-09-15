@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Simple MCP Client Example
- * 
+ * Simple MCP Client Example.
+ *
  * This example demonstrates how to create a basic MCP client that:
  * - Connects to a server via stdio
  * - Initializes the connection
@@ -20,13 +20,14 @@ require_once __DIR__ . '/../../src/Client/ClientOptions.php';
 require_once __DIR__ . '/../../src/Client/Client.php';
 require_once __DIR__ . '/../../src/Client/Transport/StdioClientTransport.php';
 
+use function Amp\async;
+
 use MCP\Client\Client;
 use MCP\Client\ClientOptions;
 use MCP\Client\Transport\StdioClientTransport;
 use MCP\Client\Transport\StdioServerParameters;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ClientCapabilities;
-use function Amp\async;
+use MCP\Types\Implementation;
 
 // Create the client
 $client = new Client(
@@ -54,7 +55,7 @@ async(function () use ($client, $transport) {
         // Connect to the server
         $client->connect($transport)->await();
 
-        echo "Connected! Server info: " . json_encode($client->getServerVersion()) . "\n\n";
+        echo 'Connected! Server info: ' . json_encode($client->getServerVersion()) . "\n\n";
 
         // List available tools
         echo "Listing tools...\n";
@@ -68,9 +69,9 @@ async(function () use ($client, $transport) {
         echo "Calling calculate tool with '2 + 2'...\n";
         $result = $client->callToolByName('calculate', ['expression' => '2 + 2'])->await();
         if ($result->isError()) {
-            echo "Error: ";
+            echo 'Error: ';
         } else {
-            echo "Result: ";
+            echo 'Result: ';
         }
         foreach ($result->getContent() as $content) {
             if ($content->getType() === 'text') {
@@ -131,7 +132,7 @@ async(function () use ($client, $transport) {
 
         echo "Done!\n";
     } catch (\Throwable $e) {
-        error_log("Client error: " . $e->getMessage());
+        error_log('Client error: ' . $e->getMessage());
         error_log($e->getTraceAsString());
         exit(1);
     }

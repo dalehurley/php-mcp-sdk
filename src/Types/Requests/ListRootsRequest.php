@@ -11,7 +11,9 @@ use MCP\Types\Request;
  */
 final class ListRootsRequest extends Request
 {
-    public const METHOD = 'roots/list';        /**
+    public const METHOD = 'roots/list';
+
+    /**
      * @param array<string, mixed>|null|string $methodOrParams For backward compatibility, can be params array or method string
      * @param array<string, mixed>|null $params Only used when first parameter is method string
      */

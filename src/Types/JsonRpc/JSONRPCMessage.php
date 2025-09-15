@@ -21,6 +21,7 @@ final class JSONRPCMessage
      * Parse a JSON-RPC message from an array.
      *
      * @return JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError
+     *
      * @throws \InvalidArgumentException
      */
     public static function fromArray(array $data): JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError

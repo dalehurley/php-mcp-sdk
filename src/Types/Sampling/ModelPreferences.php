@@ -40,7 +40,7 @@ final class ModelPreferences implements \JsonSerializable
         $hints = null;
         if (isset($data['hints']) && is_array($data['hints'])) {
             $hints = array_map(
-                fn(array $hint) => ModelHint::fromArray($hint),
+                fn (array $hint) => ModelHint::fromArray($hint),
                 $data['hints']
             );
         }
@@ -137,7 +137,7 @@ final class ModelPreferences implements \JsonSerializable
 
         if ($this->hints !== null) {
             $data['hints'] = array_map(
-                fn(ModelHint $hint) => $hint->jsonSerialize(),
+                fn (ModelHint $hint) => $hint->jsonSerialize(),
                 $this->hints
             );
         }

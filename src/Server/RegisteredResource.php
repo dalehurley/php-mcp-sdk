@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace MCP\Server;
 
-use MCP\Server\ResourceMetadata;
-
 /**
  * Represents a registered static resource in the MCP server.
  */
@@ -30,7 +28,7 @@ class RegisteredResource
     }
 
     /**
-     * Enable the resource
+     * Enable the resource.
      */
     public function enable(): void
     {
@@ -39,7 +37,7 @@ class RegisteredResource
     }
 
     /**
-     * Disable the resource
+     * Disable the resource.
      */
     public function disable(): void
     {
@@ -48,7 +46,7 @@ class RegisteredResource
     }
 
     /**
-     * Update resource properties
+     * Update resource properties.
      *
      * @param array{
      *   name?: string,
@@ -87,7 +85,7 @@ class RegisteredResource
     }
 
     /**
-     * Remove the resource
+     * Remove the resource.
      *
      * @param callable $onRemove Callback to handle removal
      */

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace MCP\Types\Requests;
 
-use MCP\Types\Request;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ClientCapabilities;
+use MCP\Types\Implementation;
+use MCP\Types\Request;
 
 /**
  * This request is sent from the client to the server when it first connects,
@@ -14,7 +14,9 @@ use MCP\Types\Capabilities\ClientCapabilities;
  */
 final class InitializeRequest extends Request
 {
-    public const METHOD = 'initialize';        /**
+    public const METHOD = 'initialize';
+
+    /**
      * @param array<string, mixed>|null|string $methodOrParams For backward compatibility, can be params array or method string
      * @param array<string, mixed>|null $params Only used when first parameter is method string
      */

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Client\Transport;
 
 /**
- * Configuration options for reconnection behavior
+ * Configuration options for reconnection behavior.
  */
 class StreamableHttpReconnectionOptions
 {

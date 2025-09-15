@@ -2,8 +2,8 @@
 <?php
 
 /**
- * MCP Inspector Utility
- * 
+ * MCP Inspector Utility.
+ *
  * This utility provides comprehensive inspection capabilities for MCP servers:
  * - Connect to any MCP server and analyze its capabilities
  * - List and test all available tools, resources, and prompts
@@ -14,14 +14,15 @@
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use function Amp\async;
+
+use Amp\Future;
 use MCP\Client\Client;
 use MCP\Client\ClientOptions;
 use MCP\Client\Transport\StdioClientTransport;
 use MCP\Client\Transport\StdioServerParameters;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ClientCapabilities;
-use function Amp\async;
-use Amp\Future;
+use MCP\Types\Implementation;
 
 // Command line argument parsing
 $options = getopt('', [
@@ -33,7 +34,7 @@ $options = getopt('', [
     'test-all',
     'output:',
     'format:',
-    'help'
+    'help',
 ]);
 
 if (isset($options['help'])) {
@@ -50,7 +51,7 @@ $config = [
     'report' => isset($options['report']),
     'test_all' => isset($options['test-all']),
     'output' => $options['output'] ?? null,
-    'format' => $options['format'] ?? 'text'
+    'format' => $options['format'] ?? 'text',
 ];
 
 async(function () use ($config) {
@@ -81,7 +82,7 @@ async(function () use ($config) {
         $client->close()->await();
         echo "✅ Inspection completed!\n";
     } catch (\Throwable $e) {
-        echo "❌ Error: " . $e->getMessage() . "\n";
+        echo '❌ Error: ' . $e->getMessage() . "\n";
         if ($config['format'] === 'json') {
             echo json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT) . "\n";
         }
@@ -90,7 +91,7 @@ async(function () use ($config) {
 })->await();
 
 /**
- * Connect to the MCP server
+ * Connect to the MCP server.
  */
 function connectToServer(array $config): Future
 {
@@ -100,7 +101,7 @@ function connectToServer(array $config): Future
         echo "   Command: {$config['command']}\n";
 
         if (!empty($config['args'])) {
-            echo "   Args: " . implode(', ', $config['args']) . "\n";
+            echo '   Args: ' . implode(', ', $config['args']) . "\n";
         }
         echo "\n";
 
@@ -126,7 +127,7 @@ function connectToServer(array $config): Future
 }
 
 /**
- * Run basic inspection of the server
+ * Run basic inspection of the server.
  */
 function runBasicInspection(Client $client): Future
 {
@@ -146,6 +147,7 @@ function runBasicInspection(Client $client): Future
 
         // List tools
         echo "🛠️  Available Tools:\n";
+
         try {
             $tools = $client->listTools()->await();
             if (count($tools->getTools()) === 0) {
@@ -156,17 +158,18 @@ function runBasicInspection(Client $client): Future
 
                     $inputSchema = $tool->getInputSchema();
                     if ($inputSchema && isset($inputSchema['properties'])) {
-                        echo "     Parameters: " . implode(', ', array_keys($inputSchema['properties'])) . "\n";
+                        echo '     Parameters: ' . implode(', ', array_keys($inputSchema['properties'])) . "\n";
                     }
                 }
             }
         } catch (\Exception $e) {
-            echo "   ❌ Error listing tools: " . $e->getMessage() . "\n";
+            echo '   ❌ Error listing tools: ' . $e->getMessage() . "\n";
         }
         echo "\n";
 
         // List resources
         echo "📁 Available Resources:\n";
+
         try {
             $resources = $client->listResources()->await();
             if (count($resources->getResources()) === 0) {
@@ -183,12 +186,13 @@ function runBasicInspection(Client $client): Future
                 }
             }
         } catch (\Exception $e) {
-            echo "   ❌ Error listing resources: " . $e->getMessage() . "\n";
+            echo '   ❌ Error listing resources: ' . $e->getMessage() . "\n";
         }
         echo "\n";
 
         // List prompts
         echo "💬 Available Prompts:\n";
+
         try {
             $prompts = $client->listPrompts()->await();
             if (count($prompts->getPrompts()) === 0) {
@@ -206,18 +210,18 @@ function runBasicInspection(Client $client): Future
                             }
                             $args[] = $argStr;
                         }
-                        echo "     Arguments: " . implode(', ', $args) . "\n";
+                        echo '     Arguments: ' . implode(', ', $args) . "\n";
                     }
                 }
             }
         } catch (\Exception $e) {
-            echo "   ❌ Error listing prompts: " . $e->getMessage() . "\n";
+            echo '   ❌ Error listing prompts: ' . $e->getMessage() . "\n";
         }
     });
 }
 
 /**
- * Run interactive mode for exploring the server
+ * Run interactive mode for exploring the server.
  */
 function runInteractiveMode(Client $client): Future
 {
@@ -237,14 +241,16 @@ function runInteractiveMode(Client $client): Future
         echo "  quit            - Exit interactive mode\n\n";
 
         while (true) {
-            echo "mcp> ";
+            echo 'mcp> ';
             $input = trim(fgets(STDIN));
 
-            if (empty($input)) continue;
+            if (empty($input)) {
+                continue;
+            }
 
             $parts = explode(' ', $input, 2);
             $command = $parts[0];
-            $args = isset($parts[1]) ? $parts[1] : '';
+            $args = $parts[1] ?? '';
 
             try {
                 switch ($command) {
@@ -312,7 +318,7 @@ function runInteractiveMode(Client $client): Future
                         echo "Type 'help' for available commands\n";
                 }
             } catch (\Exception $e) {
-                echo "❌ Error: " . $e->getMessage() . "\n";
+                echo '❌ Error: ' . $e->getMessage() . "\n";
             }
 
             echo "\n";
@@ -321,7 +327,7 @@ function runInteractiveMode(Client $client): Future
 }
 
 /**
- * Generate comprehensive report
+ * Generate comprehensive report.
  */
 function generateReport(Client $client, array $config): Future
 {
@@ -337,7 +343,7 @@ function generateReport(Client $client, array $config): Future
             'tools' => [],
             'resources' => [],
             'prompts' => [],
-            'tests' => []
+            'tests' => [],
         ];
 
         // Server information
@@ -354,11 +360,12 @@ function generateReport(Client $client, array $config): Future
                     'name' => $tool->getName(),
                     'description' => $tool->getDescription(),
                     'input_schema' => $tool->getInputSchema(),
-                    'test_result' => null
+                    'test_result' => null,
                 ];
 
                 // Test the tool if possible
                 echo "   Testing tool: {$tool->getName()}...\n";
+
                 try {
                     $testResult = testTool($client, $tool)->await();
                     $toolInfo['test_result'] = $testResult;
@@ -374,6 +381,7 @@ function generateReport(Client $client, array $config): Future
 
         // Analyze resources
         echo "   Analyzing resources...\n";
+
         try {
             $resources = $client->listResources()->await();
             foreach ($resources->getResources() as $resource) {
@@ -383,7 +391,7 @@ function generateReport(Client $client, array $config): Future
                     'description' => $resource->getDescription(),
                     'mime_type' => $resource->getMimeType(),
                     'accessible' => false,
-                    'content_sample' => null
+                    'content_sample' => null,
                 ];
 
                 // Try to read a sample of the resource
@@ -413,13 +421,14 @@ function generateReport(Client $client, array $config): Future
 
         // Analyze prompts
         echo "   Analyzing prompts...\n";
+
         try {
             $prompts = $client->listPrompts()->await();
             foreach ($prompts->getPrompts() as $prompt) {
                 $promptInfo = [
                     'name' => $prompt->getName(),
                     'description' => $prompt->getDescription(),
-                    'arguments' => []
+                    'arguments' => [],
                 ];
 
                 if ($prompt->hasArguments()) {
@@ -427,7 +436,7 @@ function generateReport(Client $client, array $config): Future
                         $promptInfo['arguments'][] = [
                             'name' => $arg->getName(),
                             'description' => $arg->getDescription(),
-                            'required' => $arg->isRequired()
+                            'required' => $arg->isRequired(),
                         ];
                     }
                 }
@@ -455,7 +464,7 @@ function generateReport(Client $client, array $config): Future
 }
 
 /**
- * Run all available tests
+ * Run all available tests.
  */
 function runAllTests(Client $client): Future
 {
@@ -466,15 +475,17 @@ function runAllTests(Client $client): Future
         $testResults = [
             'passed' => 0,
             'failed' => 0,
-            'skipped' => 0
+            'skipped' => 0,
         ];
 
         // Test all tools
         echo "Testing tools...\n";
+
         try {
             $tools = $client->listTools()->await();
             foreach ($tools->getTools() as $tool) {
                 echo "  Testing {$tool->getName()}... ";
+
                 try {
                     $result = testTool($client, $tool)->await();
                     if ($result['success']) {
@@ -485,20 +496,22 @@ function runAllTests(Client $client): Future
                         $testResults['failed']++;
                     }
                 } catch (\Exception $e) {
-                    echo "⏭️  SKIP: " . $e->getMessage() . "\n";
+                    echo '⏭️  SKIP: ' . $e->getMessage() . "\n";
                     $testResults['skipped']++;
                 }
             }
         } catch (\Exception $e) {
-            echo "❌ Error testing tools: " . $e->getMessage() . "\n";
+            echo '❌ Error testing tools: ' . $e->getMessage() . "\n";
         }
 
         // Test all resources
         echo "\nTesting resources...\n";
+
         try {
             $resources = $client->listResources()->await();
             foreach ($resources->getResources() as $resource) {
                 echo "  Reading {$resource->getName()}... ";
+
                 try {
                     $content = $client->readResourceByUri($resource->getUri())->await();
                     if (!empty($content->getContents())) {
@@ -509,12 +522,12 @@ function runAllTests(Client $client): Future
                         $testResults['failed']++;
                     }
                 } catch (\Exception $e) {
-                    echo "❌ FAIL: " . $e->getMessage() . "\n";
+                    echo '❌ FAIL: ' . $e->getMessage() . "\n";
                     $testResults['failed']++;
                 }
             }
         } catch (\Exception $e) {
-            echo "❌ Error testing resources: " . $e->getMessage() . "\n";
+            echo '❌ Error testing resources: ' . $e->getMessage() . "\n";
         }
 
         // Summary
@@ -522,20 +535,20 @@ function runAllTests(Client $client): Future
         echo "   Passed: {$testResults['passed']}\n";
         echo "   Failed: {$testResults['failed']}\n";
         echo "   Skipped: {$testResults['skipped']}\n";
-        echo "   Total: " . array_sum($testResults) . "\n";
+        echo '   Total: ' . array_sum($testResults) . "\n";
     });
 }
 
 /**
- * Interactive functions
+ * Interactive functions.
  */
 function listToolsInteractive(Client $client): Future
 {
     return \Amp\async(function () use ($client) {
         $tools = $client->listTools()->await();
-        echo "Available tools (" . count($tools->getTools()) . "):\n";
+        echo 'Available tools (' . count($tools->getTools()) . "):\n";
         foreach ($tools->getTools() as $i => $tool) {
-            echo "  " . ($i + 1) . ". {$tool->getName()} - {$tool->getDescription()}\n";
+            echo '  ' . ($i + 1) . ". {$tool->getName()} - {$tool->getDescription()}\n";
         }
     });
 }
@@ -544,9 +557,9 @@ function listResourcesInteractive(Client $client): Future
 {
     return \Amp\async(function () use ($client) {
         $resources = $client->listResources()->await();
-        echo "Available resources (" . count($resources->getResources()) . "):\n";
+        echo 'Available resources (' . count($resources->getResources()) . "):\n";
         foreach ($resources->getResources() as $i => $resource) {
-            echo "  " . ($i + 1) . ". {$resource->getName()} ({$resource->getUri()})\n";
+            echo '  ' . ($i + 1) . ". {$resource->getName()} ({$resource->getUri()})\n";
             if ($resource->getDescription()) {
                 echo "     {$resource->getDescription()}\n";
             }
@@ -558,9 +571,9 @@ function listPromptsInteractive(Client $client): Future
 {
     return \Amp\async(function () use ($client) {
         $prompts = $client->listPrompts()->await();
-        echo "Available prompts (" . count($prompts->getPrompts()) . "):\n";
+        echo 'Available prompts (' . count($prompts->getPrompts()) . "):\n";
         foreach ($prompts->getPrompts() as $i => $prompt) {
-            echo "  " . ($i + 1) . ". {$prompt->getName()} - {$prompt->getDescription()}\n";
+            echo '  ' . ($i + 1) . ". {$prompt->getName()} - {$prompt->getDescription()}\n";
         }
     });
 }
@@ -568,7 +581,7 @@ function listPromptsInteractive(Client $client): Future
 function callToolInteractive(Client $client, string $toolName): Future
 {
     return \Amp\async(function () use ($client, $toolName) {
-        echo "Enter parameters (JSON format, or press Enter for empty): ";
+        echo 'Enter parameters (JSON format, or press Enter for empty): ';
         $paramsInput = trim(fgets(STDIN));
 
         $params = [];
@@ -576,6 +589,7 @@ function callToolInteractive(Client $client, string $toolName): Future
             $params = json_decode($paramsInput, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 echo "❌ Invalid JSON format\n";
+
                 return;
             }
         }
@@ -602,7 +616,7 @@ function readResourceInteractive(Client $client, string $uri): Future
         $content = $client->readResourceByUri($uri)->await();
 
         echo "Resource content:\n";
-        echo str_repeat("-", 40) . "\n";
+        echo str_repeat('-', 40) . "\n";
 
         foreach ($content->getContents() as $item) {
             if ($item->getType() === 'text') {
@@ -610,14 +624,14 @@ function readResourceInteractive(Client $client, string $uri): Future
             }
         }
 
-        echo str_repeat("-", 40) . "\n";
+        echo str_repeat('-', 40) . "\n";
     });
 }
 
 function getPromptInteractive(Client $client, string $promptName): Future
 {
     return \Amp\async(function () use ($client, $promptName) {
-        echo "Enter arguments (JSON format, or press Enter for empty): ";
+        echo 'Enter arguments (JSON format, or press Enter for empty): ';
         $argsInput = trim(fgets(STDIN));
 
         $args = [];
@@ -625,6 +639,7 @@ function getPromptInteractive(Client $client, string $promptName): Future
             $args = json_decode($argsInput, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 echo "❌ Invalid JSON format\n";
+
                 return;
             }
         }
@@ -632,14 +647,14 @@ function getPromptInteractive(Client $client, string $promptName): Future
         $result = $client->getPromptByName($promptName, $args)->await();
 
         echo "Prompt result:\n";
-        echo str_repeat("-", 40) . "\n";
+        echo str_repeat('-', 40) . "\n";
 
         foreach ($result->getMessages() as $message) {
             echo "Role: {$message->getRole()}\n";
             echo "Content: {$message->getContent()->getText()}\n\n";
         }
 
-        echo str_repeat("-", 40) . "\n";
+        echo str_repeat('-', 40) . "\n";
     });
 }
 
@@ -659,6 +674,7 @@ function testToolInteractive(Client $client, string $toolName): Future
 
         if (!$tool) {
             echo "❌ Tool '$toolName' not found\n";
+
             return;
         }
 
@@ -667,7 +683,7 @@ function testToolInteractive(Client $client, string $toolName): Future
         if ($testResult['success']) {
             echo "✅ Test passed\n";
             if (isset($testResult['result'])) {
-                echo "Result: " . json_encode($testResult['result'], JSON_PRETTY_PRINT) . "\n";
+                echo 'Result: ' . json_encode($testResult['result'], JSON_PRETTY_PRINT) . "\n";
             }
         } else {
             echo "❌ Test failed: {$testResult['error']}\n";
@@ -676,7 +692,7 @@ function testToolInteractive(Client $client, string $toolName): Future
 }
 
 /**
- * Test a tool with sample data
+ * Test a tool with sample data.
  */
 function testTool(Client $client, $tool): Future
 {
@@ -690,20 +706,20 @@ function testTool(Client $client, $tool): Future
                 'success' => !$result->isError(),
                 'parameters' => $testParams,
                 'result' => $result->isError() ? null : extractResultText($result),
-                'error' => $result->isError() ? extractResultText($result) : null
+                'error' => $result->isError() ? extractResultText($result) : null,
             ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
                 'parameters' => $testParams,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     });
 }
 
 /**
- * Generate test parameters based on schema
+ * Generate test parameters based on schema.
  */
 function generateTestParameters(?array $schema): array
 {
@@ -745,7 +761,7 @@ function generateTestParameters(?array $schema): array
 }
 
 /**
- * Extract text from result
+ * Extract text from result.
  */
 function extractResultText($result): string
 {
@@ -755,11 +771,12 @@ function extractResultText($result): string
             $texts[] = $content->getText();
         }
     }
+
     return implode(' ', $texts);
 }
 
 /**
- * Format report as text
+ * Format report as text.
  */
 function formatReportAsText(array $report): string
 {
@@ -779,7 +796,7 @@ function formatReportAsText(array $report): string
     }
 
     if (is_array($report['tools'])) {
-        $output .= "Tools (" . count($report['tools']) . "):\n";
+        $output .= 'Tools (' . count($report['tools']) . "):\n";
         foreach ($report['tools'] as $tool) {
             $output .= "  - {$tool['name']}: {$tool['description']}\n";
             if (isset($tool['test_result']['success'])) {
@@ -791,7 +808,7 @@ function formatReportAsText(array $report): string
     }
 
     if (is_array($report['resources'])) {
-        $output .= "Resources (" . count($report['resources']) . "):\n";
+        $output .= 'Resources (' . count($report['resources']) . "):\n";
         foreach ($report['resources'] as $resource) {
             $output .= "  - {$resource['name']} ({$resource['uri']})\n";
             $status = $resource['accessible'] ? '✅ Accessible' : '❌ Not accessible';
@@ -801,12 +818,12 @@ function formatReportAsText(array $report): string
     }
 
     if (is_array($report['prompts'])) {
-        $output .= "Prompts (" . count($report['prompts']) . "):\n";
+        $output .= 'Prompts (' . count($report['prompts']) . "):\n";
         foreach ($report['prompts'] as $prompt) {
             $output .= "  - {$prompt['name']}: {$prompt['description']}\n";
             if (!empty($prompt['arguments'])) {
-                $args = array_map(fn($arg) => $arg['name'], $prompt['arguments']);
-                $output .= "    Arguments: " . implode(', ', $args) . "\n";
+                $args = array_map(fn ($arg) => $arg['name'], $prompt['arguments']);
+                $output .= '    Arguments: ' . implode(', ', $args) . "\n";
             }
         }
     }
@@ -815,7 +832,7 @@ function formatReportAsText(array $report): string
 }
 
 /**
- * Show help information
+ * Show help information.
  */
 function showHelp(): void
 {

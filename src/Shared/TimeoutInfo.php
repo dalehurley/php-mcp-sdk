@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Shared;
 
 /**
- * Information about a request's timeout state
+ * Information about a request's timeout state.
  */
 class TimeoutInfo
 {

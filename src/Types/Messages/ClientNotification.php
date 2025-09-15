@@ -45,7 +45,9 @@ final class ClientNotification
      * Create a notification from an array based on the method.
      *
      * @param array<string, mixed> $data
+     *
      * @return Notifications\CancelledNotification|Notifications\ProgressNotification|Notifications\InitializedNotification|Notifications\RootsListChangedNotification
+     *
      * @throws \InvalidArgumentException
      */
     public static function fromArray(array $data): object

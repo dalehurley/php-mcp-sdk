@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace MCP\Types\Results;
 
+use MCP\Types\Cursor;
 use MCP\Types\PaginatedResult;
 use MCP\Types\Resources\Resource;
-use MCP\Types\Cursor;
 
 /**
  * The server's response to a resources/list request from the client.
@@ -14,7 +14,7 @@ use MCP\Types\Cursor;
 final class ListResourcesResult extends PaginatedResult
 {
     /**
-     * @param Resource[] $resources
+     * @param resource[] $resources
      * @param array<string, mixed>|null $_meta
      */
     public function __construct(
@@ -35,7 +35,7 @@ final class ListResourcesResult extends PaginatedResult
         }
 
         $resources = array_map(
-            fn(array $item) => Resource::fromArray($item),
+            fn (array $item) => Resource::fromArray($item),
             $data['resources']
         );
 
@@ -49,7 +49,7 @@ final class ListResourcesResult extends PaginatedResult
     /**
      * Get the resources.
      *
-     * @return Resource[]
+     * @return resource[]
      */
     public function getResources(): array
     {
@@ -74,7 +74,7 @@ final class ListResourcesResult extends PaginatedResult
     {
         $data = parent::jsonSerialize();
         $data['resources'] = array_map(
-            fn(Resource $resource) => $resource->jsonSerialize(),
+            fn (Resource $resource) => $resource->jsonSerialize(),
             $this->resources
         );
 

@@ -216,6 +216,7 @@ final class JSONRPCError implements \JsonSerializable
         }
 
         $error = $value['error'];
+
         return isset($error['code'])
             && is_int($error['code'])
             && isset($error['message'])

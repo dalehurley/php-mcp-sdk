@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace MCP\Types\Results;
 
-use MCP\Types\Result;
+use MCP\Types\Resources\BlobResourceContents;
 use MCP\Types\Resources\ResourceContents;
 use MCP\Types\Resources\TextResourceContents;
-use MCP\Types\Resources\BlobResourceContents;
+use MCP\Types\Result;
 
 /**
  * The server's response to a resources/read request from the client.
@@ -73,7 +73,7 @@ final class ReadResourceResult extends Result
     {
         $data = parent::jsonSerialize();
         $data['contents'] = array_map(
-            fn(ResourceContents $content) => $content->jsonSerialize(),
+            fn (ResourceContents $content) => $content->jsonSerialize(),
             $this->contents
         );
 

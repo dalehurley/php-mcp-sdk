@@ -1,30 +1,32 @@
 <?php
 
 /**
- * Symfony MCP Integration Example
- * 
+ * Symfony MCP Integration Example.
+ *
  * This example demonstrates how to integrate the PHP MCP SDK with Symfony.
  * It shows patterns for:
  * - Using Symfony's dependency injection container
  * - Integrating with Symfony's console component
  * - Using Symfony's validator component
  * - Leveraging Symfony's event dispatcher
- * 
+ *
  * This is a standalone example that demonstrates Symfony patterns
  * without requiring a full Symfony installation.
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
 use MCP\Server\Transport\StdioServerTransport;
 use MCP\Types\Implementation;
-use function Amp\async;
 
 // Mock Symfony-style Dependency Injection Container
 class MockSymfonyContainer
 {
     private array $services = [];
+
     private array $parameters = [];
 
     public function set(string $id, object $service): void
@@ -37,6 +39,7 @@ class MockSymfonyContainer
         if (!isset($this->services[$id])) {
             throw new Exception("Service '{$id}' not found");
         }
+
         return $this->services[$id];
     }
 
@@ -55,6 +58,7 @@ class MockSymfonyContainer
         if (!isset($this->parameters[$name])) {
             throw new Exception("Parameter '{$name}' not found");
         }
+
         return $this->parameters[$name];
     }
 }
@@ -94,7 +98,9 @@ class MockConsoleApplication
 class MockCommand
 {
     private string $name;
+
     private string $description;
+
     private $executor;
 
     public function __construct(string $name, string $description, callable $executor)
@@ -141,6 +147,7 @@ class MockEventDispatcher
                 $results[] = $listener($data);
             }
         }
+
         return $results;
     }
 }
@@ -216,8 +223,8 @@ $console->add(new MockCommand(
                 'id' => rand(1000, 9999),
                 'name' => $args['name'],
                 'email' => $args['email'],
-                'created_at' => date('Y-m-d H:i:s')
-            ]
+                'created_at' => date('Y-m-d H:i:s'),
+            ],
         ];
     }
 ));
@@ -229,7 +236,7 @@ $console->add(new MockCommand(
         return [
             'status' => 'success',
             'message' => 'Cache cleared successfully',
-            'cleared_items' => rand(50, 200)
+            'cleared_items' => rand(50, 200),
         ];
     }
 ));
@@ -248,7 +255,7 @@ $console->add(new MockCommand(
         return [
             'status' => 'success',
             'services' => $services,
-            'count' => count($services)
+            'count' => count($services),
         ];
     }
 ));
@@ -259,14 +266,14 @@ $eventDispatcher = $container->get('event_dispatcher');
 $eventDispatcher->addListener('user.created', function (array $data) {
     return [
         'listener' => 'email_notification',
-        'message' => "Welcome email sent to {$data['email']}"
+        'message' => "Welcome email sent to {$data['email']}",
     ];
 });
 
 $eventDispatcher->addListener('user.created', function (array $data) {
     return [
         'listener' => 'audit_log',
-        'message' => "User creation logged: {$data['name']}"
+        'message' => "User creation logged: {$data['name']}",
     ];
 });
 
@@ -288,15 +295,15 @@ $server->tool(
         'properties' => [
             'command' => [
                 'type' => 'string',
-                'description' => 'Console command to execute'
+                'description' => 'Console command to execute',
             ],
             'arguments' => [
                 'type' => 'object',
                 'description' => 'Command arguments',
-                'additionalProperties' => true
-            ]
+                'additionalProperties' => true,
+            ],
         ],
-        'required' => ['command']
+        'required' => ['command'],
     ],
     function (array $args) use ($container): array {
         $console = $container->get('console');
@@ -310,9 +317,9 @@ $server->tool(
                 'content' => [
                     [
                         'type' => 'text',
-                        'text' => "❌ Command failed: {$result['error']}"
-                    ]
-                ]
+                        'text' => "❌ Command failed: {$result['error']}",
+                    ],
+                ],
             ];
         }
 
@@ -346,9 +353,9 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $output
-                ]
-            ]
+                    'text' => $output,
+                ],
+            ],
         ];
     }
 );
@@ -359,7 +366,7 @@ $server->tool(
     'List all available console commands',
     [
         'type' => 'object',
-        'properties' => []
+        'properties' => [],
     ],
     function (array $args) use ($container): array {
         $console = $container->get('console');
@@ -374,9 +381,9 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $commandList
-                ]
-            ]
+                    'text' => $commandList,
+                ],
+            ],
         ];
     }
 );
@@ -391,15 +398,15 @@ $server->tool(
             'data' => [
                 'type' => 'object',
                 'description' => 'Data to validate',
-                'additionalProperties' => true
+                'additionalProperties' => true,
             ],
             'type' => [
                 'type' => 'string',
                 'description' => 'Validation type',
-                'enum' => ['user', 'email', 'custom']
-            ]
+                'enum' => ['user', 'email', 'custom'],
+            ],
         ],
-        'required' => ['data', 'type']
+        'required' => ['data', 'type'],
     ],
     function (array $args) use ($container): array {
         $validator = $container->get('validator');
@@ -410,13 +417,13 @@ $server->tool(
             'user' => [
                 'name' => ['NotBlank' => true, 'Length' => ['min' => 2, 'max' => 50]],
                 'email' => ['NotBlank' => true, 'Email' => true],
-                'role' => ['Choice' => ['choices' => ['admin', 'user', 'moderator']]]
+                'role' => ['Choice' => ['choices' => ['admin', 'user', 'moderator']]],
             ],
             'email' => [
-                'email' => ['NotBlank' => true, 'Email' => true]
+                'email' => ['NotBlank' => true, 'Email' => true],
             ],
             'custom' => [
-                'value' => ['NotBlank' => true]
+                'value' => ['NotBlank' => true],
             ]
         };
 
@@ -427,9 +434,9 @@ $server->tool(
                 'content' => [
                     [
                         'type' => 'text',
-                        'text' => "✅ Validation passed!\n\nData is valid according to {$type} constraints."
-                    ]
-                ]
+                        'text' => "✅ Validation passed!\n\nData is valid according to {$type} constraints.",
+                    ],
+                ],
             ];
         }
 
@@ -442,9 +449,9 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $errorText
-                ]
-            ]
+                    'text' => $errorText,
+                ],
+            ],
         ];
     }
 );
@@ -458,15 +465,15 @@ $server->tool(
         'properties' => [
             'event_name' => [
                 'type' => 'string',
-                'description' => 'Name of the event to dispatch'
+                'description' => 'Name of the event to dispatch',
             ],
             'data' => [
                 'type' => 'object',
                 'description' => 'Event data',
-                'additionalProperties' => true
-            ]
+                'additionalProperties' => true,
+            ],
         ],
-        'required' => ['event_name']
+        'required' => ['event_name'],
     ],
     function (array $args) use ($container): array {
         $eventDispatcher = $container->get('event_dispatcher');
@@ -478,7 +485,7 @@ $server->tool(
         $output = "🎯 Event '{$eventName}' dispatched\n\n";
 
         if (empty($results)) {
-            $output .= "No listeners responded to this event.";
+            $output .= 'No listeners responded to this event.';
         } else {
             $output .= "Listener responses:\n";
             foreach ($results as $result) {
@@ -492,9 +499,9 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $output
-                ]
-            ]
+                    'text' => $output,
+                ],
+            ],
         ];
     }
 );
@@ -506,7 +513,7 @@ $server->resource(
     [
         'title' => 'Symfony Application Information',
         'description' => 'Information about the Symfony MCP integration',
-        'mimeType' => 'application/json'
+        'mimeType' => 'application/json',
     ],
     function () use ($container): string {
         return json_encode([
@@ -520,11 +527,11 @@ $server->resource(
                 'Console Commands',
                 'Event Dispatcher',
                 'Validator Component',
-                'Service Registration'
+                'Service Registration',
             ],
             'registered_services' => ['console', 'event_dispatcher', 'validator'],
             'available_commands' => array_keys($container->get('console')->all()),
-            'event_listeners' => ['user.created']
+            'event_listeners' => ['user.created'],
         ], JSON_PRETTY_PRINT);
     }
 );
@@ -536,7 +543,7 @@ $server->resource(
     [
         'title' => 'Dependency Injection Container Services',
         'description' => 'List of registered services in the DI container',
-        'mimeType' => 'text/plain'
+        'mimeType' => 'text/plain',
     ],
     function () use ($container): string {
         $output = "Symfony DI Container Services\n";
@@ -553,7 +560,7 @@ $server->resource(
 
                 if ($serviceId === 'console') {
                     $commands = $service->all();
-                    $output .= "Commands: " . implode(', ', array_keys($commands)) . "\n";
+                    $output .= 'Commands: ' . implode(', ', array_keys($commands)) . "\n";
                 }
 
                 $output .= "\n";
@@ -561,9 +568,9 @@ $server->resource(
         }
 
         $output .= "Parameters:\n";
-        $output .= "- app.name: " . $container->getParameter('app.name') . "\n";
-        $output .= "- app.version: " . $container->getParameter('app.version') . "\n";
-        $output .= "- app.environment: " . $container->getParameter('app.environment') . "\n";
+        $output .= '- app.name: ' . $container->getParameter('app.name') . "\n";
+        $output .= '- app.version: ' . $container->getParameter('app.version') . "\n";
+        $output .= '- app.environment: ' . $container->getParameter('app.environment') . "\n";
 
         return $output;
     }
@@ -582,9 +589,9 @@ $server->prompt(
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => 'How do I integrate MCP with Symfony?'
-                        ]
-                    ]
+                            'text' => 'How do I integrate MCP with Symfony?',
+                        ],
+                    ],
                 ],
                 [
                     'role' => 'assistant',
@@ -613,11 +620,11 @@ $server->prompt(
                                 "• list_commands - List available console commands\n" .
                                 "• validate_data - Validate data with Symfony validator\n" .
                                 "• dispatch_event - Dispatch events through event system\n\n" .
-                                "Try: 'Use console_command to run debug:container'"
-                        ]
-                    ]
-                ]
-            ]
+                                "Try: 'Use console_command to run debug:container'",
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 );
@@ -625,10 +632,10 @@ $server->prompt(
 // Start the server
 async(function () use ($server, $container) {
     echo "🚀 Symfony MCP Integration Server starting...\n";
-    echo "🏗️  Framework: Symfony " . $container->getParameter('app.version') . "\n";
+    echo '🏗️  Framework: Symfony ' . $container->getParameter('app.version') . "\n";
     echo "🛠️  Available tools: console_command, list_commands, validate_data, dispatch_event\n";
     echo "📚 Resources: app-info, services\n";
-    echo "⚡ Services: " . implode(', ', ['console', 'event_dispatcher', 'validator']) . "\n" . PHP_EOL;
+    echo '⚡ Services: ' . implode(', ', ['console', 'event_dispatcher', 'validator']) . "\n" . PHP_EOL;
 
     $transport = new StdioServerTransport();
     $server->connect($transport)->await();

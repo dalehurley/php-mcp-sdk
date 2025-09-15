@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Client\Transport;
 
-use PHPUnit\Framework\TestCase;
 use MCP\Client\Transport\WebSocketClientTransport;
 use MCP\Client\Transport\WebSocketClientTransportOptions;
+use PHPUnit\Framework\TestCase;
 
 class WebSocketClientTransportTest extends TestCase
 {
     public function testConstructor(): void
     {
         $transport = new WebSocketClientTransport('ws://localhost:8080');
-        
+
         $this->assertInstanceOf(WebSocketClientTransport::class, $transport);
         $this->assertEquals('ws://localhost:8080', $transport->getUrl());
     }
@@ -28,7 +28,7 @@ class WebSocketClientTransportTest extends TestCase
         );
 
         $transport = new WebSocketClientTransport('wss://example.com:443/mcp', $options);
-        
+
         $this->assertInstanceOf(WebSocketClientTransport::class, $transport);
         $this->assertEquals('wss://example.com:443/mcp', $transport->getUrl());
         $this->assertEquals($options, $transport->getOptions());

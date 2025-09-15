@@ -9,7 +9,6 @@ use MCP\Types\Capabilities\ServerCapabilities;
 use MCP\Types\Content\ContentBlockFactory;
 use MCP\Types\Cursor;
 use MCP\Types\Implementation;
-use MCP\Types\JsonRpc\JSONRPCMessage;
 use MCP\Types\LoggingLevel;
 use MCP\Types\ProgressToken;
 use MCP\Types\Prompts\Prompt;
@@ -31,7 +30,9 @@ use MCP\Validation\ValidationService;
 class TypeFactoryService
 {
     private readonly JSONRPCMessageFactory $jsonrpcFactory;
+
     private readonly ToolFactory $toolFactory;
+
     private readonly ResultFactory $resultFactory;
 
     public function __construct(
@@ -74,6 +75,7 @@ class TypeFactoryService
      * Parse a JSON-RPC message.
      *
      * @param array<string, mixed> $data
+     *
      * @return \MCP\Types\JsonRpc\JSONRPCRequest|\MCP\Types\JsonRpc\JSONRPCNotification|\MCP\Types\JsonRpc\JSONRPCResponse|\MCP\Types\JsonRpc\JSONRPCError
      */
     public function parseJSONRPCMessage(array $data): object
@@ -125,6 +127,7 @@ class TypeFactoryService
      * Create multiple ContentBlocks from array data.
      *
      * @param array<array<string, mixed>> $dataArray
+     *
      * @return \MCP\Types\Content\ContentBlock[]
      */
     public function createContentBlocks(array $dataArray): array

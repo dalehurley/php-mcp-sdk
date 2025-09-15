@@ -2,8 +2,8 @@
 <?php
 
 /**
- * Weather Server Example
- * 
+ * Weather Server Example.
+ *
  * This example demonstrates how to create an MCP server that:
  * - Calls external APIs (weather service)
  * - Implements caching for API responses
@@ -21,16 +21,17 @@ require_once __DIR__ . '/../../src/Server/ResourceTemplate.php';
 require_once __DIR__ . '/../../src/Server/ServerOptions.php';
 require_once __DIR__ . '/../../src/Server/Server.php';
 
+use function Amp\async;
+
+use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Exception\RequestException;
 use MCP\Server\McpServer;
 use MCP\Server\ServerOptions;
 use MCP\Server\Transport\StdioServerTransport;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ServerCapabilities;
-use MCP\Types\Results\CallToolResult;
 use MCP\Types\Content\TextContent;
-use GuzzleHttp\Client as HttpClient;
-use GuzzleHttp\Exception\RequestException;
-use function Amp\async;
+use MCP\Types\Implementation;
+use MCP\Types\Results\CallToolResult;
 
 // Create the server
 $server = new McpServer(
@@ -39,7 +40,7 @@ $server = new McpServer(
         capabilities: new ServerCapabilities(
             tools: ['listChanged' => true]
         ),
-        instructions: "This server provides weather information using external APIs with caching and rate limiting."
+        instructions: 'This server provides weather information using external APIs with caching and rate limiting.'
     )
 );
 
@@ -50,27 +51,27 @@ $config = [
     'cache_ttl' => 600, // 10 minutes
     'rate_limit' => [
         'requests_per_minute' => 60,
-        'requests_per_hour' => 1000
-    ]
+        'requests_per_hour' => 1000,
+    ],
 ];
 
 // In-memory cache and rate limiting
 $cache = [];
 $rateLimitTracker = [
     'minute' => ['count' => 0, 'reset' => time() + 60],
-    'hour' => ['count' => 0, 'reset' => time() + 3600]
+    'hour' => ['count' => 0, 'reset' => time() + 3600],
 ];
 
 // HTTP client for API calls
 $httpClient = new HttpClient([
     'timeout' => 10,
     'headers' => [
-        'User-Agent' => 'PHP-MCP-Weather-Server/1.0.0'
-    ]
+        'User-Agent' => 'PHP-MCP-Weather-Server/1.0.0',
+    ],
 ]);
 
 /**
- * Check rate limits
+ * Check rate limits.
  */
 function checkRateLimit(array &$rateLimitTracker, array $config): bool
 {
@@ -96,7 +97,7 @@ function checkRateLimit(array &$rateLimitTracker, array $config): bool
 }
 
 /**
- * Increment rate limit counters
+ * Increment rate limit counters.
  */
 function incrementRateLimit(array &$rateLimitTracker): void
 {
@@ -105,7 +106,7 @@ function incrementRateLimit(array &$rateLimitTracker): void
 }
 
 /**
- * Get cached data or null if expired/missing
+ * Get cached data or null if expired/missing.
  */
 function getCached(array &$cache, string $key, int $ttl): ?array
 {
@@ -116,6 +117,7 @@ function getCached(array &$cache, string $key, int $ttl): ?array
     $item = $cache[$key];
     if (time() - $item['timestamp'] > $ttl) {
         unset($cache[$key]);
+
         return null;
     }
 
@@ -123,18 +125,18 @@ function getCached(array &$cache, string $key, int $ttl): ?array
 }
 
 /**
- * Store data in cache
+ * Store data in cache.
  */
 function setCache(array &$cache, string $key, array $data): void
 {
     $cache[$key] = [
         'data' => $data,
-        'timestamp' => time()
+        'timestamp' => time(),
     ];
 }
 
 /**
- * Make API request with error handling
+ * Make API request with error handling.
  */
 function makeWeatherApiRequest(HttpClient $httpClient, string $url): array
 {
@@ -155,9 +157,10 @@ function makeWeatherApiRequest(HttpClient $httpClient, string $url): array
     } catch (RequestException $e) {
         if ($e->hasResponse()) {
             $statusCode = $e->getResponse()->getStatusCode();
+
             throw new \Exception("Weather API request failed with status $statusCode: " . $e->getMessage());
         } else {
-            throw new \Exception("Weather API request failed: " . $e->getMessage());
+            throw new \Exception('Weather API request failed: ' . $e->getMessage());
         }
     }
 }
@@ -169,14 +172,14 @@ $server->tool(
     [
         'location' => [
             'type' => 'string',
-            'description' => 'City name, state/country code (e.g., "London,UK" or "New York,NY,US")'
+            'description' => 'City name, state/country code (e.g., "London,UK" or "New York,NY,US")',
         ],
         'units' => [
             'type' => 'string',
             'description' => 'Temperature units',
             'enum' => ['metric', 'imperial', 'kelvin'],
-            'default' => 'metric'
-        ]
+            'default' => 'metric',
+        ],
     ],
     function (array $args) use ($httpClient, $config, &$cache, &$rateLimitTracker) {
         $location = $args['location'] ?? '';
@@ -203,6 +206,7 @@ $server->tool(
 
         if ($cachedData !== null) {
             $weatherInfo = formatWeatherData($cachedData, $units, true);
+
             return new CallToolResult(
                 content: [new TextContent($weatherInfo)]
             );
@@ -213,7 +217,7 @@ $server->tool(
             $url = $config['base_url'] . '/weather?' . http_build_query([
                 'q' => $location,
                 'appid' => $config['api_key'],
-                'units' => $units
+                'units' => $units,
             ]);
 
             $data = makeWeatherApiRequest($httpClient, $url);
@@ -223,6 +227,7 @@ $server->tool(
             setCache($cache, $cacheKey, $data);
 
             $weatherInfo = formatWeatherData($data, $units, false);
+
             return new CallToolResult(
                 content: [new TextContent($weatherInfo)]
             );
@@ -242,21 +247,21 @@ $server->tool(
     [
         'location' => [
             'type' => 'string',
-            'description' => 'City name, state/country code'
+            'description' => 'City name, state/country code',
         ],
         'units' => [
             'type' => 'string',
             'description' => 'Temperature units',
             'enum' => ['metric', 'imperial', 'kelvin'],
-            'default' => 'metric'
+            'default' => 'metric',
         ],
         'days' => [
             'type' => 'integer',
             'description' => 'Number of days (1-5)',
             'minimum' => 1,
             'maximum' => 5,
-            'default' => 3
-        ]
+            'default' => 3,
+        ],
     ],
     function (array $args) use ($httpClient, $config, &$cache, &$rateLimitTracker) {
         $location = $args['location'] ?? '';
@@ -284,6 +289,7 @@ $server->tool(
 
         if ($cachedData !== null) {
             $forecastInfo = formatForecastData($cachedData, $units, $days, true);
+
             return new CallToolResult(
                 content: [new TextContent($forecastInfo)]
             );
@@ -294,7 +300,7 @@ $server->tool(
                 'q' => $location,
                 'appid' => $config['api_key'],
                 'units' => $units,
-                'cnt' => $days * 8 // API returns 3-hour intervals, so 8 per day
+                'cnt' => $days * 8, // API returns 3-hour intervals, so 8 per day
             ]);
 
             $data = makeWeatherApiRequest($httpClient, $url);
@@ -303,6 +309,7 @@ $server->tool(
             setCache($cache, $cacheKey, $data);
 
             $forecastInfo = formatForecastData($data, $units, $days, false);
+
             return new CallToolResult(
                 content: [new TextContent($forecastInfo)]
             );
@@ -322,8 +329,8 @@ $server->tool(
     [
         'location' => [
             'type' => 'string',
-            'description' => 'City name, state/country code'
-        ]
+            'description' => 'City name, state/country code',
+        ],
     ],
     function (array $args) use ($httpClient, $config, &$cache, &$rateLimitTracker) {
         $location = $args['location'] ?? '';
@@ -351,8 +358,8 @@ $server->tool(
                 'description' => 'Excessive heat warning in effect until 8 PM',
                 'severity' => 'moderate',
                 'start' => date('c'),
-                'end' => date('c', time() + 8 * 3600)
-            ]
+                'end' => date('c', time() + 8 * 3600),
+            ],
         ];
 
         if (empty($alerts)) {
@@ -365,8 +372,8 @@ $server->tool(
         foreach ($alerts as $alert) {
             $alertText .= "🚨 {$alert['title']} ({$alert['severity']})\n";
             $alertText .= "   {$alert['description']}\n";
-            $alertText .= "   Active: " . date('M j, Y g:i A', strtotime($alert['start']));
-            $alertText .= " - " . date('M j, Y g:i A', strtotime($alert['end'])) . "\n\n";
+            $alertText .= '   Active: ' . date('M j, Y g:i A', strtotime($alert['start']));
+            $alertText .= ' - ' . date('M j, Y g:i A', strtotime($alert['end'])) . "\n\n";
         }
 
         return new CallToolResult(
@@ -384,7 +391,7 @@ $server->tool(
         $now = time();
         $cacheInfo = [
             'total_entries' => count($cache),
-            'entries' => []
+            'entries' => [],
         ];
 
         foreach ($cache as $key => $item) {
@@ -394,7 +401,7 @@ $server->tool(
                 'key' => $key,
                 'age_seconds' => $age,
                 'expires_in_seconds' => max(0, $ttl - $age),
-                'is_expired' => $age > $ttl
+                'is_expired' => $age > $ttl,
             ];
         }
 
@@ -402,13 +409,13 @@ $server->tool(
             'minute' => [
                 'used' => $rateLimitTracker['minute']['count'],
                 'limit' => $config['rate_limit']['requests_per_minute'],
-                'resets_in' => max(0, $rateLimitTracker['minute']['reset'] - $now)
+                'resets_in' => max(0, $rateLimitTracker['minute']['reset'] - $now),
             ],
             'hour' => [
                 'used' => $rateLimitTracker['hour']['count'],
                 'limit' => $config['rate_limit']['requests_per_hour'],
-                'resets_in' => max(0, $rateLimitTracker['hour']['reset'] - $now)
-            ]
+                'resets_in' => max(0, $rateLimitTracker['hour']['reset'] - $now),
+            ],
         ];
 
         $status = [
@@ -416,8 +423,8 @@ $server->tool(
             'rate_limits' => $rateLimitInfo,
             'config' => [
                 'cache_ttl_seconds' => $config['cache_ttl'],
-                'api_configured' => !empty($config['api_key']) && $config['api_key'] !== 'demo_key'
-            ]
+                'api_configured' => !empty($config['api_key']) && $config['api_key'] !== 'demo_key',
+            ],
         ];
 
         return new CallToolResult(
@@ -427,7 +434,7 @@ $server->tool(
 );
 
 /**
- * Format current weather data for display
+ * Format current weather data for display.
  */
 function formatWeatherData(array $data, string $units, bool $fromCache): string
 {
@@ -443,7 +450,7 @@ function formatWeatherData(array $data, string $units, bool $fromCache): string
         default => '°C'
     };
 
-    $cacheNote = $fromCache ? " (cached)" : "";
+    $cacheNote = $fromCache ? ' (cached)' : '';
 
     $weather = "🌤️ Current Weather for $location$cacheNote\n\n";
     $weather .= "Temperature: $temp$unitSymbol (feels like $feelsLike$unitSymbol)\n";
@@ -464,7 +471,7 @@ function formatWeatherData(array $data, string $units, bool $fromCache): string
 
     if (isset($data['visibility'])) {
         $visibility = $data['visibility'] / 1000; // Convert to km
-        $weather .= "Visibility: " . round($visibility, 1) . " km\n";
+        $weather .= 'Visibility: ' . round($visibility, 1) . " km\n";
     }
 
     $weather .= "\nLast updated: " . date('M j, Y g:i A', $data['dt']);
@@ -473,7 +480,7 @@ function formatWeatherData(array $data, string $units, bool $fromCache): string
 }
 
 /**
- * Format forecast data for display
+ * Format forecast data for display.
  */
 function formatForecastData(array $data, string $units, int $days, bool $fromCache): string
 {
@@ -484,7 +491,7 @@ function formatForecastData(array $data, string $units, int $days, bool $fromCac
         default => '°C'
     };
 
-    $cacheNote = $fromCache ? " (cached)" : "";
+    $cacheNote = $fromCache ? ' (cached)' : '';
 
     $forecast = "📅 {$days}-Day Weather Forecast for $location$cacheNote\n\n";
 
@@ -500,7 +507,9 @@ function formatForecastData(array $data, string $units, int $days, bool $fromCac
 
     $dayCount = 0;
     foreach ($dailyForecasts as $date => $dayData) {
-        if ($dayCount >= $days) break;
+        if ($dayCount >= $days) {
+            break;
+        }
 
         $dayName = date('l, M j', strtotime($date));
         $minTemp = min(array_column($dayData, 'main.temp_min'));
@@ -513,7 +522,7 @@ function formatForecastData(array $data, string $units, int $days, bool $fromCac
         $condition = ucfirst(key($mainCondition));
 
         $forecast .= "🗓️ $dayName\n";
-        $forecast .= "   " . round($minTemp) . "$unitSymbol - " . round($maxTemp) . "$unitSymbol\n";
+        $forecast .= '   ' . round($minTemp) . "$unitSymbol - " . round($maxTemp) . "$unitSymbol\n";
         $forecast .= "   $condition\n\n";
 
         $dayCount++;
@@ -523,12 +532,13 @@ function formatForecastData(array $data, string $units, int $days, bool $fromCac
 }
 
 /**
- * Convert wind degree to direction
+ * Convert wind degree to direction.
  */
 function getWindDirection(int $degrees): string
 {
     $directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
     $index = round($degrees / 22.5) % 16;
+
     return $directions[$index];
 }
 
@@ -550,7 +560,7 @@ async(function () use ($server, $config) {
 
         $server->connect($transport)->await();
     } catch (\Throwable $e) {
-        error_log("Server error: " . $e->getMessage());
+        error_log('Server error: ' . $e->getMessage());
         exit(1);
     }
 })->await();

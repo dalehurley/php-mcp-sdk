@@ -1,17 +1,18 @@
 <?php
 
 /**
- * Client Transport Test Example
- * 
+ * Client Transport Test Example.
+ *
  * This example tests the StdioClientTransport by connecting to the echo server
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use MCP\Client\Transport\StdioClientTransport;
-use MCP\Client\Transport\StdioServerParameters;
 use function Amp\async;
 use function Amp\delay;
+
+use MCP\Client\Transport\StdioClientTransport;
+use MCP\Client\Transport\StdioServerParameters;
 
 async(function () {
     // Configure server parameters
@@ -26,11 +27,11 @@ async(function () {
 
     // Set up handlers
     $transport->setMessageHandler(function (array $message) {
-        echo "Client received response: " . json_encode($message, JSON_PRETTY_PRINT) . "\n\n";
+        echo 'Client received response: ' . json_encode($message, JSON_PRETTY_PRINT) . "\n\n";
     });
 
     $transport->setErrorHandler(function (\Throwable $error) {
-        error_log("Client transport error: " . $error->getMessage());
+        error_log('Client transport error: ' . $error->getMessage());
     });
 
     $transport->setCloseHandler(function () {
@@ -44,7 +45,7 @@ async(function () {
         // Start the transport (spawns the server process)
         $transport->start()->await();
 
-        echo "Connected to server (PID: " . $transport->getPid() . ")\n\n";
+        echo 'Connected to server (PID: ' . $transport->getPid() . ")\n\n";
 
         // Send some test messages
         $messages = [
@@ -52,23 +53,23 @@ async(function () {
                 'jsonrpc' => '2.0',
                 'method' => 'hello',
                 'params' => ['name' => 'World'],
-                'id' => 1
+                'id' => 1,
             ],
             [
                 'jsonrpc' => '2.0',
                 'method' => 'calculate',
                 'params' => ['expression' => '2 + 2'],
-                'id' => 2
+                'id' => 2,
             ],
             [
                 'jsonrpc' => '2.0',
                 'method' => 'ping',
-                'id' => 3
-            ]
+                'id' => 3,
+            ],
         ];
 
         foreach ($messages as $message) {
-            echo "Sending: " . json_encode($message) . "\n";
+            echo 'Sending: ' . json_encode($message) . "\n";
             $transport->send($message)->await();
 
             // Wait a bit between messages
@@ -85,7 +86,7 @@ async(function () {
 
         echo "Done!\n";
     } catch (\Throwable $e) {
-        error_log("Error: " . $e->getMessage());
+        error_log('Error: ' . $e->getMessage());
         error_log($e->getTraceAsString());
 
         // Try to close transport on error

@@ -10,20 +10,20 @@ use MCP\Server\Transport\WebSocketServerTransport;
 use MCP\Server\Transport\WebSocketServerTransportOptions;
 use MCP\Types\Content\TextContent;
 use MCP\Types\Tool;
-use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 /**
- * WebSocket MCP Server Example
- * 
+ * WebSocket MCP Server Example.
+ *
  * This example demonstrates how to create an MCP server that communicates
  * over WebSocket connections, allowing multiple clients to connect simultaneously.
- * 
+ *
  * Usage:
  *   php examples/server/websocket-server.php
- * 
+ *
  * Then connect with a WebSocket client to: ws://localhost:8080
- * 
+ *
  * Features demonstrated:
  * - WebSocket server transport with multiple client support
  * - Real-time bidirectional communication
@@ -50,7 +50,7 @@ try {
             'http://localhost:3000',
             'http://127.0.0.1:3000',
             'https://localhost:3000',
-            'https://127.0.0.1:3000'
+            'https://127.0.0.1:3000',
         ]
     );
 
@@ -72,17 +72,18 @@ try {
             'properties' => [
                 'text' => [
                     'type' => 'string',
-                    'description' => 'Text to echo back'
-                ]
+                    'description' => 'Text to echo back',
+                ],
             ],
-            'required' => ['text']
+            'required' => ['text'],
         ],
         function (array $arguments): array {
             $text = $arguments['text'] ?? '';
+
             return [
                 'content' => [
-                    new TextContent("Echo: {$text}")
-                ]
+                    new TextContent("Echo: {$text}"),
+                ],
             ];
         }
     );
@@ -94,8 +95,8 @@ try {
         function (array $arguments): array {
             return [
                 'content' => [
-                    new TextContent('Current server time: ' . date('Y-m-d H:i:s T'))
-                ]
+                    new TextContent('Current server time: ' . date('Y-m-d H:i:s T')),
+                ],
             ];
         }
     );
@@ -106,14 +107,15 @@ try {
         [],
         function (array $arguments) use ($transport): array {
             $status = $transport->getStatus();
+
             return [
                 'content' => [
                     new TextContent(
                         "Active connections: {$status['connections']}/{$status['maxConnections']}\n" .
                             "Server address: {$status['address']}\n" .
-                            "Status: " . ($status['started'] ? 'Running' : 'Stopped')
-                    )
-                ]
+                            'Status: ' . ($status['started'] ? 'Running' : 'Stopped')
+                    ),
+                ],
             ];
         }
     );
@@ -127,18 +129,18 @@ try {
                 'operation' => [
                     'type' => 'string',
                     'enum' => ['add', 'subtract', 'multiply', 'divide'],
-                    'description' => 'Mathematical operation to perform'
+                    'description' => 'Mathematical operation to perform',
                 ],
                 'a' => [
                     'type' => 'number',
-                    'description' => 'First number'
+                    'description' => 'First number',
                 ],
                 'b' => [
                     'type' => 'number',
-                    'description' => 'Second number'
-                ]
+                    'description' => 'Second number',
+                ],
             ],
-            'required' => ['operation', 'a', 'b']
+            'required' => ['operation', 'a', 'b'],
         ],
         function (array $arguments): array {
             $operation = $arguments['operation'];
@@ -155,8 +157,8 @@ try {
 
             return [
                 'content' => [
-                    new TextContent("{$a} {$operation} {$b} = {$result}")
-                ]
+                    new TextContent("{$a} {$operation} {$b} = {$result}"),
+                ],
             ];
         }
     );
@@ -173,9 +175,9 @@ try {
                 "================================\n" .
                 "Address: {$transportOptions->getAddress()}\n" .
                 "Max Connections: {$transportOptions->maxConnections}\n" .
-                "Heartbeat Enabled: " . ($transportOptions->enablePing ? 'Yes' : 'No') . "\n" .
+                'Heartbeat Enabled: ' . ($transportOptions->enablePing ? 'Yes' : 'No') . "\n" .
                 "Heartbeat Interval: {$transportOptions->heartbeatInterval}s\n" .
-                "Started: " . date('Y-m-d H:i:s T') . "\n";
+                'Started: ' . date('Y-m-d H:i:s T') . "\n";
         }
     );
 
@@ -198,12 +200,12 @@ try {
                                 "- Server Address: {$status['address']}\n" .
                                 "- Active Connections: {$status['connections']}\n" .
                                 "- Maximum Connections: {$status['maxConnections']}\n" .
-                                "- Server Status: " . ($status['started'] ? 'Running' : 'Stopped') . "\n" .
-                                "- Current Time: " . date('Y-m-d H:i:s T') . "\n\n" .
-                                "Please provide insights on performance, capacity utilization, and any recommendations."
-                        ]
-                    ]
-                ]
+                                '- Server Status: ' . ($status['started'] ? 'Running' : 'Stopped') . "\n" .
+                                '- Current Time: ' . date('Y-m-d H:i:s T') . "\n\n" .
+                                'Please provide insights on performance, capacity utilization, and any recommendations.',
+                        ],
+                    ],
+                ],
             ];
         }
     );
@@ -211,10 +213,10 @@ try {
     echo "✅ Server configured with tools, resources, and prompts\n";
     echo "🌐 WebSocket server will listen on: {$transportOptions->getAddress()}\n";
     echo "📊 Maximum concurrent connections: {$transportOptions->maxConnections}\n";
-    echo "💓 Heartbeat enabled: " . ($transportOptions->enablePing ? 'Yes' : 'No') . "\n";
+    echo '💓 Heartbeat enabled: ' . ($transportOptions->enablePing ? 'Yes' : 'No') . "\n";
 
     if ($transportOptions->allowedOrigins) {
-        echo "🔒 Allowed origins: " . implode(', ', $transportOptions->allowedOrigins) . "\n";
+        echo '🔒 Allowed origins: ' . implode(', ', $transportOptions->allowedOrigins) . "\n";
     }
 
     echo "\n📝 Available tools:\n";
@@ -259,7 +261,7 @@ try {
         $logger->error("Server error: {$error->getMessage()}", [
             'file' => $error->getFile(),
             'line' => $error->getLine(),
-            'trace' => $error->getTraceAsString()
+            'trace' => $error->getTraceAsString(),
         ]);
     }
 

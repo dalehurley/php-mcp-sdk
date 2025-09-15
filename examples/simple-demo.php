@@ -21,9 +21,9 @@ $implementation = new Implementation(
 );
 
 echo "Server Info:\n";
-echo "- Name: " . $implementation->getName() . "\n";
-echo "- Version: " . $implementation->getVersion() . "\n";
-echo "- Title: " . $implementation->getTitle() . "\n\n";
+echo '- Name: ' . $implementation->getName() . "\n";
+echo '- Version: ' . $implementation->getVersion() . "\n";
+echo '- Title: ' . $implementation->getTitle() . "\n\n";
 
 // Convert to array (for JSON encoding)
 $serverInfo = $implementation->toArray();
@@ -40,9 +40,9 @@ try {
     );
 } catch (McpError $e) {
     echo "Error caught:\n";
-    echo "- Code: " . $e->errorCode->value . "\n";
-    echo "- Message: " . $e->getMessage() . "\n";
-    echo "- Data: " . json_encode($e->data) . "\n\n";
+    echo '- Code: ' . $e->errorCode->value . "\n";
+    echo '- Message: ' . $e->getMessage() . "\n";
+    echo '- Data: ' . json_encode($e->data) . "\n\n";
 
     // Convert to JSON-RPC error format
     $jsonRpcError = $e->toJsonRpcError();
@@ -54,12 +54,12 @@ try {
 $errorData = [
     'code' => -32602,
     'message' => 'Invalid params',
-    'data' => ['param' => 'value']
+    'data' => ['param' => 'value'],
 ];
 
 $error = McpError::fromJsonRpcError($errorData);
 echo "Error created from JSON-RPC:\n";
-echo "- Error Code: " . $error->errorCode->name . " (" . $error->errorCode->value . ")\n";
-echo "- Message: " . $error->getMessage() . "\n\n";
+echo '- Error Code: ' . $error->errorCode->name . ' (' . $error->errorCode->value . ")\n";
+echo '- Message: ' . $error->getMessage() . "\n\n";
 
 echo "Demo completed!\n";

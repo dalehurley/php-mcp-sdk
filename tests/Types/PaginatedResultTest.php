@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Types;
 
-use MCP\Types\PaginatedResult;
 use MCP\Types\Cursor;
+use MCP\Types\PaginatedResult;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -19,7 +19,7 @@ class PaginatedResultTest extends TestCase
     public function testConstructionWithoutCursor(): void
     {
         $result = new TestPaginatedResult();
-        
+
         $this->assertNull($result->getNextCursor());
         $this->assertFalse($result->hasMore());
     }
@@ -31,7 +31,7 @@ class PaginatedResultTest extends TestCase
     {
         $cursor = new Cursor('next-page');
         $result = new TestPaginatedResult($cursor);
-        
+
         $this->assertNotNull($result->getNextCursor());
         $this->assertEquals('next-page', $result->getNextCursor()->getValue());
         $this->assertTrue($result->hasMore());
@@ -44,7 +44,7 @@ class PaginatedResultTest extends TestCase
     {
         $result = new TestPaginatedResult();
         $json = $result->jsonSerialize();
-        
+
         $this->assertIsArray($json);
         $this->assertArrayNotHasKey('nextCursor', $json);
     }
@@ -57,7 +57,7 @@ class PaginatedResultTest extends TestCase
         $cursor = new Cursor('page3');
         $result = new TestPaginatedResult($cursor);
         $json = $result->jsonSerialize();
-        
+
         $this->assertIsArray($json);
         $this->assertArrayHasKey('nextCursor', $json);
         $this->assertEquals('page3', $json['nextCursor']);
@@ -73,12 +73,12 @@ class PaginatedResultTest extends TestCase
         $cursor = TestPaginatedResult::extractNextCursorPublic($data);
         $this->assertNotNull($cursor);
         $this->assertEquals('page4', $cursor->getValue());
-        
+
         // Test without cursor
         $data = ['other' => 'data'];
         $cursor = TestPaginatedResult::extractNextCursorPublic($data);
         $this->assertNull($cursor);
-        
+
         // Test with non-string cursor
         $data = ['nextCursor' => 123];
         $cursor = TestPaginatedResult::extractNextCursorPublic($data);
@@ -95,7 +95,7 @@ class TestPaginatedResult extends PaginatedResult
     {
         parent::__construct($nextCursor, $_meta);
     }
-    
+
     /**
      * Public wrapper for protected method.
      */

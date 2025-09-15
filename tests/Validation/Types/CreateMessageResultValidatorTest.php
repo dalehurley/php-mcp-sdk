@@ -24,8 +24,8 @@ class CreateMessageResultValidatorTest extends TestCase
             'role' => 'assistant',
             'content' => [
                 'type' => 'text',
-                'text' => 'Hello, world!'
-            ]
+                'text' => 'Hello, world!',
+            ],
         ];
 
         $result = $this->validator->validate($data);
@@ -41,8 +41,8 @@ class CreateMessageResultValidatorTest extends TestCase
             'content' => [
                 'type' => 'image',
                 'data' => 'base64encodeddata',
-                'mimeType' => 'image/png'
-            ]
+                'mimeType' => 'image/png',
+            ],
         ];
 
         $result = $this->validator->validate($data);
@@ -56,8 +56,8 @@ class CreateMessageResultValidatorTest extends TestCase
             'role' => 'assistant',
             'content' => [
                 'type' => 'text',
-                'text' => 'Hello, world!'
-            ]
+                'text' => 'Hello, world!',
+            ],
         ];
 
         $this->expectException(ValidationException::class);
@@ -72,8 +72,8 @@ class CreateMessageResultValidatorTest extends TestCase
             'role' => 'assistant',
             'content' => [
                 'type' => 'invalid',
-                'text' => 'Hello, world!'
-            ]
+                'text' => 'Hello, world!',
+            ],
         ];
 
         $this->expectException(ValidationException::class);

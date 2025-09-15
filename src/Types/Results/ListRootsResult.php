@@ -33,7 +33,7 @@ final class ListRootsResult extends Result
         }
 
         $roots = array_map(
-            fn(array $item) => Root::fromArray($item),
+            fn (array $item) => Root::fromArray($item),
             $data['roots']
         );
 
@@ -67,7 +67,7 @@ final class ListRootsResult extends Result
     {
         $data = parent::jsonSerialize();
         $data['roots'] = array_map(
-            fn(Root $root) => $root->jsonSerialize(),
+            fn (Root $root) => $root->jsonSerialize(),
             $this->roots
         );
 

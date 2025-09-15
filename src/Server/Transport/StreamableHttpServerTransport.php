@@ -4,26 +4,21 @@ declare(strict_types=1);
 
 namespace MCP\Server\Transport;
 
+use function Amp\async;
+use function Amp\delay;
+
+use Amp\Future;
+use Amp\Http\HttpStatus;
+use Amp\Http\Server\Request;
+use Amp\Http\Server\Response;
 use MCP\Shared\Transport;
+use MCP\Types\JsonRpc\JSONRPCError;
 use MCP\Types\JsonRpc\JSONRPCMessage;
 use MCP\Types\JsonRpc\JSONRPCRequest;
 use MCP\Types\JsonRpc\JSONRPCResponse;
-use MCP\Types\JsonRpc\JSONRPCError;
-use MCP\Types\JsonRpc\JSONRPCNotification;
-use MCP\Types\Protocol;
-use MCP\Types\RequestId;
-use MCP\Types\McpError;
-use MCP\Types\ErrorCode;
-use MCP\Types\Supporting\MessageExtraInfo;
-use MCP\Types\Supporting\RequestInfo;
-use MCP\Shared\ReadBuffer;
-use Amp\Future;
-use Amp\Http\Server\Request;
-use Amp\Http\Server\Response;
-use Amp\Http\HttpStatus;
 
-use function Amp\async;
-use function Amp\delay;
+use MCP\Types\Protocol;
+use MCP\Types\Supporting\RequestInfo;
 
 /**
  * Server transport for Streamable HTTP: this implements the MCP Streamable HTTP transport specification.
@@ -45,7 +40,9 @@ class StreamableHttpServerTransport implements Transport
     private const STANDALONE_SSE_STREAM_ID = '_GET_stream';
 
     private StreamableHttpServerTransportOptions $_options;
+
     private bool $_started = false;
+
     private bool $_initialized = false;
 
     /** @var ?string Session ID when in stateful mode */
@@ -105,18 +102,19 @@ class StreamableHttpServerTransport implements Transport
     {
         return async(function () {
             if ($this->_started) {
-                throw new \RuntimeException("Transport already started");
+                throw new \RuntimeException('Transport already started');
             }
             $this->_started = true;
         });
     }
 
     /**
-     * Handles an incoming HTTP request
+     * Handles an incoming HTTP request.
      *
      * @param Request $request The Amp HTTP request
      * @param mixed $parsedBody Pre-parsed body (optional)
      * @param array|null $authInfo Authentication information
+     *
      * @return Future<Response>
      */
     public function handleRequest(Request $request, $parsedBody = null, ?array $authInfo = null): Future
@@ -152,9 +150,9 @@ class StreamableHttpServerTransport implements Transport
                             'jsonrpc' => '2.0',
                             'error' => [
                                 'code' => -32000,
-                                'message' => 'Method not allowed.'
+                                'message' => 'Method not allowed.',
                             ],
-                            'id' => null
+                            'id' => null,
                         ])
                     );
             }
@@ -162,7 +160,7 @@ class StreamableHttpServerTransport implements Transport
     }
 
     /**
-     * Validates request headers for DNS rebinding protection
+     * Validates request headers for DNS rebinding protection.
      *
      * @return string|null Error message if validation fails
      */
@@ -192,7 +190,7 @@ class StreamableHttpServerTransport implements Transport
     }
 
     /**
-     * Handle GET requests for SSE stream
+     * Handle GET requests for SSE stream.
      */
     private function handleGetRequest(Request $request): Future
     {
@@ -263,7 +261,7 @@ class StreamableHttpServerTransport implements Transport
     }
 
     /**
-     * Handle POST requests containing JSON-RPC messages
+     * Handle POST requests containing JSON-RPC messages.
      */
     private function handlePostRequest(Request $request, $parsedBody, ?array $authInfo): Future
     {
@@ -299,7 +297,7 @@ class StreamableHttpServerTransport implements Transport
                     $rawMessage = json_decode($body, true);
 
                     if (json_last_error() !== JSON_ERROR_NONE) {
-                        throw new \RuntimeException("Invalid JSON: " . json_last_error_msg());
+                        throw new \RuntimeException('Invalid JSON: ' . json_last_error_msg());
                     }
                 }
 
@@ -495,8 +493,8 @@ class StreamableHttpServerTransport implements Transport
                         }
 
                         $body = count($responses) === 1
-                            ? json_encode($responses[0] instanceof \JsonSerializable ? $responses[0]->jsonSerialize() : (array)$responses[0])
-                            : json_encode(array_map(fn($r) => $r instanceof \JsonSerializable ? $r->jsonSerialize() : (array)$r, $responses));
+                            ? json_encode($responses[0] instanceof \JsonSerializable ? $responses[0]->jsonSerialize() : (array) $responses[0])
+                            : json_encode(array_map(fn ($r) => $r instanceof \JsonSerializable ? $r->jsonSerialize() : (array) $r, $responses));
 
                         return new Response(HttpStatus::OK, $headers, $body);
                     }
@@ -510,14 +508,14 @@ class StreamableHttpServerTransport implements Transport
                     HttpStatus::BAD_REQUEST,
                     -32700,
                     'Parse error',
-                    (string)$error
+                    (string) $error
                 );
             }
         });
     }
 
     /**
-     * Handle DELETE requests to terminate sessions
+     * Handle DELETE requests to terminate sessions.
      */
     private function handleDeleteRequest(Request $request): Future
     {
@@ -549,7 +547,7 @@ class StreamableHttpServerTransport implements Transport
     }
 
     /**
-     * Validates session ID for non-initialization requests
+     * Validates session ID for non-initialization requests.
      *
      * @return Response|null Response if validation fails, null if valid
      */
@@ -590,7 +588,7 @@ class StreamableHttpServerTransport implements Transport
     }
 
     /**
-     * Validates protocol version header
+     * Validates protocol version header.
      *
      * @return Response|null Response if validation fails, null if valid
      */
@@ -612,7 +610,7 @@ class StreamableHttpServerTransport implements Transport
     }
 
     /**
-     * Replay events for resumability
+     * Replay events for resumability.
      */
     private function replayEvents(string $lastEventId, Request $request): Future
     {
@@ -643,7 +641,7 @@ class StreamableHttpServerTransport implements Transport
                         return async(function () use ($stream, $eventId, $message) {
                             $data = "event: message\n";
                             $data .= "id: $eventId\n";
-                            $data .= "data: " . json_encode($message instanceof \JsonSerializable ? $message->jsonSerialize() : (array)$message) . "\n\n";
+                            $data .= 'data: ' . json_encode($message instanceof \JsonSerializable ? $message->jsonSerialize() : (array) $message) . "\n\n";
 
                             $stream->write($data);
                         });
@@ -688,7 +686,7 @@ class StreamableHttpServerTransport implements Transport
             if ($requestId === null) {
                 if ($jsonrpcMessage instanceof JSONRPCResponse || $jsonrpcMessage instanceof JSONRPCError) {
                     throw new \RuntimeException(
-                        "Cannot send a response on a standalone SSE stream unless resuming a previous client request"
+                        'Cannot send a response on a standalone SSE stream unless resuming a previous client request'
                     );
                 }
 
@@ -716,7 +714,7 @@ class StreamableHttpServerTransport implements Transport
                     if ($eventId !== null) {
                         $data .= "id: $eventId\n";
                     }
-                    $data .= "data: " . json_encode($message) . "\n\n";
+                    $data .= 'data: ' . json_encode($message) . "\n\n";
 
                     $body->write($data);
                 }
@@ -751,7 +749,7 @@ class StreamableHttpServerTransport implements Transport
                         if ($eventId !== null) {
                             $data .= "id: $eventId\n";
                         }
-                        $data .= "data: " . json_encode($message) . "\n\n";
+                        $data .= 'data: ' . json_encode($message) . "\n\n";
 
                         $body->write($data);
                     }
@@ -826,7 +824,7 @@ class StreamableHttpServerTransport implements Transport
     }
 
     /**
-     * Create a JSON error response
+     * Create a JSON error response.
      */
     private function jsonErrorResponse(int $status, int $code, string $message, $data = null): Response
     {
@@ -834,9 +832,9 @@ class StreamableHttpServerTransport implements Transport
             'jsonrpc' => '2.0',
             'error' => [
                 'code' => $code,
-                'message' => $message
+                'message' => $message,
             ],
-            'id' => null
+            'id' => null,
         ];
 
         if ($data !== null) {
@@ -851,7 +849,7 @@ class StreamableHttpServerTransport implements Transport
     }
 
     /**
-     * Convert Amp Request headers to array format
+     * Convert Amp Request headers to array format.
      */
     private function getHeadersArray(Request $request): array
     {
@@ -859,6 +857,7 @@ class StreamableHttpServerTransport implements Transport
         foreach ($request->getHeaders() as $name => $values) {
             $headers[$name] = is_array($values) ? implode(', ', $values) : $values;
         }
+
         return $headers;
     }
 }

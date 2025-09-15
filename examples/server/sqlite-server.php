@@ -2,8 +2,8 @@
 <?php
 
 /**
- * SQLite Database Server Example
- * 
+ * SQLite Database Server Example.
+ *
  * This example demonstrates how to create an MCP server that:
  * - Connects to SQLite database
  * - Provides database schema as resources
@@ -21,17 +21,17 @@ require_once __DIR__ . '/../../src/Server/ResourceTemplate.php';
 require_once __DIR__ . '/../../src/Server/ServerOptions.php';
 require_once __DIR__ . '/../../src/Server/Server.php';
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
 use MCP\Server\ServerOptions;
 use MCP\Server\Transport\StdioServerTransport;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ServerCapabilities;
+use MCP\Types\Content\TextContent;
+use MCP\Types\Implementation;
+use MCP\Types\Resources\TextResourceContents;
 use MCP\Types\Results\CallToolResult;
 use MCP\Types\Results\ReadResourceResult;
-use MCP\Types\Results\ListResourcesResult;
-use MCP\Types\Resources\TextResourceContents;
-use MCP\Types\Content\TextContent;
-use function Amp\async;
 
 // Create the server
 $server = new McpServer(
@@ -41,7 +41,7 @@ $server = new McpServer(
             tools: ['listChanged' => true],
             resources: ['listChanged' => true]
         ),
-        instructions: "This server provides safe access to SQLite databases with schema inspection and query execution."
+        instructions: 'This server provides safe access to SQLite databases with schema inspection and query execution.'
     )
 );
 
@@ -56,14 +56,14 @@ function initializeDatabase(string $dbPath): \PDO
 
     $pdo = new \PDO("sqlite:$dbPath", null, null, [
         \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
+        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
     ]);
 
     if ($isNewDb) {
         echo "Creating new SQLite database with sample data...\n";
 
         // Create tables
-        $pdo->exec("
+        $pdo->exec('
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
@@ -72,9 +72,9 @@ function initializeDatabase(string $dbPath): \PDO
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 is_active BOOLEAN DEFAULT 1
             )
-        ");
+        ');
 
-        $pdo->exec("
+        $pdo->exec('
             CREATE TABLE posts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -84,9 +84,9 @@ function initializeDatabase(string $dbPath): \PDO
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
-        ");
+        ');
 
-        $pdo->exec("
+        $pdo->exec('
             CREATE TABLE comments (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 post_id INTEGER NOT NULL,
@@ -96,23 +96,23 @@ function initializeDatabase(string $dbPath): \PDO
                 FOREIGN KEY (post_id) REFERENCES posts(id),
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
-        ");
+        ');
 
-        $pdo->exec("
+        $pdo->exec('
             CREATE INDEX idx_posts_user_id ON posts(user_id);
             CREATE INDEX idx_comments_post_id ON comments(post_id);
             CREATE INDEX idx_comments_user_id ON comments(user_id);
-        ");
+        ');
 
         // Insert sample data
         $users = [
             ['alice', 'alice@example.com', 'Alice Johnson'],
             ['bob', 'bob@example.com', 'Bob Smith'],
             ['charlie', 'charlie@example.com', 'Charlie Brown'],
-            ['diana', 'diana@example.com', 'Diana Prince']
+            ['diana', 'diana@example.com', 'Diana Prince'],
         ];
 
-        $stmt = $pdo->prepare("INSERT INTO users (username, email, full_name) VALUES (?, ?, ?)");
+        $stmt = $pdo->prepare('INSERT INTO users (username, email, full_name) VALUES (?, ?, ?)');
         foreach ($users as $user) {
             $stmt->execute($user);
         }
@@ -123,10 +123,10 @@ function initializeDatabase(string $dbPath): \PDO
             [1, 'PHP MCP SDK Features', 'The PHP MCP SDK provides comprehensive tools for...'],
             [2, 'Database Integration', 'Working with databases in MCP servers is straightforward...'],
             [3, 'Security Best Practices', 'When building MCP servers, security should be a top priority...'],
-            [4, 'Real-world Applications', 'Here are some practical examples of MCP servers in action...']
+            [4, 'Real-world Applications', 'Here are some practical examples of MCP servers in action...'],
         ];
 
-        $stmt = $pdo->prepare("INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)");
+        $stmt = $pdo->prepare('INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)');
         foreach ($posts as $post) {
             $stmt->execute($post);
         }
@@ -138,10 +138,10 @@ function initializeDatabase(string $dbPath): \PDO
             [2, 1, 'Looking forward to trying this out.'],
             [2, 4, 'Security is indeed crucial.'],
             [3, 2, 'The database features look promising.'],
-            [4, 5, 'Excellent real-world examples!']
+            [4, 5, 'Excellent real-world examples!'],
         ];
 
-        $stmt = $pdo->prepare("INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)");
+        $stmt = $pdo->prepare('INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)');
         foreach ($comments as $comment) {
             $stmt->execute($comment);
         }
@@ -156,7 +156,7 @@ function initializeDatabase(string $dbPath): \PDO
 try {
     $pdo = initializeDatabase($dbPath);
 } catch (\Exception $e) {
-    echo "Failed to initialize database: " . $e->getMessage() . "\n";
+    echo 'Failed to initialize database: ' . $e->getMessage() . "\n";
     exit(1);
 }
 
@@ -171,7 +171,7 @@ $server->resource(
     [
         'title' => 'Database Schema',
         'description' => 'Complete database schema with table definitions',
-        'mimeType' => 'application/sql'
+        'mimeType' => 'application/sql',
     ],
     function ($uri, $extra) use ($pdo) {
         try {
@@ -179,7 +179,7 @@ $server->resource(
             $tables = $pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")->fetchAll();
 
             $schema = "-- Database Schema\n";
-            $schema .= "-- Generated at " . date('Y-m-d H:i:s') . "\n\n";
+            $schema .= '-- Generated at ' . date('Y-m-d H:i:s') . "\n\n";
 
             foreach ($tables as $table) {
                 $tableName = $table['name'];
@@ -202,11 +202,11 @@ $server->resource(
                         uri: $uri,
                         text: $schema,
                         mimeType: 'application/sql'
-                    )
+                    ),
                 ]
             );
         } catch (\Exception $e) {
-            throw new \Exception("Failed to generate schema: " . $e->getMessage());
+            throw new \Exception('Failed to generate schema: ' . $e->getMessage());
         }
     }
 );
@@ -217,7 +217,7 @@ $server->resource(
     'db://tables/{table}',
     [
         'title' => 'Table Data',
-        'description' => 'View data from database tables'
+        'description' => 'View data from database tables',
     ],
     function ($uri, $variables, $extra) use ($pdo) {
         $tableName = $variables['table'] ?? 'unknown';
@@ -236,14 +236,20 @@ $server->resource(
             $data = $pdo->query("SELECT * FROM $tableName LIMIT 10")->fetchAll();
 
             $output = "Table: $tableName\n";
-            $output .= str_repeat("=", strlen("Table: $tableName")) . "\n\n";
+            $output .= str_repeat('=', strlen("Table: $tableName")) . "\n\n";
 
             $output .= "Columns:\n";
             foreach ($columns as $col) {
                 $output .= "- {$col['name']} ({$col['type']})";
-                if ($col['pk']) $output .= " PRIMARY KEY";
-                if ($col['notnull']) $output .= " NOT NULL";
-                if ($col['dflt_value'] !== null) $output .= " DEFAULT {$col['dflt_value']}";
+                if ($col['pk']) {
+                    $output .= ' PRIMARY KEY';
+                }
+                if ($col['notnull']) {
+                    $output .= ' NOT NULL';
+                }
+                if ($col['dflt_value'] !== null) {
+                    $output .= " DEFAULT {$col['dflt_value']}";
+                }
                 $output .= "\n";
             }
 
@@ -256,7 +262,7 @@ $server->resource(
                         uri: $uri,
                         text: $output,
                         mimeType: 'text/plain'
-                    )
+                    ),
                 ]
             );
         } catch (\Exception $e) {
@@ -272,14 +278,14 @@ $server->tool(
     [
         'query' => [
             'type' => 'string',
-            'description' => 'SELECT query to execute (SELECT statements only)'
+            'description' => 'SELECT query to execute (SELECT statements only)',
         ],
         'limit' => [
             'type' => 'integer',
             'description' => 'Maximum number of rows to return',
             'default' => 100,
-            'maximum' => 1000
-        ]
+            'maximum' => 1000,
+        ],
     ],
     function (array $args) use ($pdo, &$queryCache, $cacheTimeout) {
         $query = trim($args['query'] ?? '');
@@ -348,13 +354,13 @@ $server->tool(
                 'row_count' => count($results),
                 'execution_time_ms' => round($executionTime * 1000, 2),
                 'data' => $results,
-                'cached' => false
+                'cached' => false,
             ];
 
             // Cache the result
             $queryCache[$cacheKey] = [
                 'data' => $result,
-                'timestamp' => time()
+                'timestamp' => time(),
             ];
 
             return new CallToolResult(
@@ -380,8 +386,8 @@ $server->tool(
         'table' => [
             'type' => 'string',
             'description' => 'Table name (optional - if not provided, shows all tables)',
-            'enum' => ['users', 'posts', 'comments']
-        ]
+            'enum' => ['users', 'posts', 'comments'],
+        ],
     ],
     function (array $args) use ($pdo) {
         $tableName = $args['table'] ?? null;
@@ -437,17 +443,17 @@ $server->tool(
     [
         'term' => [
             'type' => 'string',
-            'description' => 'Search term'
+            'description' => 'Search term',
         ],
         'tables' => [
             'type' => 'array',
             'description' => 'Tables to search in',
             'items' => [
                 'type' => 'string',
-                'enum' => ['users', 'posts', 'comments']
+                'enum' => ['users', 'posts', 'comments'],
             ],
-            'default' => ['users', 'posts', 'comments']
-        ]
+            'default' => ['users', 'posts', 'comments'],
+        ],
     ],
     function (array $args) use ($pdo) {
         $term = $args['term'] ?? '';
@@ -550,7 +556,7 @@ $server->tool(
 );
 
 /**
- * Get statistics for a table
+ * Get statistics for a table.
  */
 function getTableStats(\PDO $pdo, string $tableName): array
 {
@@ -558,7 +564,7 @@ function getTableStats(\PDO $pdo, string $tableName): array
         'table_name' => $tableName,
         'row_count' => 0,
         'columns' => [],
-        'indexes' => []
+        'indexes' => [],
     ];
 
     // Get row count
@@ -571,8 +577,8 @@ function getTableStats(\PDO $pdo, string $tableName): array
             'name' => $col['name'],
             'type' => $col['type'],
             'nullable' => !$col['notnull'],
-            'primary_key' => (bool)$col['pk'],
-            'default_value' => $col['dflt_value']
+            'primary_key' => (bool) $col['pk'],
+            'default_value' => $col['dflt_value'],
         ];
     }
 
@@ -582,8 +588,8 @@ function getTableStats(\PDO $pdo, string $tableName): array
         $indexInfo = $pdo->query("PRAGMA index_info('{$idx['name']}')")->fetchAll();
         $stats['indexes'][] = [
             'name' => $idx['name'],
-            'unique' => (bool)$idx['unique'],
-            'columns' => array_column($indexInfo, 'name')
+            'unique' => (bool) $idx['unique'],
+            'columns' => array_column($indexInfo, 'name'),
         ];
     }
 
@@ -604,7 +610,7 @@ async(function () use ($server, $dbPath) {
 
         $server->connect($transport)->await();
     } catch (\Throwable $e) {
-        error_log("Server error: " . $e->getMessage());
+        error_log('Server error: ' . $e->getMessage());
         exit(1);
     }
 })->await();

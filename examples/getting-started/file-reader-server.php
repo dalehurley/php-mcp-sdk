@@ -2,18 +2,18 @@
 <?php
 
 /**
- * File Reader MCP Server
- * 
+ * File Reader MCP Server.
+ *
  * Demonstrates resource management with file system operations.
  * This server provides:
  * - File reading capabilities
  * - Directory listing
  * - File information
  * - Safe file operations with proper error handling
- * 
+ *
  * Perfect example for understanding MCP resources and how to work
  * with external data sources safely.
- * 
+ *
  * Usage:
  *   php file-reader-server.php
  */
@@ -39,7 +39,7 @@ $server = new McpServer(
 $safeBasePath = getcwd();
 
 /**
- * Check if a path is safe to access (within safe directory)
+ * Check if a path is safe to access (within safe directory).
  */
 function isSafePath(string $path, string $basePath): bool
 {
@@ -60,10 +60,10 @@ $server->addTool(
         'properties' => [
             'path' => [
                 'type' => 'string',
-                'description' => 'Path to the file to read (relative to current directory)'
-            ]
+                'description' => 'Path to the file to read (relative to current directory)',
+            ],
         ],
-        'required' => ['path']
+        'required' => ['path'],
     ],
     handler: function (array $args) use ($safeBasePath): array {
         $filePath = $args['path'];
@@ -108,9 +108,9 @@ $server->addTool(
                         "Size: {$fileSize} bytes\n" .
                         "Contents:\n" .
                         "---\n" .
-                        $contents
-                ]
-            ]
+                        $contents,
+                ],
+            ],
         ];
     }
 );
@@ -125,9 +125,9 @@ $server->addTool(
             'path' => [
                 'type' => 'string',
                 'description' => 'Path to the directory to list (default: current directory)',
-                'default' => '.'
-            ]
-        ]
+                'default' => '.',
+            ],
+        ],
     ],
     handler: function (array $args) use ($safeBasePath): array {
         $dirPath = $args['path'] ?? '.';
@@ -174,9 +174,9 @@ $server->addTool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $listing
-                ]
-            ]
+                    'text' => $listing,
+                ],
+            ],
         ];
     }
 );
@@ -190,10 +190,10 @@ $server->addTool(
         'properties' => [
             'path' => [
                 'type' => 'string',
-                'description' => 'Path to the file or directory'
-            ]
+                'description' => 'Path to the file or directory',
+            ],
         ],
-        'required' => ['path']
+        'required' => ['path'],
     ],
     handler: function (array $args) use ($safeBasePath): array {
         $path = $args['path'];
@@ -220,22 +220,22 @@ $server->addTool(
         $isWritable = is_writable($path);
 
         $info = "Path: {$path}\n";
-        $info .= "Type: " . ($isDir ? 'Directory' : ($isFile ? 'File' : 'Other')) . "\n";
-        $info .= "Size: " . $stat['size'] . " bytes\n";
-        $info .= "Permissions: " . substr(sprintf('%o', fileperms($path)), -4) . "\n";
-        $info .= "Readable: " . ($isReadable ? 'Yes' : 'No') . "\n";
-        $info .= "Writable: " . ($isWritable ? 'Yes' : 'No') . "\n";
-        $info .= "Last Modified: " . date('Y-m-d H:i:s', $stat['mtime']) . "\n";
-        $info .= "Last Accessed: " . date('Y-m-d H:i:s', $stat['atime']) . "\n";
+        $info .= 'Type: ' . ($isDir ? 'Directory' : ($isFile ? 'File' : 'Other')) . "\n";
+        $info .= 'Size: ' . $stat['size'] . " bytes\n";
+        $info .= 'Permissions: ' . substr(sprintf('%o', fileperms($path)), -4) . "\n";
+        $info .= 'Readable: ' . ($isReadable ? 'Yes' : 'No') . "\n";
+        $info .= 'Writable: ' . ($isWritable ? 'Yes' : 'No') . "\n";
+        $info .= 'Last Modified: ' . date('Y-m-d H:i:s', $stat['mtime']) . "\n";
+        $info .= 'Last Accessed: ' . date('Y-m-d H:i:s', $stat['atime']) . "\n";
 
         if ($isFile) {
             $extension = pathinfo($path, PATHINFO_EXTENSION);
-            $info .= "Extension: " . ($extension ?: 'none') . "\n";
+            $info .= 'Extension: ' . ($extension ?: 'none') . "\n";
 
             // Try to detect MIME type
             if (function_exists('mime_content_type')) {
                 $mimeType = mime_content_type($path);
-                $info .= "MIME Type: " . ($mimeType ?: 'unknown') . "\n";
+                $info .= 'MIME Type: ' . ($mimeType ?: 'unknown') . "\n";
             }
         }
 
@@ -243,9 +243,9 @@ $server->addTool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => $info
-                ]
-            ]
+                    'text' => $info,
+                ],
+            ],
         ];
     }
 );
@@ -284,8 +284,8 @@ $server->addResource(
             'security_features' => [
                 'path_validation' => true,
                 'safe_directory_restriction' => true,
-                'permission_checking' => true
-            ]
+                'permission_checking' => true,
+            ],
         ];
 
         return json_encode($stats, JSON_PRETTY_PRINT);
@@ -305,9 +305,9 @@ $server->addPrompt(
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => 'How do I use the file reader server?'
-                        ]
-                    ]
+                            'text' => 'How do I use the file reader server?',
+                        ],
+                    ],
                 ],
                 [
                     'role' => 'assistant',
@@ -326,11 +326,11 @@ $server->addPrompt(
                                 "• All access restricted to current directory and subdirectories\n" .
                                 "• Permission checking before file operations\n" .
                                 "• Path validation to prevent directory traversal\n\n" .
-                                "Try: 'List the files in the current directory'"
-                        ]
-                    ]
-                ]
-            ]
+                                "Try: 'List the files in the current directory'",
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 );

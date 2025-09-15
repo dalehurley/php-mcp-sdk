@@ -1,27 +1,27 @@
 <?php
 
 /**
- * Example demonstrating the protocol message types in PHP MCP SDK
+ * Example demonstrating the protocol message types in PHP MCP SDK.
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use MCP\Types\Protocol;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ClientCapabilities;
 use MCP\Types\Capabilities\ServerCapabilities;
-use MCP\Types\Requests\InitializeRequest;
-use MCP\Types\Results\InitializeResult;
-use MCP\Types\Notifications\InitializedNotification;
-use MCP\Types\Requests\ListResourcesRequest;
-use MCP\Types\Results\ListResourcesResult;
-use MCP\Types\Resources\Resource;
 use MCP\Types\Cursor;
-use MCP\Types\Progress;
-use MCP\Types\Notifications\ProgressNotification;
-use MCP\Types\ProgressToken;
+use MCP\Types\Implementation;
 use MCP\Types\Messages\ClientRequest;
 use MCP\Types\Messages\ServerResult;
+use MCP\Types\Notifications\InitializedNotification;
+use MCP\Types\Notifications\ProgressNotification;
+use MCP\Types\Progress;
+use MCP\Types\ProgressToken;
+use MCP\Types\Protocol;
+use MCP\Types\Requests\InitializeRequest;
+use MCP\Types\Requests\ListResourcesRequest;
+use MCP\Types\Resources\Resource;
+use MCP\Types\Results\InitializeResult;
+use MCP\Types\Results\ListResourcesResult;
 
 echo "=== PHP MCP SDK Protocol Messages Example ===\n\n";
 
@@ -116,13 +116,13 @@ $requestData = [
 try {
     if (ClientRequest::isValidMethod($requestData['method'])) {
         $parsedRequest = ClientRequest::fromArray($requestData);
-        echo "Parsed request type: " . get_class($parsedRequest) . "\n";
+        echo 'Parsed request type: ' . get_class($parsedRequest) . "\n";
         if ($parsedRequest instanceof ListResourcesRequest) {
-            echo "Has cursor: " . ($parsedRequest->getCursor() ? 'Yes' : 'No') . "\n";
+            echo 'Has cursor: ' . ($parsedRequest->getCursor() ? 'Yes' : 'No') . "\n";
         }
     }
 } catch (\Exception $e) {
-    echo "Error parsing request: " . $e->getMessage() . "\n";
+    echo 'Error parsing request: ' . $e->getMessage() . "\n";
 }
 
 echo "\n";
@@ -137,12 +137,12 @@ $resultData = [
 
 try {
     $parsedResult = ServerResult::fromArray($resultData);
-    echo "Parsed result type: " . get_class($parsedResult) . "\n";
+    echo 'Parsed result type: ' . get_class($parsedResult) . "\n";
     if ($parsedResult instanceof InitializeResult) {
-        echo "Server version: " . $parsedResult->getServerInfo()->getVersion() . "\n";
+        echo 'Server version: ' . $parsedResult->getServerInfo()->getVersion() . "\n";
     }
 } catch (\Exception $e) {
-    echo "Error parsing result: " . $e->getMessage() . "\n";
+    echo 'Error parsing result: ' . $e->getMessage() . "\n";
 }
 
 echo "\n=== Example Complete ===\n";

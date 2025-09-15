@@ -11,7 +11,6 @@ use MCP\Types\JsonRpc\JSONRPCRequest;
 use MCP\Types\JsonRpc\JSONRPCResponse;
 use MCP\Types\Protocol;
 use MCP\Types\RequestId;
-use MCP\Types\Result;
 use MCP\Validation\ValidationException;
 use MCP\Validation\ValidationService;
 
@@ -33,6 +32,7 @@ class JSONRPCMessageFactory extends AbstractTypeFactory
      * Create a JSON-RPC message from array data.
      *
      * @return JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError
+     *
      * @throws ValidationException
      */
     protected function createInstance(array $data): object

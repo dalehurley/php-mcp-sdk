@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace MCP\Client\Middleware;
 
-use Amp\Future;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-
 use function Amp\async;
 use function Amp\delay;
+
+use Amp\Future;
+
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Middleware that retries failed requests with exponential backoff.

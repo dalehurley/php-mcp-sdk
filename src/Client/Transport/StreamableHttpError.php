@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Client\Transport;
 
 /**
- * Error class for Streamable HTTP transport errors
+ * Error class for Streamable HTTP transport errors.
  */
 class StreamableHttpError extends \RuntimeException
 {

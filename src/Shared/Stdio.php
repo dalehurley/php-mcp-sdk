@@ -14,6 +14,7 @@ class Stdio
      *
      * @param resource $stdin The STDIN resource
      * @param int $length Maximum bytes to read
+     *
      * @return string|false The data read or false on failure
      */
     public static function readNonBlocking($stdin, int $length = 8192): string|false
@@ -26,6 +27,7 @@ class Stdio
      *
      * @param resource $stdout The STDOUT resource
      * @param string $data The data to write
+     *
      * @return int|false The number of bytes written or false on error
      */
     public static function write($stdout, string $data): int|false
@@ -38,6 +40,7 @@ class Stdio
      *
      * @param resource $stdin The STDIN resource
      * @param int $timeout Timeout in microseconds
+     *
      * @return bool
      */
     public static function hasDataAvailable($stdin, int $timeout = 0): bool

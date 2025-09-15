@@ -2,15 +2,15 @@
 <?php
 
 /**
- * FullCX MCP Client with OpenAI Integration Example
- * 
+ * FullCX MCP Client with OpenAI Integration Example.
+ *
  * This example demonstrates how to connect to and interact with the FullCX MCP server
- * for AI-enhanced product management operations including products, features, requirements, 
+ * for AI-enhanced product management operations including products, features, requirements,
  * and ideas with intelligent content generation.
- * 
+ *
  * Usage:
  *   php examples/client/fullcx-client.php [command] [options]
- * 
+ *
  * Commands:
  *   connect        - Test connection to FullCX server
  *   products       - List and explore products
@@ -24,13 +24,13 @@
  *   ai-roadmap     - Generate AI-powered roadmap
  *   analyze        - Comprehensive product analysis
  *   demo           - Run full demonstration
- * 
+ *
  * Environment Variables:
  *   FULLCX_API_TOKEN   - Your FullCX API token (required)
  *   FULLCX_MCP_URL     - FullCX MCP server URL (default: https://full.cx/mcp)
  *   OPENAI_API_KEY     - OpenAI API key (required for AI features)
  *   OPENAI_ORG_ID      - OpenAI organization ID (optional)
- * 
+ *
  * Examples:
  *   export FULLCX_API_TOKEN=your-token-here
  *   export OPENAI_API_KEY=your-openai-key-here
@@ -43,16 +43,16 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use FullCX\MCP\FullCXClient;
-use MCP\Shared\RequestOptions;
-use MCP\Types\McpError;
-use OpenAI;
 use Amp\Loop;
+use FullCX\MCP\FullCXClient;
+use OpenAI;
 
 class AIEnhancedFullCXClient
 {
     private FullCXClient $fullcx;
+
     private ?OpenAI\Client $openai = null;
+
     private array $config;
 
     public function __construct()
@@ -63,7 +63,7 @@ class AIEnhancedFullCXClient
             'openai_key' => $_ENV['OPENAI_API_KEY'] ?? null,
             'openai_org' => $_ENV['OPENAI_ORG_ID'] ?? null,
             'timeout' => 30000,
-            'retries' => 3
+            'retries' => 3,
         ];
 
         if (!$this->config['fullcx_token']) {
@@ -90,13 +90,13 @@ class AIEnhancedFullCXClient
     }
 
     /**
-     * Test connection to FullCX server
+     * Test connection to FullCX server.
      */
     public function testConnection(): \Generator
     {
         echo "🔌 Testing connection to FullCX...\n";
         echo "URL: {$this->config['fullcx_url']}\n";
-        echo "Token: " . substr($this->config['fullcx_token'], 0, 8) . "...\n";
+        echo 'Token: ' . substr($this->config['fullcx_token'], 0, 8) . "...\n";
 
         if ($this->openai) {
             echo "OpenAI: Enabled ✅\n";
@@ -127,21 +127,22 @@ class AIEnhancedFullCXClient
                 $response = $this->openai->chat()->create([
                     'model' => 'gpt-4.1',
                     'messages' => [
-                        ['role' => 'user', 'content' => 'Hello! Just testing the connection.']
+                        ['role' => 'user', 'content' => 'Hello! Just testing the connection.'],
                     ],
-                    'max_tokens' => 10
+                    'max_tokens' => 10,
                 ]);
                 echo "✅ OpenAI connection successful!\n";
-                echo "Response: " . $response->choices[0]->message->content . "\n\n";
+                echo 'Response: ' . $response->choices[0]->message->content . "\n\n";
             }
         } catch (\Exception $e) {
             echo "❌ Connection failed: {$e->getMessage()}\n";
+
             throw $e;
         }
     }
 
     /**
-     * AI-powered feature planning
+     * AI-powered feature planning.
      */
     public function aiFeaturePlanning(string $productId, string $featureIdea): \Generator
     {
@@ -150,7 +151,7 @@ class AIEnhancedFullCXClient
         }
 
         echo "🤖 AI-Powered Feature Planning\n";
-        echo "=" . str_repeat("=", 35) . "\n\n";
+        echo '=' . str_repeat('=', 35) . "\n\n";
 
         try {
             // Get product context
@@ -169,10 +170,10 @@ class AIEnhancedFullCXClient
                 'model' => 'gpt-4.1',
                 'messages' => [
                     ['role' => 'system', 'content' => 'You are a senior product manager who creates detailed feature specifications. Always respond with valid JSON.'],
-                    ['role' => 'user', 'content' => $prompt]
+                    ['role' => 'user', 'content' => $prompt],
                 ],
                 'max_tokens' => 2000,
-                'temperature' => 0.3
+                'temperature' => 0.3,
             ]);
 
             $featurePlan = json_decode($response->choices[0]->message->content, true);
@@ -233,7 +234,7 @@ class AIEnhancedFullCXClient
 
             echo "\n🎯 Feature Planning Summary:\n";
             echo "  Feature: {$featurePlan['name']}\n";
-            echo "  Requirements: " . count($createdRequirements) . "\n";
+            echo '  Requirements: ' . count($createdRequirements) . "\n";
             echo "  Estimated Effort: {$featurePlan['effort']}/10\n";
             echo "  Expected Impact: {$featurePlan['impact']}/10\n";
             echo "  Priority: {$featurePlan['priority']}\n\n";
@@ -241,16 +242,17 @@ class AIEnhancedFullCXClient
             return [
                 'feature' => $featureData,
                 'requirements' => $createdRequirements,
-                'ai_plan' => $featurePlan
+                'ai_plan' => $featurePlan,
             ];
         } catch (\Exception $e) {
             echo "❌ AI feature planning failed: {$e->getMessage()}\n";
+
             throw $e;
         }
     }
 
     /**
-     * Generate AI-powered product ideas
+     * Generate AI-powered product ideas.
      */
     public function generateAIIdeas(string $productId, array $marketTrends = [], array $userFeedback = []): \Generator
     {
@@ -259,7 +261,7 @@ class AIEnhancedFullCXClient
         }
 
         echo "💡 AI-Powered Idea Generation\n";
-        echo "=" . str_repeat("=", 32) . "\n\n";
+        echo '=' . str_repeat('=', 32) . "\n\n";
 
         try {
             // Get product context
@@ -276,10 +278,10 @@ class AIEnhancedFullCXClient
                 'model' => 'gpt-4.1',
                 'messages' => [
                     ['role' => 'system', 'content' => 'You are an innovative product strategist who generates creative, feasible product ideas based on market analysis. Always respond with valid JSON.'],
-                    ['role' => 'user', 'content' => $prompt]
+                    ['role' => 'user', 'content' => $prompt],
                 ],
                 'max_tokens' => 1500,
-                'temperature' => 0.8
+                'temperature' => 0.8,
             ]);
 
             $ideas = json_decode($response->choices[0]->message->content, true);
@@ -288,7 +290,7 @@ class AIEnhancedFullCXClient
                 throw new \Exception('Failed to parse AI ideas response');
             }
 
-            echo "✅ Generated " . count($ideas) . " innovative ideas!\n\n";
+            echo '✅ Generated ' . count($ideas) . " innovative ideas!\n\n";
 
             // Create ideas in FullCX
             echo "📝 Creating ideas in FullCX...\n";
@@ -314,32 +316,34 @@ class AIEnhancedFullCXClient
                 echo "  💡 {$ideaResult['name']}\n";
                 echo "     Impact: {$ideaData['impact']}/10, Effort: {$ideaData['effort']}/10, Ratio: {$ratio}\n";
                 echo "     Timeline: {$ideaData['timeline']}\n";
-                echo "     " . substr($ideaData['description'], 0, 80) . "...\n\n";
+                echo '     ' . substr($ideaData['description'], 0, 80) . "...\n\n";
             }
 
             // Sort by impact/effort ratio
             usort($createdIdeas, function ($a, $b) {
                 $ratioA = $a['impact'] / max($a['effort'], 1);
                 $ratioB = $b['impact'] / max($b['effort'], 1);
+
                 return $ratioB <=> $ratioA;
             });
 
             echo "🏆 Top Priority Ideas (by Impact/Effort ratio):\n";
             foreach (array_slice($createdIdeas, 0, 3) as $index => $idea) {
                 $ratio = round($idea['impact'] / max($idea['effort'], 1), 2);
-                echo "  " . ($index + 1) . ". {$idea['name']} (Ratio: {$ratio})\n";
+                echo '  ' . ($index + 1) . ". {$idea['name']} (Ratio: {$ratio})\n";
             }
             echo "\n";
 
             return $createdIdeas;
         } catch (\Exception $e) {
             echo "❌ AI idea generation failed: {$e->getMessage()}\n";
+
             throw $e;
         }
     }
 
     /**
-     * AI competitive analysis
+     * AI competitive analysis.
      */
     public function aiCompetitiveAnalysis(string $productId, array $competitors = []): \Generator
     {
@@ -348,7 +352,7 @@ class AIEnhancedFullCXClient
         }
 
         echo "📊 AI-Powered Competitive Analysis\n";
-        echo "=" . str_repeat("=", 38) . "\n\n";
+        echo '=' . str_repeat('=', 38) . "\n\n";
 
         try {
             // Get comprehensive product data
@@ -359,7 +363,7 @@ class AIEnhancedFullCXClient
             $featureData = json_decode($features['content'][0]['text'], true);
 
             echo "🎯 Analyzing: {$productData['name']}\n";
-            echo "Competitors: " . implode(', ', $competitors) . "\n\n";
+            echo 'Competitors: ' . implode(', ', $competitors) . "\n\n";
 
             // Build analysis prompt
             $prompt = $this->buildCompetitiveAnalysisPrompt($productData, $featureData, $competitors);
@@ -369,17 +373,17 @@ class AIEnhancedFullCXClient
                 'model' => 'gpt-4.1',
                 'messages' => [
                     ['role' => 'system', 'content' => 'You are a senior product strategist and market analyst with deep expertise in competitive intelligence and strategic positioning.'],
-                    ['role' => 'user', 'content' => $prompt]
+                    ['role' => 'user', 'content' => $prompt],
                 ],
                 'max_tokens' => 1200,
-                'temperature' => 0.4
+                'temperature' => 0.4,
             ]);
 
             $analysis = $response->choices[0]->message->content;
 
             echo "✅ Analysis complete!\n\n";
             echo "📋 Competitive Analysis Report:\n";
-            echo str_repeat("-", 50) . "\n";
+            echo str_repeat('-', 50) . "\n";
             echo $analysis . "\n\n";
 
             // Generate strategic ideas based on analysis
@@ -393,10 +397,10 @@ class AIEnhancedFullCXClient
                 'model' => 'gpt-4.1',
                 'messages' => [
                     ['role' => 'system', 'content' => 'You are a strategic product planner. Always respond with valid JSON.'],
-                    ['role' => 'user', 'content' => $ideaPrompt]
+                    ['role' => 'user', 'content' => $ideaPrompt],
                 ],
                 'max_tokens' => 1000,
-                'temperature' => 0.6
+                'temperature' => 0.6,
             ]);
 
             $strategicIdeas = json_decode($ideaResponse->choices[0]->message->content, true);
@@ -424,16 +428,17 @@ class AIEnhancedFullCXClient
 
             return [
                 'analysis' => $analysis,
-                'strategic_ideas' => $strategicIdeas ?? []
+                'strategic_ideas' => $strategicIdeas ?? [],
             ];
         } catch (\Exception $e) {
             echo "❌ Competitive analysis failed: {$e->getMessage()}\n";
+
             throw $e;
         }
     }
 
     /**
-     * Generate AI-powered product roadmap
+     * Generate AI-powered product roadmap.
      */
     public function generateAIRoadmap(string $productId, int $quarters = 4): \Generator
     {
@@ -442,7 +447,7 @@ class AIEnhancedFullCXClient
         }
 
         echo "🗺️ AI-Powered Roadmap Generation\n";
-        echo "=" . str_repeat("=", 36) . "\n\n";
+        echo '=' . str_repeat('=', 36) . "\n\n";
 
         try {
             // Get comprehensive product data
@@ -471,10 +476,10 @@ class AIEnhancedFullCXClient
                 'model' => 'gpt-4.1',
                 'messages' => [
                     ['role' => 'system', 'content' => 'You are a senior product manager who creates strategic roadmaps. Always respond with valid JSON.'],
-                    ['role' => 'user', 'content' => $prompt]
+                    ['role' => 'user', 'content' => $prompt],
                 ],
                 'max_tokens' => 2000,
-                'temperature' => 0.5
+                'temperature' => 0.5,
             ]);
 
             $roadmap = json_decode($response->choices[0]->message->content, true);
@@ -487,7 +492,7 @@ class AIEnhancedFullCXClient
 
             // Display and create roadmap items
             echo "📅 Roadmap Overview:\n";
-            echo str_repeat("-", 50) . "\n";
+            echo str_repeat('-', 50) . "\n";
 
             foreach ($roadmap['quarters'] as $quarterKey => $quarterData) {
                 echo "🗓️ {$quarterKey}: {$quarterData['theme']}\n";
@@ -542,17 +547,18 @@ class AIEnhancedFullCXClient
             return $roadmap;
         } catch (\Exception $e) {
             echo "❌ Roadmap generation failed: {$e->getMessage()}\n";
+
             throw $e;
         }
     }
 
     /**
-     * Enhanced product analysis with AI insights
+     * Enhanced product analysis with AI insights.
      */
     public function enhancedAnalysis(string $productId): \Generator
     {
         echo "🔍 Enhanced Product Analysis with AI\n";
-        echo "=" . str_repeat("=", 40) . "\n\n";
+        echo '=' . str_repeat('=', 40) . "\n\n";
 
         try {
             // Get comprehensive data
@@ -591,16 +597,16 @@ class AIEnhancedFullCXClient
                     'model' => 'gpt-4.1',
                     'messages' => [
                         ['role' => 'system', 'content' => 'You are a senior product strategist who provides actionable insights and recommendations based on product data analysis.'],
-                        ['role' => 'user', 'content' => $prompt]
+                        ['role' => 'user', 'content' => $prompt],
                     ],
                     'max_tokens' => 1000,
-                    'temperature' => 0.6
+                    'temperature' => 0.6,
                 ]);
 
                 $insights = $response->choices[0]->message->content;
 
                 echo "🧠 AI Strategic Insights:\n";
-                echo str_repeat("-", 50) . "\n";
+                echo str_repeat('-', 50) . "\n";
                 echo $insights . "\n\n";
             }
 
@@ -611,18 +617,18 @@ class AIEnhancedFullCXClient
     }
 
     /**
-     * Run comprehensive demonstration
+     * Run comprehensive demonstration.
      */
     public function runDemo(): \Generator
     {
         echo "🎬 FullCX + OpenAI Integration Demonstration\n";
-        echo "=" . str_repeat("=", 50) . "\n\n";
+        echo '=' . str_repeat('=', 50) . "\n\n";
 
         try {
             // 1. Test connections
             yield $this->testConnection();
 
-            echo "\n" . str_repeat("-", 60) . "\n\n";
+            echo "\n" . str_repeat('-', 60) . "\n\n";
 
             // 2. Get a product to work with
             echo "📦 Getting product for demonstration...\n";
@@ -631,6 +637,7 @@ class AIEnhancedFullCXClient
 
             if (empty($productData)) {
                 echo "❌ No products available for demonstration\n";
+
                 return;
             }
 
@@ -639,14 +646,14 @@ class AIEnhancedFullCXClient
 
             echo "Using product: {$productName} (ID: {$productId})\n\n";
 
-            echo str_repeat("-", 60) . "\n\n";
+            echo str_repeat('-', 60) . "\n\n";
 
             // 3. Enhanced analysis
             yield $this->enhancedAnalysis($productId);
 
             // Only run AI features if OpenAI is available
             if ($this->openai) {
-                echo "\n" . str_repeat("-", 60) . "\n\n";
+                echo "\n" . str_repeat('-', 60) . "\n\n";
 
                 // 4. AI idea generation
                 echo "🤖 AI Feature Demonstration\n\n";
@@ -657,7 +664,7 @@ class AIEnhancedFullCXClient
                     ['Need better performance', 'Want more integrations', 'Mobile app requested']
                 );
 
-                echo "\n" . str_repeat("-", 60) . "\n\n";
+                echo "\n" . str_repeat('-', 60) . "\n\n";
 
                 // 5. AI feature planning
                 yield $this->aiFeaturePlanning(
@@ -665,7 +672,7 @@ class AIEnhancedFullCXClient
                     'Advanced analytics dashboard with real-time insights and customizable reports'
                 );
 
-                echo "\n" . str_repeat("-", 60) . "\n\n";
+                echo "\n" . str_repeat('-', 60) . "\n\n";
 
                 // 6. Competitive analysis
                 yield $this->aiCompetitiveAnalysis(
@@ -714,7 +721,7 @@ class AIEnhancedFullCXClient
         $prompt .= "      ]\n";
         $prompt .= "    }\n";
         $prompt .= "  ]\n";
-        $prompt .= "}";
+        $prompt .= '}';
 
         return $prompt;
     }
@@ -750,7 +757,7 @@ class AIEnhancedFullCXClient
         $prompt .= "    \"timeline\": \"Now|Next|Later\",\n";
         $prompt .= "    \"rationale\": \"Why this idea is valuable\"\n";
         $prompt .= "  }\n";
-        $prompt .= "]";
+        $prompt .= ']';
 
         return $prompt;
     }
@@ -760,7 +767,7 @@ class AIEnhancedFullCXClient
         $prompt = "Perform a competitive analysis for:\n\n";
         $prompt .= "Our Product: {$productData['name']}\n";
         $prompt .= "Description: {$productData['description']}\n";
-        $prompt .= "Features: " . count($featureData) . "\n\n";
+        $prompt .= 'Features: ' . count($featureData) . "\n\n";
 
         $prompt .= "Key Features:\n";
         foreach (array_slice($featureData, 0, 5) as $feature) {
@@ -785,8 +792,8 @@ class AIEnhancedFullCXClient
     {
         $prompt = "Create a strategic {$quarters}-quarter product roadmap for:\n\n";
         $prompt .= "Product: {$productData['name']}\n";
-        $prompt .= "Current Features: " . count($featureData) . "\n";
-        $prompt .= "Pending Ideas: " . count($productIdeas) . "\n\n";
+        $prompt .= 'Current Features: ' . count($featureData) . "\n";
+        $prompt .= 'Pending Ideas: ' . count($productIdeas) . "\n\n";
 
         if (!empty($featureData)) {
             $prompt .= "Current Features:\n";
@@ -816,7 +823,7 @@ class AIEnhancedFullCXClient
         $prompt .= "  },\n";
         $prompt .= "  \"risks\": [\"Risk 1\", \"Risk 2\"],\n";
         $prompt .= "  \"dependencies\": [\"Dependency 1\", \"Dependency 2\"]\n";
-        $prompt .= "}";
+        $prompt .= '}';
 
         return $prompt;
     }
@@ -826,9 +833,9 @@ class AIEnhancedFullCXClient
         $prompt = "Analyze this product portfolio and provide strategic insights:\n\n";
         $prompt .= "Product: {$productData['name']}\n";
         $prompt .= "Description: {$productData['description']}\n";
-        $prompt .= "Features: " . count($featureData) . "\n";
-        $prompt .= "Requirements: " . count($reqData) . "\n";
-        $prompt .= "Ideas: " . count($productIdeas) . "\n\n";
+        $prompt .= 'Features: ' . count($featureData) . "\n";
+        $prompt .= 'Requirements: ' . count($reqData) . "\n";
+        $prompt .= 'Ideas: ' . count($productIdeas) . "\n\n";
 
         // Analyze feature status distribution
         $featureStatus = [];
@@ -944,7 +951,7 @@ class AIEnhancedFullCXClient
     }
 
     /**
-     * Run the example with error handling and cleanup
+     * Run the example with error handling and cleanup.
      */
     public function run(array $args): void
     {
@@ -992,7 +999,7 @@ class AIEnhancedFullCXClient
                             echo "Usage: ai-roadmap <product-id> [quarters]\n";
                             break;
                         }
-                        $quarters = $param2 ? (int)$param2 : 4;
+                        $quarters = $param2 ? (int) $param2 : 4;
                         yield $this->generateAIRoadmap($param1, $quarters);
                         break;
 

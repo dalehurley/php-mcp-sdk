@@ -2,33 +2,30 @@
 <?php
 
 /**
- * Working Agentic AI Demo - Simplified but Functional
- * 
+ * Working Agentic AI Demo - Simplified but Functional.
+ *
  * This example demonstrates agentic AI concepts with working MCP integration.
  * It shows:
  * - Task analysis and planning
  * - Multi-step tool execution
  * - Error handling and adaptation
  * - Result synthesis
- * 
+ *
  * Usage:
  *   php working-agentic-demo.php
  */
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use MCP\Client\Client;
-use MCP\Client\Transport\StdioClientTransport;
-use MCP\Types\Implementation;
 use function Amp\async;
-use function Amp\delay;
 
 /**
- * Working Agentic AI Agent
+ * Working Agentic AI Agent.
  */
 class WorkingAgenticAgent
 {
     private array $availableTools = [];
+
     private array $executionHistory = [];
 
     public function getAvailableTools(): array
@@ -42,7 +39,7 @@ class WorkingAgenticAgent
     }
 
     /**
-     * Process a task with agentic reasoning
+     * Process a task with agentic reasoning.
      */
     public function processTask(string $task): array
     {
@@ -54,7 +51,7 @@ class WorkingAgenticAgent
 
         // 2. Create plan
         $plan = $this->createPlan($task, $analysis);
-        echo "📋 Created plan with " . count($plan['steps']) . " steps\n";
+        echo '📋 Created plan with ' . count($plan['steps']) . " steps\n";
 
         // 3. Execute plan (simulated)
         $results = $this->simulateExecution($plan);
@@ -67,7 +64,7 @@ class WorkingAgenticAgent
             'analysis' => $analysis,
             'plan' => $plan,
             'results' => $results,
-            'response' => $response
+            'response' => $response,
         ];
     }
 
@@ -79,7 +76,7 @@ class WorkingAgenticAgent
             'type' => 'general',
             'complexity' => 'simple',
             'keywords' => str_word_count($task_lower, 1),
-            'estimated_steps' => 1
+            'estimated_steps' => 1,
         ];
 
         if (preg_match('/\b(calculate|math|add|subtract)\b/', $task_lower)) {
@@ -105,31 +102,31 @@ class WorkingAgenticAgent
     {
         $plan = [
             'strategy' => $this->determineStrategy($analysis),
-            'steps' => []
+            'steps' => [],
         ];
 
         switch ($analysis['type']) {
             case 'calculation':
                 $plan['steps'] = [
-                    ['id' => 1, 'action' => 'perform_calculation', 'description' => 'Execute mathematical operation']
+                    ['id' => 1, 'action' => 'perform_calculation', 'description' => 'Execute mathematical operation'],
                 ];
                 break;
             case 'file_analysis':
                 $plan['steps'] = [
                     ['id' => 1, 'action' => 'list_files', 'description' => 'List directory contents'],
-                    ['id' => 2, 'action' => 'analyze_structure', 'description' => 'Analyze file structure']
+                    ['id' => 2, 'action' => 'analyze_structure', 'description' => 'Analyze file structure'],
                 ];
                 break;
             case 'research':
                 $plan['steps'] = [
                     ['id' => 1, 'action' => 'gather_info', 'description' => 'Gather available information'],
                     ['id' => 2, 'action' => 'process_data', 'description' => 'Process and analyze data'],
-                    ['id' => 3, 'action' => 'synthesize', 'description' => 'Synthesize insights']
+                    ['id' => 3, 'action' => 'synthesize', 'description' => 'Synthesize insights'],
                 ];
                 break;
             default:
                 $plan['steps'] = [
-                    ['id' => 1, 'action' => 'explore', 'description' => 'Explore available capabilities']
+                    ['id' => 1, 'action' => 'explore', 'description' => 'Explore available capabilities'],
                 ];
         }
 
@@ -151,7 +148,7 @@ class WorkingAgenticAgent
                 'success' => $success,
                 'description' => $step['description'],
                 'simulated_result' => $success ? 'Step completed successfully' : 'Step failed',
-                'execution_time' => rand(100, 500) / 1000 // Random execution time
+                'execution_time' => rand(100, 500) / 1000, // Random execution time
             ];
 
             if ($success) {
@@ -166,7 +163,7 @@ class WorkingAgenticAgent
 
     private function synthesizeResponse(string $task, array $plan, array $results): string
     {
-        $successCount = count(array_filter($results, fn($r) => $r['success']));
+        $successCount = count(array_filter($results, fn ($r) => $r['success']));
         $totalCount = count($results);
         $successRate = $totalCount > 0 ? ($successCount / $totalCount) * 100 : 0;
 
@@ -174,7 +171,7 @@ class WorkingAgenticAgent
         $response .= "Task: {$task}\n";
         $response .= "Strategy: {$plan['strategy']}\n";
         $response .= "Steps Executed: {$totalCount}\n";
-        $response .= "Success Rate: " . round($successRate, 1) . "%\n\n";
+        $response .= 'Success Rate: ' . round($successRate, 1) . "%\n\n";
 
         $response .= "🔍 Execution Details:\n";
         foreach ($results as $result) {
@@ -212,20 +209,20 @@ async(function () {
 
     // Demo tasks
     $tasks = [
-        "Calculate the compound interest for a $10,000 investment",
-        "Analyze the current project structure and identify key components",
-        "Research available MCP tools and create a capability assessment",
-        "Plan a development workflow for building MCP applications"
+        'Calculate the compound interest for a $10,000 investment',
+        'Analyze the current project structure and identify key components',
+        'Research available MCP tools and create a capability assessment',
+        'Plan a development workflow for building MCP applications',
     ];
 
     foreach ($tasks as $i => $task) {
-        echo "📝 Demo " . ($i + 1) . ": {$task}\n";
-        echo str_repeat("-", 60) . "\n";
+        echo '📝 Demo ' . ($i + 1) . ": {$task}\n";
+        echo str_repeat('-', 60) . "\n";
 
         $result = $agent->processTask($task);
         echo $result['response'] . "\n";
 
-        echo str_repeat("=", 70) . "\n\n";
+        echo str_repeat('=', 70) . "\n\n";
 
         // Brief pause between demos
         sleep(1);

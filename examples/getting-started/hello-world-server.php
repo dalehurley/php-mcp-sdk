@@ -2,26 +2,27 @@
 <?php
 
 /**
- * Hello World MCP Server
- * 
+ * Hello World MCP Server.
+ *
  * The simplest possible MCP server - demonstrates basic server setup
  * and provides a single "say_hello" tool.
- * 
+ *
  * This is the absolute minimum code needed to create a working MCP server.
  * Perfect for understanding the core concepts before building more complex servers.
- * 
+ *
  * Usage:
  *   php hello-world-server.php
- * 
+ *
  * Test with Claude Desktop or any MCP client by adding to your configuration.
  */
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
 use MCP\Server\Transport\StdioServerTransport;
 use MCP\Types\Implementation;
-use function Amp\async;
 
 // Create the simplest possible MCP server
 $server = new McpServer(
@@ -40,10 +41,10 @@ $server->tool(
         'properties' => [
             'name' => [
                 'type' => 'string',
-                'description' => 'Name of the person to greet'
-            ]
+                'description' => 'Name of the person to greet',
+            ],
         ],
-        'required' => ['name']
+        'required' => ['name'],
     ],
     function (array $args): array {
         $name = $args['name'] ?? 'World';
@@ -52,9 +53,9 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => "Hello, {$name}! 👋 Welcome to MCP!"
-                ]
-            ]
+                    'text' => "Hello, {$name}! 👋 Welcome to MCP!",
+                ],
+            ],
         ];
     }
 );

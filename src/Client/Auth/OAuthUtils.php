@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Client\Auth;
 
+use function Amp\async;
+
 use Amp\Future;
 use MCP\Client\Auth\Exceptions\InvalidClientException;
 use MCP\Client\Auth\Exceptions\InvalidGrantException;
@@ -18,9 +20,8 @@ use MCP\Types\Protocol;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamFactoryInterface;
 
-use function Amp\async;
+use Psr\Http\Message\StreamFactoryInterface;
 
 /**
  * OAuth utilities for PKCE, JWT parsing, metadata discovery, and error handling.
@@ -53,6 +54,7 @@ class OAuthUtils
     {
         // Generate 32 random bytes and encode as URL-safe base64
         $bytes = random_bytes(32);
+
         return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
     }
 
@@ -62,6 +64,7 @@ class OAuthUtils
     public static function generateCodeChallenge(string $verifier): string
     {
         $hash = hash('sha256', $verifier, true);
+
         return rtrim(strtr(base64_encode($hash), '+/', '-_'), '=');
     }
 
@@ -71,6 +74,7 @@ class OAuthUtils
     public static function generateState(): string
     {
         $bytes = random_bytes(16);
+
         return bin2hex($bytes);
     }
 
@@ -98,6 +102,7 @@ class OAuthUtils
         }
 
         $claims = json_decode($decoded, true);
+
         return is_array($claims) ? $claims : null;
     }
 
@@ -122,7 +127,7 @@ class OAuthUtils
         ?string $protocolVersion = null
     ): Future {
         return async(function () use ($serverUrl, $protocolVersion) {
-            $protocolVersion = $protocolVersion ?? Protocol::LATEST_PROTOCOL_VERSION;
+            $protocolVersion ??= Protocol::LATEST_PROTOCOL_VERSION;
 
             // Try RFC 8414 OAuth Authorization Server Metadata first
             $urls = $this->buildDiscoveryUrls($serverUrl);
@@ -137,7 +142,7 @@ class OAuthUtils
                     $response = $this->httpClient->sendRequest($request);
 
                     if ($response->getStatusCode() === 200) {
-                        $data = json_decode((string)$response->getBody(), true);
+                        $data = json_decode((string) $response->getBody(), true);
                         if (is_array($data)) {
                             return $data;
                         }
@@ -161,7 +166,7 @@ class OAuthUtils
         ?string $protocolVersion = null
     ): Future {
         return async(function () use ($serverUrl, $resourceMetadataUrl, $protocolVersion) {
-            $protocolVersion = $protocolVersion ?? Protocol::LATEST_PROTOCOL_VERSION;
+            $protocolVersion ??= Protocol::LATEST_PROTOCOL_VERSION;
 
             if ($resourceMetadataUrl) {
                 $url = $resourceMetadataUrl;
@@ -183,7 +188,7 @@ class OAuthUtils
                 $response = $this->httpClient->sendRequest($request);
 
                 if ($response->getStatusCode() === 200) {
-                    $data = json_decode((string)$response->getBody(), true);
+                    $data = json_decode((string) $response->getBody(), true);
                     if (is_array($data)) {
                         return OAuthProtectedResourceMetadata::fromArray($data);
                     }
@@ -368,7 +373,7 @@ class OAuthUtils
     public static function parseErrorResponse(ResponseInterface $response): OAuthException
     {
         $statusCode = $response->getStatusCode();
-        $body = (string)$response->getBody();
+        $body = (string) $response->getBody();
 
         try {
             $data = json_decode($body, true);
@@ -378,6 +383,7 @@ class OAuthUtils
                 $uri = $data['error_uri'] ?? null;
 
                 $exceptionClass = self::ERROR_MAP[$error] ?? OAuthException::class;
+
                 return new $exceptionClass($description, $uri, $statusCode);
             }
         } catch (\JsonException $e) {
@@ -386,6 +392,7 @@ class OAuthUtils
 
         // Generic error if we can't parse the OAuth error
         $message = "HTTP {$statusCode}: Invalid OAuth error response. Raw body: {$body}";
+
         return new OAuthException($message, null, $statusCode);
     }
 
@@ -409,7 +416,7 @@ class OAuthUtils
                 throw self::parseErrorResponse($response);
             }
 
-            $data = json_decode((string)$response->getBody(), true);
+            $data = json_decode((string) $response->getBody(), true);
             if (!is_array($data)) {
                 throw new OAuthException('Invalid JSON response from registration endpoint');
             }

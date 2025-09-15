@@ -5,26 +5,20 @@ declare(strict_types=1);
 namespace MCP\Tests\Server;
 
 use MCP\Server\McpServer;
-use MCP\Server\ServerOptions;
-use MCP\Server\RegisteredTool;
-use MCP\Server\RegisteredResource;
 use MCP\Server\RegisteredPrompt;
+use MCP\Server\RegisteredResource;
+use MCP\Server\RegisteredTool;
 use MCP\Server\ResourceTemplate;
 use MCP\Types\Implementation;
-use MCP\Types\Capabilities\ServerCapabilities;
 use MCP\Types\Results\CallToolResult;
 use MCP\Types\Results\GetPromptResult;
 use MCP\Types\Results\ReadResourceResult;
-use MCP\Types\Tools\ToolAnnotations;
-use MCP\Types\McpError;
-use MCP\Types\ErrorCode;
-use MCP\Shared\RequestHandlerExtra;
-use MCP\Shared\UriTemplate;
 use PHPUnit\Framework\TestCase;
 
 class McpServerTest extends TestCase
 {
     private Implementation $serverInfo;
+
     private McpServer $server;
 
     protected function setUp(): void
@@ -44,7 +38,7 @@ class McpServerTest extends TestCase
     {
         $callback = function (array $args): CallToolResult {
             return new CallToolResult([
-                ['type' => 'text', 'text' => 'Result: ' . $args['input']]
+                ['type' => 'text', 'text' => 'Result: ' . $args['input']],
             ]);
         };
 
@@ -56,10 +50,10 @@ class McpServerTest extends TestCase
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
-                        'input' => ['type' => 'string']
+                        'input' => ['type' => 'string'],
                     ],
-                    'required' => ['input']
-                ]
+                    'required' => ['input'],
+                ],
             ],
             $callback
         );
@@ -75,7 +69,7 @@ class McpServerTest extends TestCase
         // Test simple callback registration
         $callback = function (): CallToolResult {
             return new CallToolResult([
-                ['type' => 'text', 'text' => 'Simple result']
+                ['type' => 'text', 'text' => 'Simple result'],
             ]);
         };
 
@@ -90,7 +84,7 @@ class McpServerTest extends TestCase
         // Test with schema
         $schema = [
             'type' => 'object',
-            'properties' => ['param' => ['type' => 'string']]
+            'properties' => ['param' => ['type' => 'string']],
         ];
         $tool3 = $this->server->tool('schema-tool', 'Description', $schema, $callback);
         $this->assertEquals($schema, $tool3->inputSchema);
@@ -113,7 +107,7 @@ class McpServerTest extends TestCase
     {
         $callback = function (string $uri): ReadResourceResult {
             return new ReadResourceResult([
-                ['type' => 'text', 'text' => "Content for {$uri}"]
+                ['type' => 'text', 'text' => "Content for {$uri}"],
             ]);
         };
 
@@ -123,7 +117,7 @@ class McpServerTest extends TestCase
             [
                 'title' => 'Test Resource',
                 'description' => 'A test resource',
-                'mimeType' => 'text/plain'
+                'mimeType' => 'text/plain',
             ],
             $callback
         );
@@ -143,7 +137,7 @@ class McpServerTest extends TestCase
 
         $callback = function (string $uri, array $variables): ReadResourceResult {
             return new ReadResourceResult([
-                ['type' => 'text', 'text' => "File content for {$variables['path']}"]
+                ['type' => 'text', 'text' => "File content for {$variables['path']}"],
             ]);
         };
 
@@ -163,7 +157,7 @@ class McpServerTest extends TestCase
     {
         $callback = function (array $args): GetPromptResult {
             return new GetPromptResult([
-                ['type' => 'text', 'text' => "Prompt with name: {$args['name']}"]
+                ['type' => 'text', 'text' => "Prompt with name: {$args['name']}"],
             ]);
         };
 
@@ -175,10 +169,10 @@ class McpServerTest extends TestCase
                 'argsSchema' => [
                     'type' => 'object',
                     'properties' => [
-                        'name' => ['type' => 'string']
+                        'name' => ['type' => 'string'],
                     ],
-                    'required' => ['name']
-                ]
+                    'required' => ['name'],
+                ],
             ],
             $callback
         );
@@ -193,7 +187,7 @@ class McpServerTest extends TestCase
     {
         $callback = function (): GetPromptResult {
             return new GetPromptResult([
-                ['type' => 'text', 'text' => 'Simple prompt']
+                ['type' => 'text', 'text' => 'Simple prompt'],
             ]);
         };
 
@@ -303,9 +297,9 @@ class McpServerTest extends TestCase
             'type' => 'object',
             'properties' => [
                 'name' => ['type' => 'string'],
-                'age' => ['type' => 'integer']
+                'age' => ['type' => 'integer'],
             ],
-            'required' => ['name']
+            'required' => ['name'],
         ];
 
         // Test schema normalization through the server's utility methods
@@ -325,14 +319,14 @@ class McpServerTest extends TestCase
             'properties' => [
                 'name' => [
                     'type' => 'string',
-                    'description' => 'The name parameter'
+                    'description' => 'The name parameter',
                 ],
                 'optional' => [
                     'type' => 'string',
-                    'description' => 'Optional parameter'
-                ]
+                    'description' => 'Optional parameter',
+                ],
             ],
-            'required' => ['name']
+            'required' => ['name'],
         ];
 
         $reflection = new \ReflectionClass($this->server);
@@ -344,7 +338,7 @@ class McpServerTest extends TestCase
         $this->assertCount(2, $arguments);
 
         // Check that required argument is marked as such
-        $nameArg = array_filter($arguments, fn($arg) => $arg['name'] === 'name')[0] ?? null;
+        $nameArg = array_filter($arguments, fn ($arg) => $arg['name'] === 'name')[0] ?? null;
         $this->assertNotNull($nameArg);
         $this->assertTrue($nameArg['required'] ?? false);
     }
@@ -355,8 +349,8 @@ class McpServerTest extends TestCase
             'type' => 'object',
             'properties' => [
                 'field1' => ['type' => 'string'],
-                'field2' => ['type' => 'number']
-            ]
+                'field2' => ['type' => 'number'],
+            ],
         ];
 
         $reflection = new \ReflectionClass($this->server);
@@ -403,7 +397,7 @@ class McpServerTest extends TestCase
         $params = [
             'level' => 'info',
             'logger' => 'test',
-            'data' => 'test message'
+            'data' => 'test message',
         ];
 
         $future = $this->server->sendLoggingMessage($params);

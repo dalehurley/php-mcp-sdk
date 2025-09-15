@@ -1,17 +1,18 @@
 <?php
 
 /**
- * Transport Test Example
- * 
+ * Transport Test Example.
+ *
  * This example tests the stdio transport implementations directly
  * without the full client/server classes.
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use MCP\Server\Transport\StdioServerTransport;
 use function Amp\async;
 use function Amp\delay;
+
+use MCP\Server\Transport\StdioServerTransport;
 
 // Simple echo server using StdioServerTransport
 async(function () {
@@ -19,7 +20,7 @@ async(function () {
 
     // Set up message handler
     $transport->setMessageHandler(function (array $message) use ($transport) {
-        echo "Server received: " . json_encode($message) . "\n";
+        echo 'Server received: ' . json_encode($message) . "\n";
 
         // Echo the message back with a "echo_" prefix
         if (isset($message['method'])) {
@@ -28,8 +29,8 @@ async(function () {
                 'id' => $message['id'] ?? null,
                 'result' => [
                     'echo' => $message,
-                    'timestamp' => time()
-                ]
+                    'timestamp' => time(),
+                ],
             ];
 
             $transport->send($response)->await();
@@ -37,7 +38,7 @@ async(function () {
     });
 
     $transport->setErrorHandler(function (\Throwable $error) {
-        error_log("Transport error: " . $error->getMessage());
+        error_log('Transport error: ' . $error->getMessage());
     });
 
     $transport->setCloseHandler(function () {

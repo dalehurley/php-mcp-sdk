@@ -29,6 +29,7 @@ class ClientBuilder
     public function withMiddleware(MiddlewareInterface $middleware): self
     {
         $this->middleware[] = $middleware;
+
         return $this;
     }
 
@@ -38,6 +39,7 @@ class ClientBuilder
     public function withOAuth(OAuthClientProvider $provider, ?string $baseUrl = null): self
     {
         $oauthMiddleware = new \MCP\Client\Middleware\OAuthMiddleware($provider, $baseUrl);
+
         return $this->withMiddleware($oauthMiddleware);
     }
 
@@ -47,6 +49,7 @@ class ClientBuilder
     public function withRetry(int $maxRetries = 3, float $baseDelay = 1.0): self
     {
         $retryMiddleware = new \MCP\Client\Middleware\RetryMiddleware($maxRetries, $baseDelay);
+
         return $this->withMiddleware($retryMiddleware);
     }
 
@@ -56,6 +59,7 @@ class ClientBuilder
     public function withLogging(LoggerInterface $logger, string $logLevel = 'info'): self
     {
         $loggingMiddleware = new \MCP\Client\Middleware\LoggingMiddleware($logger, $logLevel);
+
         return $this->withMiddleware($loggingMiddleware);
     }
 

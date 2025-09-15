@@ -4,29 +4,31 @@ declare(strict_types=1);
 
 namespace MCP\Shared;
 
-use MCP\Types\JsonRpc\JSONRPCMessage;
-use MCP\Types\JsonRpc\JSONRPCRequest;
-use MCP\Types\JsonRpc\JSONRPCNotification;
-use MCP\Types\JsonRpc\JSONRPCResponse;
 use MCP\Types\JsonRpc\JSONRPCError;
+use MCP\Types\JsonRpc\JSONRPCMessage;
+use MCP\Types\JsonRpc\JSONRPCNotification;
+use MCP\Types\JsonRpc\JSONRPCRequest;
+use MCP\Types\JsonRpc\JSONRPCResponse;
 
 /**
  * Utility class for handling message framing in different transport protocols
- * Provides methods for serializing, deserializing, and validating JSON-RPC messages
+ * Provides methods for serializing, deserializing, and validating JSON-RPC messages.
  */
 class MessageFraming
 {
     /**
-     * Maximum message size in bytes (4MB by default)
+     * Maximum message size in bytes (4MB by default).
      */
     public const DEFAULT_MAX_MESSAGE_SIZE = 4 * 1024 * 1024;
 
     /**
-     * Serialize a JSON-RPC message for transmission over newline-delimited JSON transport
+     * Serialize a JSON-RPC message for transmission over newline-delimited JSON transport.
      *
      * @param array|JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError $message The message to serialize
      * @param bool $validate Whether to validate the message structure
+     *
      * @return string The serialized message with newline terminator
+     *
      * @throws \InvalidArgumentException If message is invalid
      * @throws \JsonException If JSON encoding fails
      */
@@ -60,11 +62,13 @@ class MessageFraming
     }
 
     /**
-     * Deserialize a JSON-RPC message from string
+     * Deserialize a JSON-RPC message from string.
      *
      * @param string $data The JSON string to deserialize
      * @param bool $validate Whether to validate the message structure
+     *
      * @return JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError The deserialized message
+     *
      * @throws \InvalidArgumentException If message is invalid
      * @throws \JsonException If JSON decoding fails
      */
@@ -84,11 +88,13 @@ class MessageFraming
     }
 
     /**
-     * Parse multiple messages from a newline-delimited JSON stream
+     * Parse multiple messages from a newline-delimited JSON stream.
      *
      * @param string $data The stream data containing multiple messages
      * @param bool $validate Whether to validate each message
+     *
      * @return array<JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError> Array of parsed messages
+     *
      * @throws \InvalidArgumentException If any message is invalid
      * @throws \JsonException If JSON decoding fails
      */
@@ -110,9 +116,10 @@ class MessageFraming
     }
 
     /**
-     * Validate the structure of a JSON-RPC message array
+     * Validate the structure of a JSON-RPC message array.
      *
      * @param array $message The message array to validate
+     *
      * @throws \InvalidArgumentException If message structure is invalid
      */
     public static function validateMessageStructure(array $message): void
@@ -155,9 +162,10 @@ class MessageFraming
     }
 
     /**
-     * Validate a request ID
+     * Validate a request ID.
      *
      * @param mixed $id The ID to validate
+     *
      * @throws \InvalidArgumentException If ID is invalid
      */
     private static function validateRequestId(mixed $id): void
@@ -169,11 +177,13 @@ class MessageFraming
 
     /**
      * Create a chunked message stream for large messages
-     * Splits large messages into smaller chunks for transmission
+     * Splits large messages into smaller chunks for transmission.
      *
      * @param array|JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError $message The message to chunk
      * @param int $chunkSize Maximum size of each chunk in bytes
+     *
      * @return array<string> Array of serialized message chunks
+     *
      * @throws \InvalidArgumentException If message is invalid
      */
     public static function createChunkedStream(
@@ -199,23 +209,27 @@ class MessageFraming
     }
 
     /**
-     * Reconstruct a message from chunks
+     * Reconstruct a message from chunks.
      *
      * @param array<string> $chunks Array of message chunks
      * @param bool $validate Whether to validate the reconstructed message
+     *
      * @return JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError The reconstructed message
+     *
      * @throws \InvalidArgumentException If reconstruction fails
      */
     public static function reconstructFromChunks(array $chunks, bool $validate = true): JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError
     {
         $reconstructed = implode('', $chunks);
+
         return self::deserializeMessage($reconstructed, $validate);
     }
 
     /**
-     * Check if a string contains a complete JSON-RPC message
+     * Check if a string contains a complete JSON-RPC message.
      *
      * @param string $data The data to check
+     *
      * @return bool True if data contains a complete message
      */
     public static function isCompleteMessage(string $data): bool
@@ -227,6 +241,7 @@ class MessageFraming
 
         try {
             $decoded = json_decode($trimmed, true, 512, JSON_THROW_ON_ERROR);
+
             return is_array($decoded) && isset($decoded['jsonrpc']);
         } catch (\JsonException) {
             return false;
@@ -235,9 +250,10 @@ class MessageFraming
 
     /**
      * Extract complete messages from a partial stream buffer
-     * Returns complete messages and remaining buffer data
+     * Returns complete messages and remaining buffer data.
      *
      * @param string $buffer The buffer containing partial messages
+     *
      * @return array{messages: array<JSONRPCRequest|JSONRPCNotification|JSONRPCResponse|JSONRPCError>, remaining: string}
      */
     public static function extractCompleteMessages(string $buffer): array
@@ -269,7 +285,7 @@ class MessageFraming
 
         return [
             'messages' => $messages,
-            'remaining' => $remaining
+            'remaining' => $remaining,
         ];
     }
 }

@@ -68,6 +68,7 @@ class ValidationException extends \InvalidArgumentException
                 $messages[] = "$field: $error";
             }
         }
+
         return $messages;
     }
 }

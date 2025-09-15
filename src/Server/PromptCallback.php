@@ -6,15 +6,17 @@ namespace MCP\Server;
 
 use MCP\Shared\RequestHandlerExtra;
 use MCP\Types\Results\GetPromptResult;
-use MCP\Types\ServerRequest;
 use MCP\Types\ServerNotification;
+use MCP\Types\ServerRequest;
 
 /**
  * Callback for a prompt handler.
  *
  * @template Args
+ *
  * @param Args $args The parsed and validated arguments (if schema provided)
  * @param RequestHandlerExtra<ServerRequest, ServerNotification> $extra
+ *
  * @return GetPromptResult|\Amp\Future<GetPromptResult>
  */
 interface PromptCallback

@@ -6,23 +6,20 @@ namespace MCP\Tests\Server;
 
 use MCP\Server\Server;
 use MCP\Server\ServerOptions;
-use MCP\Types\Implementation;
-use MCP\Types\Capabilities\ServerCapabilities;
+use MCP\Shared\RequestHandlerExtra;
 use MCP\Types\Capabilities\ClientCapabilities;
-use MCP\Types\Requests\InitializeRequest;
-use MCP\Types\Results\InitializeResult;
+use MCP\Types\Capabilities\ServerCapabilities;
+use MCP\Types\Implementation;
 use MCP\Types\Notifications\InitializedNotification;
 use MCP\Types\Protocol as ProtocolConstants;
-use MCP\Types\LoggingLevel;
-use MCP\Types\Requests\SetLevelRequest;
-use MCP\Types\Result;
-use MCP\Shared\RequestHandlerExtra;
+use MCP\Types\Requests\InitializeRequest;
+use MCP\Types\Results\InitializeResult;
 use PHPUnit\Framework\TestCase;
-use PHPUnit\Framework\MockObject\MockObject;
 
 class ServerTest extends TestCase
 {
     private Implementation $serverInfo;
+
     private ServerCapabilities $capabilities;
 
     protected function setUp(): void
@@ -72,8 +69,8 @@ class ServerTest extends TestCase
             'params' => [
                 'protocolVersion' => ProtocolConstants::LATEST_PROTOCOL_VERSION,
                 'capabilities' => $clientCapabilities->jsonSerialize(),
-                'clientInfo' => (new Implementation('test-client', '1.0.0'))->jsonSerialize()
-            ]
+                'clientInfo' => (new Implementation('test-client', '1.0.0'))->jsonSerialize(),
+            ],
         ]);
 
         // Create a mock RequestHandlerExtra
@@ -106,8 +103,8 @@ class ServerTest extends TestCase
             'params' => [
                 'protocolVersion' => '999.0.0', // Unsupported version
                 'capabilities' => $clientCapabilities->jsonSerialize(),
-                'clientInfo' => (new Implementation('test-client', '1.0.0'))->jsonSerialize()
-            ]
+                'clientInfo' => (new Implementation('test-client', '1.0.0'))->jsonSerialize(),
+            ],
         ]);
 
         $reflection = new \ReflectionClass($server);
@@ -264,7 +261,7 @@ class ServerTest extends TestCase
         $params = [
             'level' => 'info',
             'logger' => 'test',
-            'data' => 'test message'
+            'data' => 'test message',
         ];
 
         $future = $server->sendLoggingMessage($params);

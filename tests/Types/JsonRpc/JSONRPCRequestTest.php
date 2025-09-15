@@ -28,7 +28,7 @@ class JSONRPCRequestTest extends TestCase
             'jsonrpc' => '2.0',
             'id' => 'request-id',
             'method' => 'tools/call',
-            'params' => ['name' => 'calculator']
+            'params' => ['name' => 'calculator'],
         ];
 
         $request = JSONRPCRequest::fromArray($data);
@@ -43,7 +43,7 @@ class JSONRPCRequestTest extends TestCase
         $data = [
             'jsonrpc' => '2.0',
             'id' => 123,
-            'method' => 'test'
+            'method' => 'test',
         ];
 
         $request = JSONRPCRequest::fromArray($data);
@@ -60,7 +60,7 @@ class JSONRPCRequestTest extends TestCase
         JSONRPCRequest::fromArray([
             'jsonrpc' => '1.0',
             'id' => 'test',
-            'method' => 'test'
+            'method' => 'test',
         ]);
     }
 
@@ -71,7 +71,7 @@ class JSONRPCRequestTest extends TestCase
 
         JSONRPCRequest::fromArray([
             'jsonrpc' => '2.0',
-            'method' => 'test'
+            'method' => 'test',
         ]);
     }
 
@@ -82,7 +82,7 @@ class JSONRPCRequestTest extends TestCase
 
         JSONRPCRequest::fromArray([
             'jsonrpc' => '2.0',
-            'id' => 'test'
+            'id' => 'test',
         ]);
     }
 
@@ -135,25 +135,25 @@ class JSONRPCRequestTest extends TestCase
         $this->assertTrue(JSONRPCRequest::isValid([
             'jsonrpc' => '2.0',
             'id' => 'test',
-            'method' => 'test/method'
+            'method' => 'test/method',
         ]));
 
         $this->assertTrue(JSONRPCRequest::isValid([
             'jsonrpc' => '2.0',
             'id' => 123,
             'method' => 'test/method',
-            'params' => ['key' => 'value']
+            'params' => ['key' => 'value'],
         ]));
 
         $this->assertFalse(JSONRPCRequest::isValid([
             'jsonrpc' => '2.0',
-            'method' => 'test/method' // missing id
+            'method' => 'test/method', // missing id
         ]));
 
         $this->assertFalse(JSONRPCRequest::isValid([
             'jsonrpc' => '1.0', // wrong version
             'id' => 'test',
-            'method' => 'test/method'
+            'method' => 'test/method',
         ]));
 
         $this->assertFalse(JSONRPCRequest::isValid('not-an-array'));

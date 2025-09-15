@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * MCP (Model Context Protocol) Configuration for Laravel
+ * MCP (Model Context Protocol) Configuration for Laravel.
  *
  * This configuration file shows how to configure the core PHP MCP SDK
  * when using it directly in a Laravel application.

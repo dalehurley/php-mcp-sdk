@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Types\Requests;
 
-use MCP\Types\Requests\InitializeRequest;
-use MCP\Types\Protocol;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ClientCapabilities;
+use MCP\Types\Implementation;
+use MCP\Types\Protocol;
+use MCP\Types\Requests\InitializeRequest;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -22,13 +22,13 @@ class InitializeRequestTest extends TestCase
     {
         $clientInfo = new Implementation('test-client', '1.0.0');
         $capabilities = ClientCapabilities::fromArray(['sampling' => []]);
-        
+
         $request = InitializeRequest::create(
             Protocol::LATEST_PROTOCOL_VERSION,
             $capabilities,
             $clientInfo
         );
-        
+
         $this->assertInstanceOf(InitializeRequest::class, $request);
         $this->assertEquals('initialize', $request->getMethod());
         $this->assertEquals(Protocol::LATEST_PROTOCOL_VERSION, $request->getProtocolVersion());
@@ -46,16 +46,16 @@ class InitializeRequestTest extends TestCase
             'capabilities' => ['experimental' => []],
             'clientInfo' => [
                 'name' => 'test-client',
-                'version' => '1.0.0'
-            ]
+                'version' => '1.0.0',
+            ],
         ]);
-        
+
         $this->assertEquals('2025-06-18', $request->getProtocolVersion());
-        
+
         $capabilities = $request->getCapabilities();
         $this->assertNotNull($capabilities);
         $this->assertInstanceOf(ClientCapabilities::class, $capabilities);
-        
+
         $clientInfo = $request->getClientInfo();
         $this->assertNotNull($clientInfo);
         $this->assertInstanceOf(Implementation::class, $clientInfo);
@@ -68,7 +68,7 @@ class InitializeRequestTest extends TestCase
     public function testGettersWithMissingData(): void
     {
         $request = new InitializeRequest();
-        
+
         $this->assertNull($request->getProtocolVersion());
         $this->assertNull($request->getCapabilities());
         $this->assertNull($request->getClientInfo());
@@ -85,31 +85,31 @@ class InitializeRequestTest extends TestCase
             'params' => [
                 'protocolVersion' => '2025-06-18',
                 'capabilities' => [],
-                'clientInfo' => ['name' => 'test', 'version' => '1.0']
-            ]
+                'clientInfo' => ['name' => 'test', 'version' => '1.0'],
+            ],
         ]));
-        
+
         // Wrong method
         $this->assertFalse(InitializeRequest::isValid([
             'method' => 'other',
             'params' => [
                 'protocolVersion' => '2025-06-18',
                 'capabilities' => [],
-                'clientInfo' => []
-            ]
+                'clientInfo' => [],
+            ],
         ]));
-        
+
         // Missing required params
         $this->assertFalse(InitializeRequest::isValid([
             'method' => 'initialize',
             'params' => [
-                'protocolVersion' => '2025-06-18'
-            ]
+                'protocolVersion' => '2025-06-18',
+            ],
         ]));
-        
+
         // No params
         $this->assertFalse(InitializeRequest::isValid([
-            'method' => 'initialize'
+            'method' => 'initialize',
         ]));
     }
 
@@ -121,17 +121,17 @@ class InitializeRequestTest extends TestCase
         $clientInfo = new Implementation('my-client', '2.0.0', 'My Client');
         $capabilities = ClientCapabilities::fromArray([
             'roots' => ['listChanged' => true],
-            'sampling' => []
+            'sampling' => [],
         ]);
-        
+
         $request = InitializeRequest::create(
             Protocol::LATEST_PROTOCOL_VERSION,
             $capabilities,
             $clientInfo
         );
-        
+
         $json = $request->jsonSerialize();
-        
+
         $this->assertEquals('initialize', $json['method']);
         $this->assertArrayHasKey('params', $json);
         $this->assertEquals(Protocol::LATEST_PROTOCOL_VERSION, $json['params']['protocolVersion']);

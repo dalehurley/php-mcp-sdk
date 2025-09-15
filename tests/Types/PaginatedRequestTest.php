@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Types;
 
-use MCP\Types\PaginatedRequest;
 use MCP\Types\Cursor;
+use MCP\Types\PaginatedRequest;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,7 +29,7 @@ class PaginatedRequestTest extends TestCase
     {
         $request = new TestPaginatedRequest(['cursor' => 'page2']);
         $cursor = $request->getCursor();
-        
+
         $this->assertNotNull($cursor);
         $this->assertInstanceOf(Cursor::class, $cursor);
         $this->assertEquals('page2', $cursor->getValue());
@@ -43,10 +43,10 @@ class PaginatedRequestTest extends TestCase
         $request = new TestPaginatedRequest();
         $cursor = new Cursor('page3');
         $newRequest = $request->withCursor($cursor);
-        
+
         $this->assertNotSame($request, $newRequest);
         $this->assertNull($request->getCursor());
-        
+
         $newCursor = $newRequest->getCursor();
         $this->assertNotNull($newCursor);
         $this->assertEquals('page3', $newCursor->getValue());
@@ -59,11 +59,11 @@ class PaginatedRequestTest extends TestCase
     {
         $request = new TestPaginatedRequest(['cursor' => 'page2', 'limit' => 10]);
         $newRequest = $request->withoutCursor();
-        
+
         $this->assertNotSame($request, $newRequest);
         $this->assertNotNull($request->getCursor());
         $this->assertNull($newRequest->getCursor());
-        
+
         // Other params should remain
         $params = $newRequest->getParams();
         $this->assertEquals(10, $params['limit'] ?? null);
@@ -76,7 +76,7 @@ class PaginatedRequestTest extends TestCase
     {
         $request = new TestPaginatedRequest(['cursor' => 'page2']);
         $newRequest = $request->withoutCursor();
-        
+
         $this->assertNull($newRequest->getParams());
     }
 

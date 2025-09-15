@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Shared;
 
+use GuzzleHttp\Psr7\Uri;
 use MCP\Shared\AuthUtils;
 use PHPUnit\Framework\TestCase;
-use GuzzleHttp\Psr7\Uri;
 
 class AuthUtilsTest extends TestCase
 {
@@ -30,42 +30,42 @@ class AuthUtilsTest extends TestCase
         // Test exact match
         $params = [
             'requestedResource' => 'https://api.example.com/v1',
-            'configuredResource' => 'https://api.example.com/v1'
+            'configuredResource' => 'https://api.example.com/v1',
         ];
         $this->assertTrue(AuthUtils::checkResourceAllowed($params));
 
         // Test subpath match
         $params = [
             'requestedResource' => 'https://api.example.com/v1/users',
-            'configuredResource' => 'https://api.example.com/v1'
+            'configuredResource' => 'https://api.example.com/v1',
         ];
         $this->assertTrue(AuthUtils::checkResourceAllowed($params));
 
         // Test different domain
         $params = [
             'requestedResource' => 'https://other.example.com/v1',
-            'configuredResource' => 'https://api.example.com/v1'
+            'configuredResource' => 'https://api.example.com/v1',
         ];
         $this->assertFalse(AuthUtils::checkResourceAllowed($params));
 
         // Test different scheme
         $params = [
             'requestedResource' => 'http://api.example.com/v1',
-            'configuredResource' => 'https://api.example.com/v1'
+            'configuredResource' => 'https://api.example.com/v1',
         ];
         $this->assertFalse(AuthUtils::checkResourceAllowed($params));
 
         // Test shorter requested path
         $params = [
             'requestedResource' => 'https://api.example.com/v',
-            'configuredResource' => 'https://api.example.com/v1'
+            'configuredResource' => 'https://api.example.com/v1',
         ];
         $this->assertFalse(AuthUtils::checkResourceAllowed($params));
 
         // Test with Uri objects
         $params = [
             'requestedResource' => new Uri('https://api.example.com/v1/users'),
-            'configuredResource' => new Uri('https://api.example.com/v1')
+            'configuredResource' => new Uri('https://api.example.com/v1'),
         ];
         $this->assertTrue(AuthUtils::checkResourceAllowed($params));
     }
@@ -75,20 +75,20 @@ class AuthUtilsTest extends TestCase
         // Test that trailing slashes are handled correctly
         $params = [
             'requestedResource' => 'https://api.example.com/api',
-            'configuredResource' => 'https://api.example.com/api/'
+            'configuredResource' => 'https://api.example.com/api/',
         ];
         $this->assertTrue(AuthUtils::checkResourceAllowed($params)); // With trailing slash normalization, /api/ matches /api/
 
         $params = [
             'requestedResource' => 'https://api.example.com/api/',
-            'configuredResource' => 'https://api.example.com/api'
+            'configuredResource' => 'https://api.example.com/api',
         ];
         $this->assertTrue(AuthUtils::checkResourceAllowed($params));
 
         // Test that /api123 doesn't match /api
         $params = [
             'requestedResource' => 'https://api.example.com/api123',
-            'configuredResource' => 'https://api.example.com/api'
+            'configuredResource' => 'https://api.example.com/api',
         ];
         $this->assertFalse(AuthUtils::checkResourceAllowed($params)); // /api123/ does NOT start with /api/
     }
@@ -167,7 +167,7 @@ class AuthUtilsTest extends TestCase
             'sub' => '1234567890',
             'name' => 'John Doe',
             'iat' => 1516239022,
-            'exp' => time() + 3600
+            'exp' => time() + 3600,
         ]));
         $signature = 'fake-signature';
         $token = "$header.$payload.$signature";
@@ -200,7 +200,7 @@ class AuthUtilsTest extends TestCase
         $payload = base64_encode(json_encode([
             'sub' => 'user123',
             'email' => 'user@example.com',
-            'exp' => time() + 3600
+            'exp' => time() + 3600,
         ]));
         $token = "$header.$payload.signature";
 
@@ -217,7 +217,7 @@ class AuthUtilsTest extends TestCase
         // Create expired token
         $header = base64_encode(json_encode(['alg' => 'HS256']));
         $expiredPayload = base64_encode(json_encode([
-            'exp' => time() - 3600 // Expired 1 hour ago
+            'exp' => time() - 3600, // Expired 1 hour ago
         ]));
         $expiredToken = "$header.$expiredPayload.signature";
 
@@ -225,7 +225,7 @@ class AuthUtilsTest extends TestCase
 
         // Create valid token
         $validPayload = base64_encode(json_encode([
-            'exp' => time() + 3600 // Expires in 1 hour
+            'exp' => time() + 3600, // Expires in 1 hour
         ]));
         $validToken = "$header.$validPayload.signature";
 
@@ -246,7 +246,7 @@ class AuthUtilsTest extends TestCase
             'redirect_uri' => 'https://app.example.com/callback',
             'response_type' => 'code',
             'scope' => 'read write',
-            'state' => 'random-state'
+            'state' => 'random-state',
         ];
 
         $url = AuthUtils::buildAuthorizationUrl($endpoint, $params);
@@ -264,7 +264,7 @@ class AuthUtilsTest extends TestCase
         $endpoint = 'https://auth.example.com/authorize?foo=bar';
         $params = [
             'client_id' => 'test-client',
-            'state' => 'random-state'
+            'state' => 'random-state',
         ];
 
         $url = AuthUtils::buildAuthorizationUrl($endpoint, $params);

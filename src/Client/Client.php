@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Client;
 
+use function Amp\async;
+
 use Amp\Future;
 use MCP\Client\Auth\OAuthClientProvider;
 use MCP\Client\Middleware\LoggingMiddleware;
@@ -14,8 +16,6 @@ use MCP\Client\Middleware\RetryMiddleware;
 use MCP\Shared\Protocol;
 use MCP\Shared\RequestOptions;
 use MCP\Shared\Transport;
-use Psr\Http\Client\ClientInterface;
-use Psr\Log\LoggerInterface;
 use MCP\Types\Capabilities\ClientCapabilities;
 use MCP\Types\Capabilities\ServerCapabilities;
 use MCP\Types\ErrorCode;
@@ -43,7 +43,6 @@ use MCP\Types\Requests\ReadResourceRequest;
 use MCP\Types\Requests\SetLevelRequest;
 use MCP\Types\Requests\SubscribeRequest;
 use MCP\Types\Requests\UnsubscribeRequest;
-use MCP\Types\Result;
 use MCP\Types\Results\CallToolResult;
 use MCP\Types\Results\CompleteResult;
 use MCP\Types\Results\GetPromptResult;
@@ -57,7 +56,7 @@ use MCP\Types\Tools\Tool;
 use MCP\Utils\JsonSchemaValidator;
 use MCP\Validation\ValidationService;
 
-use function Amp\async;
+use Psr\Log\LoggerInterface;
 
 /**
  * An MCP client on top of a pluggable transport.
@@ -67,8 +66,11 @@ use function Amp\async;
 class Client extends Protocol
 {
     private ?ServerCapabilities $serverCapabilities = null;
+
     private ?Implementation $serverVersion = null;
+
     private ClientCapabilities $capabilities;
+
     private ?string $instructions = null;
 
     /** @var array<string, array<string, mixed>> */
@@ -106,7 +108,7 @@ class Client extends Protocol
                 function (CreateMessageRequest $request) {
                     throw new McpError(
                         ErrorCode::MethodNotFound,
-                        "Sampling not implemented. Override the CreateMessageRequest handler to provide sampling functionality."
+                        'Sampling not implemented. Override the CreateMessageRequest handler to provide sampling functionality.'
                     );
                 }
             );
@@ -119,7 +121,7 @@ class Client extends Protocol
                 function (ElicitRequest $request) {
                     throw new McpError(
                         ErrorCode::MethodNotFound,
-                        "Elicitation not implemented. Override the ElicitRequest handler to provide elicitation functionality."
+                        'Elicitation not implemented. Override the ElicitRequest handler to provide elicitation functionality.'
                     );
                 }
             );
@@ -132,7 +134,7 @@ class Client extends Protocol
                 function (ListRootsRequest $request) {
                     throw new McpError(
                         ErrorCode::MethodNotFound,
-                        "Roots listing not implemented. Override the ListRootsRequest handler to provide roots functionality."
+                        'Roots listing not implemented. Override the ListRootsRequest handler to provide roots functionality.'
                     );
                 }
             );
@@ -147,7 +149,7 @@ class Client extends Protocol
     public function registerCapabilities(ClientCapabilities $capabilities): void
     {
         if ($this->getTransport()) {
-            throw new \Error("Cannot register capabilities after connecting to transport");
+            throw new \Error('Cannot register capabilities after connecting to transport');
         }
 
         $this->capabilities = $this->mergeClientCapabilities($this->capabilities, $capabilities);
@@ -187,7 +189,7 @@ class Client extends Protocol
         if (!$this->serverCapabilities) {
             throw new McpError(
                 ErrorCode::InternalError,
-                "Server capabilities not initialized"
+                'Server capabilities not initialized'
             );
         }
 
@@ -349,7 +351,7 @@ class Client extends Protocol
                 if (!($result instanceof InitializeResult)) {
                     throw new McpError(
                         ErrorCode::InternalError,
-                        "Server sent invalid initialize result"
+                        'Server sent invalid initialize result'
                     );
                 }
 
@@ -375,6 +377,7 @@ class Client extends Protocol
             } catch (\Throwable $error) {
                 // Disconnect if initialization fails
                 $this->close()->await();
+
                 throw $error;
             }
         });
@@ -411,6 +414,7 @@ class Client extends Protocol
     {
         return async(function () use ($options) {
             $request = PingRequest::create();
+
             return $this->request($request, new ValidationService(), $options)->await();
         });
     }
@@ -422,6 +426,7 @@ class Client extends Protocol
     {
         return async(function () use ($request, $options) {
             $result = $this->request($request, new ValidationService(), $options)->await();
+
             return CompleteResult::fromArray($result);
         });
     }
@@ -433,6 +438,7 @@ class Client extends Protocol
     {
         return async(function () use ($level, $options) {
             $request = SetLevelRequest::create($level);
+
             return $this->request($request, new ValidationService(), $options)->await();
         });
     }
@@ -444,6 +450,7 @@ class Client extends Protocol
     {
         return async(function () use ($request, $options) {
             $result = $this->request($request, new ValidationService(), $options)->await();
+
             return GetPromptResult::fromArray($result);
         });
     }
@@ -454,8 +461,9 @@ class Client extends Protocol
     public function listPrompts(?ListPromptsRequest $request = null, ?RequestOptions $options = null): Future
     {
         return async(function () use ($request, $options) {
-            $request = $request ?? ListPromptsRequest::create();
+            $request ??= ListPromptsRequest::create();
             $result = $this->request($request, new ValidationService(), $options)->await();
+
             return ListPromptsResult::fromArray($result);
         });
     }
@@ -466,8 +474,9 @@ class Client extends Protocol
     public function listResources(?ListResourcesRequest $request = null, ?RequestOptions $options = null): Future
     {
         return async(function () use ($request, $options) {
-            $request = $request ?? ListResourcesRequest::create();
+            $request ??= ListResourcesRequest::create();
             $result = $this->request($request, new ValidationService(), $options)->await();
+
             return ListResourcesResult::fromArray($result);
         });
     }
@@ -478,8 +487,9 @@ class Client extends Protocol
     public function listResourceTemplates(?ListResourceTemplatesRequest $request = null, ?RequestOptions $options = null): Future
     {
         return async(function () use ($request, $options) {
-            $request = $request ?? ListResourceTemplatesRequest::create();
+            $request ??= ListResourceTemplatesRequest::create();
             $result = $this->request($request, new ValidationService(), $options)->await();
+
             return ListResourceTemplatesResult::fromArray($result);
         });
     }
@@ -491,6 +501,7 @@ class Client extends Protocol
     {
         return async(function () use ($request, $options) {
             $result = $this->request($request, new ValidationService(), $options)->await();
+
             return ReadResourceResult::fromArray($result);
         });
     }
@@ -521,7 +532,7 @@ class Client extends Protocol
     public function listTools(?ListToolsRequest $request = null, ?RequestOptions $options = null): Future
     {
         return async(function () use ($request, $options) {
-            $request = $request ?? ListToolsRequest::create();
+            $request ??= ListToolsRequest::create();
             $result = $this->request($request, new ValidationService(), $options)->await();
             $listToolsResult = ListToolsResult::fromArray($result);
 
@@ -612,6 +623,7 @@ class Client extends Protocol
     {
         return async(function () {
             $notification = new RootsListChangedNotification();
+
             return $this->notification($notification)->await();
         });
     }
@@ -631,6 +643,7 @@ class Client extends Protocol
                 $params['cursor'] = $cursor;
                 $request = new ListToolsRequest($params);
             }
+
             return $this->listTools($request, $options)->await();
         });
     }
@@ -642,6 +655,7 @@ class Client extends Protocol
     {
         return async(function () use ($name, $arguments, $options) {
             $request = CallToolRequest::create($name, $arguments);
+
             return $this->callTool($request, $options)->await();
         });
     }
@@ -653,6 +667,7 @@ class Client extends Protocol
     {
         return async(function () use ($uri, $options) {
             $request = ReadResourceRequest::create($uri);
+
             return $this->readResource($request, $options)->await();
         });
     }
@@ -664,6 +679,7 @@ class Client extends Protocol
     {
         return async(function () use ($uri, $options) {
             $request = SubscribeRequest::create($uri);
+
             return $this->subscribeResource($request, $options)->await();
         });
     }
@@ -675,6 +691,7 @@ class Client extends Protocol
     {
         return async(function () use ($uri, $options) {
             $request = UnsubscribeRequest::create($uri);
+
             return $this->unsubscribeResource($request, $options)->await();
         });
     }
@@ -686,6 +703,7 @@ class Client extends Protocol
     {
         return async(function () use ($name, $arguments, $options) {
             $request = GetPromptRequest::create($name, $arguments);
+
             return $this->getPrompt($request, $options)->await();
         });
     }
@@ -722,7 +740,6 @@ class Client extends Protocol
         $this->setRequestHandler(ListRootsRequest::class, $handler);
     }
 
-
     // Middleware methods
 
     /**
@@ -732,6 +749,7 @@ class Client extends Protocol
     {
         $this->middleware[] = $middleware;
         $this->middlewareStack = null; // Reset stack to rebuild
+
         return $this;
     }
 
@@ -759,7 +777,6 @@ class Client extends Protocol
         return $this->addMiddleware(new LoggingMiddleware($logger, $logLevel));
     }
 
-
     /**
      * Clear all middleware.
      */
@@ -767,6 +784,7 @@ class Client extends Protocol
     {
         $this->middleware = [];
         $this->middlewareStack = null;
+
         return $this;
     }
 

@@ -85,6 +85,7 @@ interface OAuthServerProvider
      * Exchanges a refresh token for an access token.
      *
      * @param string[] $scopes
+     *
      * @return PromiseInterface<OAuthTokens>
      */
     public function exchangeRefreshToken(

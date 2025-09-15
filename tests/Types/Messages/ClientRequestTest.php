@@ -21,14 +21,14 @@ class ClientRequestTest extends TestCase
     public function testGetMethods(): void
     {
         $methods = ClientRequest::getMethods();
-        
+
         $this->assertIsArray($methods);
         $this->assertContains('ping', $methods);
         $this->assertContains('initialize', $methods);
         $this->assertContains('completion/complete', $methods);
         $this->assertContains('resources/list', $methods);
         $this->assertContains('tools/call', $methods);
-        
+
         // Should not contain server methods
         $this->assertNotContains('sampling/createMessage', $methods);
         $this->assertNotContains('elicitation/create', $methods);
@@ -43,7 +43,7 @@ class ClientRequestTest extends TestCase
         $this->assertTrue(ClientRequest::isValidMethod('initialize'));
         $this->assertTrue(ClientRequest::isValidMethod('resources/list'));
         $this->assertTrue(ClientRequest::isValidMethod('tools/list'));
-        
+
         // Invalid methods
         $this->assertFalse(ClientRequest::isValidMethod('sampling/createMessage'));
         $this->assertFalse(ClientRequest::isValidMethod('invalid/method'));
@@ -60,12 +60,12 @@ class ClientRequestTest extends TestCase
             'params' => [
                 'protocolVersion' => '2025-06-18',
                 'capabilities' => [],
-                'clientInfo' => ['name' => 'test', 'version' => '1.0']
-            ]
+                'clientInfo' => ['name' => 'test', 'version' => '1.0'],
+            ],
         ];
-        
+
         $request = ClientRequest::fromArray($data);
-        
+
         $this->assertInstanceOf(InitializeRequest::class, $request);
         $this->assertEquals('initialize', $request->getMethod());
     }
@@ -77,11 +77,11 @@ class ClientRequestTest extends TestCase
     {
         $data = [
             'method' => 'resources/list',
-            'params' => ['cursor' => 'next-page']
+            'params' => ['cursor' => 'next-page'],
         ];
-        
+
         $request = ClientRequest::fromArray($data);
-        
+
         $this->assertInstanceOf(ListResourcesRequest::class, $request);
         $this->assertEquals('resources/list', $request->getMethod());
         $this->assertNotNull($request->getCursor());
@@ -93,9 +93,9 @@ class ClientRequestTest extends TestCase
     public function testFromArrayPingRequest(): void
     {
         $data = ['method' => 'ping'];
-        
+
         $request = ClientRequest::fromArray($data);
-        
+
         $this->assertInstanceOf(PingRequest::class, $request);
         $this->assertEquals('ping', $request->getMethod());
     }
@@ -107,7 +107,7 @@ class ClientRequestTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unknown client request method: invalid/method');
-        
+
         ClientRequest::fromArray(['method' => 'invalid/method']);
     }
 
@@ -118,7 +118,7 @@ class ClientRequestTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Request must have a method property');
-        
+
         ClientRequest::fromArray(['params' => []]);
     }
 }

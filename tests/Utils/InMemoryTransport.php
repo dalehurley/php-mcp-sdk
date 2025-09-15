@@ -4,22 +4,28 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Utils;
 
-use MCP\Shared\Transport;
+use function Amp\async;
+
 use Amp\Future;
 use Evenement\EventEmitter;
-use function Amp\async;
+use MCP\Shared\Transport;
 
 /**
  * In-memory transport for testing purposes
- * Allows direct message passing without network I/O
+ * Allows direct message passing without network I/O.
  */
 class InMemoryTransport extends EventEmitter implements Transport
 {
     private array $messageQueue = [];
+
     private $messageHandler = null;
+
     private $closeHandler = null;
+
     private $errorHandler = null;
+
     private bool $started = false;
+
     private bool $closed = false;
 
     public function start(): Future
@@ -31,6 +37,7 @@ class InMemoryTransport extends EventEmitter implements Transport
 
             $this->started = true;
             $this->emit('start');
+
             return null;
         });
     }
@@ -44,6 +51,7 @@ class InMemoryTransport extends EventEmitter implements Transport
 
             $this->messageQueue[] = $message;
             $this->emit('message_sent', [$message]);
+
             return null;
         });
     }
@@ -63,6 +71,7 @@ class InMemoryTransport extends EventEmitter implements Transport
             }
 
             $this->emit('close');
+
             return null;
         });
     }
@@ -85,7 +94,7 @@ class InMemoryTransport extends EventEmitter implements Transport
     // Test helper methods
 
     /**
-     * Simulate receiving a message from the other end
+     * Simulate receiving a message from the other end.
      */
     public function simulateMessage(array $message): void
     {
@@ -95,7 +104,7 @@ class InMemoryTransport extends EventEmitter implements Transport
     }
 
     /**
-     * Simulate an error condition
+     * Simulate an error condition.
      */
     public function simulateError(\Throwable $error): void
     {
@@ -106,7 +115,7 @@ class InMemoryTransport extends EventEmitter implements Transport
     }
 
     /**
-     * Get all messages that were sent through this transport
+     * Get all messages that were sent through this transport.
      */
     public function getSentMessages(): array
     {
@@ -114,7 +123,7 @@ class InMemoryTransport extends EventEmitter implements Transport
     }
 
     /**
-     * Clear the sent messages queue
+     * Clear the sent messages queue.
      */
     public function clearSentMessages(): void
     {
@@ -122,7 +131,7 @@ class InMemoryTransport extends EventEmitter implements Transport
     }
 
     /**
-     * Check if transport is started
+     * Check if transport is started.
      */
     public function isStarted(): bool
     {
@@ -130,7 +139,7 @@ class InMemoryTransport extends EventEmitter implements Transport
     }
 
     /**
-     * Check if transport is closed
+     * Check if transport is closed.
      */
     public function isClosed(): bool
     {
@@ -138,7 +147,7 @@ class InMemoryTransport extends EventEmitter implements Transport
     }
 
     /**
-     * Get the number of sent messages
+     * Get the number of sent messages.
      */
     public function getSentMessageCount(): int
     {
@@ -147,7 +156,7 @@ class InMemoryTransport extends EventEmitter implements Transport
 
     /**
      * Create a pair of connected transports for testing
-     * Messages sent on one will be received on the other
+     * Messages sent on one will be received on the other.
      */
     public static function createConnectedPair(): array
     {

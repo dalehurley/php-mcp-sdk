@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace MCP\Server\Transport;
 
+use function Amp\async;
+
 use Amp\DeferredCancellation;
+
+use function Amp\delay;
+
 use Amp\Future;
 use Amp\Http\Server\HttpServer;
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
 use Amp\Http\Server\SocketHttpServer;
-use Amp\Http\HttpStatus;
 use Amp\Socket;
 use Amp\Socket\InternetAddress;
 use Amp\Websocket\Server\Websocket;
@@ -23,15 +27,13 @@ use MCP\Shared\ReadBuffer;
 use MCP\Shared\Transport;
 use MCP\Types\ErrorCode;
 use MCP\Types\McpError;
+
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-use function Amp\async;
-use function Amp\delay;
-
 /**
  * WebSocket server transport for MCP communication.
- * 
+ *
  * This transport implements the MCP transport interface over WebSocket connections,
  * supporting multiple concurrent clients, automatic connection management, and
  * proper JSON-RPC message handling.
@@ -39,7 +41,9 @@ use function Amp\delay;
 class WebSocketServerTransport implements Transport
 {
     private bool $started = false;
+
     private ?HttpServer $server = null;
+
     private ?DeferredCancellation $cancellation = null;
 
     /** @var array<string, WebsocketClient> */
@@ -57,7 +61,8 @@ class WebSocketServerTransport implements Transport
     public function __construct(
         private readonly WebSocketServerTransportOptions $options = new WebSocketServerTransportOptions(),
         private readonly LoggerInterface $logger = new NullLogger()
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritDoc}
@@ -67,8 +72,8 @@ class WebSocketServerTransport implements Transport
         return async(function () {
             if ($this->started) {
                 throw new \RuntimeException(
-                    "WebSocketServerTransport already started! If using Server class, " .
-                        "note that connect() calls start() automatically."
+                    'WebSocketServerTransport already started! If using Server class, ' .
+                        'note that connect() calls start() automatically.'
                 );
             }
 
@@ -121,11 +126,12 @@ class WebSocketServerTransport implements Transport
     {
         return async(function () use ($message) {
             if (!$this->started) {
-                throw new McpError(ErrorCode::InternalError, "WebSocket server not started");
+                throw new McpError(ErrorCode::InternalError, 'WebSocket server not started');
             }
 
             if (empty($this->connections)) {
-                $this->logger->debug("No WebSocket connections available to send message");
+                $this->logger->debug('No WebSocket connections available to send message');
+
                 return;
             }
 
@@ -178,7 +184,7 @@ class WebSocketServerTransport implements Transport
                 return;
             }
 
-            $this->logger->info("Closing WebSocket server");
+            $this->logger->info('Closing WebSocket server');
 
             // Cancel any ongoing operations
             if ($this->cancellation) {
@@ -212,7 +218,7 @@ class WebSocketServerTransport implements Transport
                 ($this->closeHandler)();
             }
 
-            $this->logger->info("WebSocket server closed");
+            $this->logger->info('WebSocket server closed');
         });
     }
 
@@ -241,7 +247,7 @@ class WebSocketServerTransport implements Transport
     }
 
     /**
-     * Get the number of active connections
+     * Get the number of active connections.
      */
     public function getConnectionCount(): int
     {
@@ -249,7 +255,7 @@ class WebSocketServerTransport implements Transport
     }
 
     /**
-     * Get server status information
+     * Get server status information.
      */
     public function getStatus(): array
     {
@@ -262,7 +268,7 @@ class WebSocketServerTransport implements Transport
     }
 
     /**
-     * Create the socket server based on configuration
+     * Create the socket server based on configuration.
      */
     private function createSocket(): Socket\ServerSocket
     {
@@ -271,21 +277,22 @@ class WebSocketServerTransport implements Transport
         if ($this->options->enableTls) {
             // TLS configuration would go here
             // For now, we'll use a simple socket
-            throw new \RuntimeException("TLS support not yet implemented for WebSocket server");
+            throw new \RuntimeException('TLS support not yet implemented for WebSocket server');
         }
 
         return Socket\listen($address);
     }
 
     /**
-     * Create the WebSocket gateway with MCP message handling
+     * Create the WebSocket gateway with MCP message handling.
      */
     private function createWebSocketGateway(): WebsocketGateway
     {
-        return new WebsocketClientGateway(new class($this) implements WebsocketClientHandler {
+        return new WebsocketClientGateway(new class ($this) implements WebsocketClientHandler {
             public function __construct(
                 private readonly WebSocketServerTransport $transport
-            ) {}
+            ) {
+            }
 
             public function handleClient(WebsocketClient $client, Request $request, Response $response): void
             {
@@ -294,6 +301,7 @@ class WebSocketServerTransport implements Transport
                 if ($validationError) {
                     $this->transport->logger->warning("Connection rejected: {$validationError}");
                     $client->close();
+
                     return;
                 }
 
@@ -301,8 +309,9 @@ class WebSocketServerTransport implements Transport
 
                 // Check connection limit
                 if (count($this->transport->connections) >= $this->transport->options->maxConnections) {
-                    $this->transport->logger->warning("Connection limit reached, rejecting new connection");
+                    $this->transport->logger->warning('Connection limit reached, rejecting new connection');
                     $client->close();
+
                     return;
                 }
 
@@ -407,27 +416,27 @@ class WebSocketServerTransport implements Transport
     }
 
     /**
-     * Add a new WebSocket connection
+     * Add a new WebSocket connection.
      */
     private function addConnection(string $connectionId, WebsocketClient $client): void
     {
         $this->connections[$connectionId] = $client;
-        $this->logger->debug("Added WebSocket connection {$connectionId} (total: " . count($this->connections) . ")");
+        $this->logger->debug("Added WebSocket connection {$connectionId} (total: " . count($this->connections) . ')');
     }
 
     /**
-     * Remove a WebSocket connection
+     * Remove a WebSocket connection.
      */
     private function removeConnection(string $connectionId): void
     {
         if (isset($this->connections[$connectionId])) {
             unset($this->connections[$connectionId]);
-            $this->logger->debug("Removed WebSocket connection {$connectionId} (total: " . count($this->connections) . ")");
+            $this->logger->debug("Removed WebSocket connection {$connectionId} (total: " . count($this->connections) . ')');
         }
     }
 
     /**
-     * Start heartbeat ping/pong mechanism
+     * Start heartbeat ping/pong mechanism.
      */
     private function startHeartbeat(): void
     {

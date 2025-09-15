@@ -15,9 +15,10 @@ class MetadataUtils
      * Gets the display name for an object with BaseMetadata.
      * For tools, the precedence is: title → annotations.title → name
      * For other objects: title → name
-     * This implements the spec requirement: "if no title is provided, name should be used for display purposes"
+     * This implements the spec requirement: "if no title is provided, name should be used for display purposes".
      *
      * @param BaseMetadata|array $metadata The metadata object or array
+     *
      * @return string The display name
      */
     public static function getDisplayName(BaseMetadata|array $metadata): string
@@ -60,6 +61,7 @@ class MetadataUtils
      * Check if metadata has a title.
      *
      * @param BaseMetadata|array $metadata
+     *
      * @return bool
      */
     public static function hasTitle(BaseMetadata|array $metadata): bool
@@ -69,6 +71,7 @@ class MetadataUtils
         }
 
         $title = $metadata->getTitle();
+
         return $title !== null && $title !== '';
     }
 
@@ -76,6 +79,7 @@ class MetadataUtils
      * Get the description from metadata.
      *
      * @param BaseMetadata|array $metadata
+     *
      * @return string|null
      */
     public static function getDescription(BaseMetadata|array $metadata): ?string
@@ -87,6 +91,7 @@ class MetadataUtils
         // BaseMetadata doesn't have a description property, but subclasses might
         // Check in additional properties
         $additionalProps = $metadata->getAdditionalProperties();
+
         return $additionalProps['description'] ?? null;
     }
 
@@ -94,19 +99,22 @@ class MetadataUtils
      * Check if metadata has a description.
      *
      * @param BaseMetadata|array $metadata
+     *
      * @return bool
      */
     public static function hasDescription(BaseMetadata|array $metadata): bool
     {
         $description = self::getDescription($metadata);
+
         return $description !== null && $description !== '';
     }
 
     /**
      * Create a display string with name and optional title.
-     * Format: "name (title)" if title exists and differs from name, otherwise just "name"
+     * Format: "name (title)" if title exists and differs from name, otherwise just "name".
      *
      * @param BaseMetadata|array $metadata
+     *
      * @return string
      */
     public static function getDisplayString(BaseMetadata|array $metadata): string

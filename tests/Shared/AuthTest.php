@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Shared;
 
-use MCP\Shared\OAuthProtectedResourceMetadata;
-use MCP\Shared\OAuthMetadata;
-use MCP\Shared\OAuthTokens;
-use MCP\Shared\OAuthErrorResponse;
-use MCP\Shared\OAuthClientMetadata;
 use MCP\Shared\OAuthClientInformation;
+use MCP\Shared\OAuthClientMetadata;
+use MCP\Shared\OAuthErrorResponse;
+use MCP\Shared\OAuthMetadata;
+use MCP\Shared\OAuthProtectedResourceMetadata;
+use MCP\Shared\OAuthTokens;
 use PHPUnit\Framework\TestCase;
 
 class AuthTest extends TestCase

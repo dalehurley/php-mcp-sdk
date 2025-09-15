@@ -13,7 +13,7 @@ enum ErrorCode: int
     case ConnectionClosed = -32000;
     case RequestTimeout = -32001;
 
-        // Standard JSON-RPC error codes
+    // Standard JSON-RPC error codes
     case ParseError = -32700;
     case InvalidRequest = -32600;
     case MethodNotFound = -32601;

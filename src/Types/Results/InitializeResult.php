@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace MCP\Types\Results;
 
-use MCP\Types\Result;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ServerCapabilities;
+use MCP\Types\Implementation;
+use MCP\Types\Result;
 
 /**
  * After receiving an initialize request from the client, the server sends this response.

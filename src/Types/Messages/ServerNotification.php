@@ -48,7 +48,9 @@ final class ServerNotification
      * Create a notification from an array based on the method.
      *
      * @param array<string, mixed> $data
+     *
      * @return Notifications\CancelledNotification|Notifications\ProgressNotification|Notifications\LoggingMessageNotification|Notifications\ResourceUpdatedNotification|Notifications\ResourceListChangedNotification|Notifications\ToolListChangedNotification|Notifications\PromptListChangedNotification
+     *
      * @throws \InvalidArgumentException
      */
     public static function fromArray(array $data): object

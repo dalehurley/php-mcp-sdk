@@ -4,21 +4,22 @@ declare(strict_types=1);
 
 namespace MCP\Server\Transport;
 
-use MCP\Shared\Transport;
-use MCP\Types\JsonRpc\JSONRPCMessage;
-use MCP\Shared\ReadBuffer;
-use Amp\Future;
-use Amp\Http\Server\Request;
-use Amp\Http\Server\Response;
-use Amp\Http\HttpStatus;
-use Amp\ByteStream\WritableIterableStream;
-
 use function Amp\async;
 
+use Amp\ByteStream\WritableIterableStream;
+use Amp\Future;
+use Amp\Http\HttpStatus;
+use Amp\Http\Server\Request;
+use Amp\Http\Server\Response;
+use MCP\Shared\Transport;
+
+use MCP\Types\JsonRpc\JSONRPCMessage;
+
 /**
- * Configuration options for SSEServerTransport
+ * Configuration options for SSEServerTransport.
  *
  * @deprecated Use StreamableHttpServerTransport instead
+ *
  * @internal This class will be removed in a future version
  */
 class SseServerTransportOptions
@@ -32,7 +33,8 @@ class SseServerTransportOptions
         public readonly ?array $allowedHosts = null,
         public readonly ?array $allowedOrigins = null,
         public readonly bool $enableDnsRebindingProtection = false
-    ) {}
+    ) {
+    }
 }
 
 /**
@@ -45,10 +47,14 @@ class SseServerTransportOptions
 class SseServerTransport implements Transport
 {
     private string $_endpoint;
+
     /** @SuppressWarnings(PHPMD.DeprecatedClass) */
     private SseServerTransportOptions $_options;
+
     private ?string $_sessionId = null;
+
     private ?WritableIterableStream $_sseStream = null;
+
     private bool $_started = false;
 
     /** @var callable(array, array|null): void|null */
@@ -61,10 +67,11 @@ class SseServerTransport implements Transport
     private $onerror = null;
 
     /**
-     * Creates a new SSE server transport
+     * Creates a new SSE server transport.
      *
      * @param string $endpoint The endpoint URL where clients should POST messages
      * @param SseServerTransportOptions|null $options Configuration options
+     *
      * @deprecated Use StreamableHttpServerTransport instead
      */
     public function __construct(
@@ -113,8 +120,8 @@ class SseServerTransport implements Transport
         return async(function () {
             if ($this->_started) {
                 throw new \RuntimeException(
-                    "SSEServerTransport already started! If using Server class, " .
-                        "note that connect() calls start() automatically."
+                    'SSEServerTransport already started! If using Server class, ' .
+                        'note that connect() calls start() automatically.'
                 );
             }
 
@@ -123,15 +130,16 @@ class SseServerTransport implements Transport
     }
 
     /**
-     * Handle the initial SSE connection request
+     * Handle the initial SSE connection request.
      *
      * @param Request $request The HTTP request
+     *
      * @return Response The SSE response
      */
     public function handleSseRequest(Request $request): Response
     {
         if ($this->_sseStream !== null) {
-            throw new \RuntimeException("SSE stream already established");
+            throw new \RuntimeException('SSE stream already established');
         }
 
         // Validate request headers
@@ -175,11 +183,12 @@ class SseServerTransport implements Transport
     }
 
     /**
-     * Handle incoming POST messages
+     * Handle incoming POST messages.
      *
      * @param Request $request The HTTP request
      * @param mixed $parsedBody Pre-parsed body (optional)
      * @param array|null $authInfo Authentication information
+     *
      * @return Future<Response>
      */
     public function handlePostMessage(
@@ -228,7 +237,7 @@ class SseServerTransport implements Transport
                     $body = json_decode($bodyContent, true);
 
                     if (json_last_error() !== JSON_ERROR_NONE) {
-                        throw new \RuntimeException("Invalid JSON: " . json_last_error_msg());
+                        throw new \RuntimeException('Invalid JSON: ' . json_last_error_msg());
                     }
                 }
 
@@ -252,14 +261,14 @@ class SseServerTransport implements Transport
                 return new Response(
                     HttpStatus::BAD_REQUEST,
                     ['Content-Type' => 'text/plain'],
-                    "Invalid message: " . $error->getMessage()
+                    'Invalid message: ' . $error->getMessage()
                 );
             }
         });
     }
 
     /**
-     * Handle a client message
+     * Handle a client message.
      *
      * @param mixed $message The message data
      * @param array|null $extra Extra information
@@ -276,6 +285,7 @@ class SseServerTransport implements Transport
             if ($this->onerror !== null) {
                 ($this->onerror)($error);
             }
+
             throw $error;
         }
     }
@@ -287,11 +297,11 @@ class SseServerTransport implements Transport
     {
         return async(function () use ($message) {
             if ($this->_sseStream === null) {
-                throw new \RuntimeException("Not connected");
+                throw new \RuntimeException('Not connected');
             }
 
             $data = "event: message\n";
-            $data .= "data: " . json_encode($message) . "\n\n";
+            $data .= 'data: ' . json_encode($message) . "\n\n";
 
             $this->_sseStream->write($data);
         });
@@ -313,7 +323,7 @@ class SseServerTransport implements Transport
     }
 
     /**
-     * Get the session ID for this transport
+     * Get the session ID for this transport.
      */
     public function getSessionId(): string
     {
@@ -321,7 +331,7 @@ class SseServerTransport implements Transport
     }
 
     /**
-     * Validate request headers for DNS rebinding protection
+     * Validate request headers for DNS rebinding protection.
      *
      * @return string|null Error message if validation fails
      */
@@ -351,7 +361,7 @@ class SseServerTransport implements Transport
     }
 
     /**
-     * Convert Amp Request headers to array format
+     * Convert Amp Request headers to array format.
      */
     private function getHeadersArray(Request $request): array
     {
@@ -359,6 +369,7 @@ class SseServerTransport implements Transport
         foreach ($request->getHeaders() as $name => $values) {
             $headers[$name] = is_array($values) ? implode(', ', $values) : $values;
         }
+
         return $headers;
     }
 }

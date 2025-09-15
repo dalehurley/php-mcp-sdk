@@ -22,6 +22,7 @@ interface MiddlewareInterface
      *
      * @param RequestInterface $request The HTTP request to process
      * @param callable $next The next middleware handler in the chain
+     *
      * @return Future<ResponseInterface> The HTTP response
      */
     public function process(RequestInterface $request, callable $next): Future;

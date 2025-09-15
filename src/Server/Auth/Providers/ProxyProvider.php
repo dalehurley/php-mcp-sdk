@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MCP\Server\Auth\Providers;
 
-use MCP\Server\Auth\AuthInfo;
 use MCP\Server\Auth\AuthorizationParams;
 use MCP\Server\Auth\Errors\ServerError;
 use MCP\Server\Auth\OAuthRegisteredClientsStore;
@@ -29,7 +28,8 @@ final readonly class ProxyEndpoints
         public string $tokenUrl,
         public ?string $revocationUrl = null,
         public ?string $registrationUrl = null
-    ) {}
+    ) {
+    }
 }
 
 /**
@@ -79,7 +79,7 @@ final class ProxyProvider implements OAuthServerProvider
                 'response_type' => 'code',
                 'redirect_uri' => $params->redirectUri,
                 'code_challenge' => $params->codeChallenge,
-                'code_challenge_method' => 'S256'
+                'code_challenge_method' => 'S256',
             ];
 
             // Add optional parameters
@@ -155,12 +155,14 @@ final class ProxyProvider implements OAuthServerProvider
 
                 if ($response->getStatusCode() !== 200) {
                     $reject(new ServerError("Token exchange failed: {$response->getStatusCode()}"));
+
                     return;
                 }
 
-                $data = json_decode((string)$response->getBody(), true);
+                $data = json_decode((string) $response->getBody(), true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $reject(new ServerError('Invalid JSON response from token endpoint'));
+
                     return;
                 }
 
@@ -215,12 +217,14 @@ final class ProxyProvider implements OAuthServerProvider
 
                 if ($response->getStatusCode() !== 200) {
                     $reject(new ServerError("Token refresh failed: {$response->getStatusCode()}"));
+
                     return;
                 }
 
-                $data = json_decode((string)$response->getBody(), true);
+                $data = json_decode((string) $response->getBody(), true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $reject(new ServerError('Invalid JSON response from token endpoint'));
+
                     return;
                 }
 
@@ -252,6 +256,7 @@ final class ProxyProvider implements OAuthServerProvider
         return new Promise(function ($resolve, $reject) use ($client, $request) {
             if ($this->endpoints->revocationUrl === null) {
                 $reject(new ServerError('No revocation endpoint configured'));
+
                 return;
             }
 
@@ -278,6 +283,7 @@ final class ProxyProvider implements OAuthServerProvider
 
                 if ($response->getStatusCode() !== 200) {
                     $reject(new ServerError("Token revocation failed: {$response->getStatusCode()}"));
+
                     return;
                 }
 
@@ -301,7 +307,8 @@ final class ProxyClientsStore implements OAuthRegisteredClientsStore
         private readonly ClientInterface $httpClient,
         private readonly RequestFactoryInterface $requestFactory,
         private readonly StreamFactoryInterface $streamFactory
-    ) {}
+    ) {
+    }
 
     public function getClient(string $clientId): PromiseInterface
     {
@@ -313,6 +320,7 @@ final class ProxyClientsStore implements OAuthRegisteredClientsStore
         return new Promise(function ($resolve, $reject) use ($client) {
             if ($this->registrationUrl === null) {
                 $reject(new ServerError('No registration endpoint configured'));
+
                 return;
             }
 
@@ -326,12 +334,14 @@ final class ProxyClientsStore implements OAuthRegisteredClientsStore
 
                 if ($response->getStatusCode() !== 201) {
                     $reject(new ServerError("Client registration failed: {$response->getStatusCode()}"));
+
                     return;
                 }
 
-                $data = json_decode((string)$response->getBody(), true);
+                $data = json_decode((string) $response->getBody(), true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $reject(new ServerError('Invalid JSON response from registration endpoint'));
+
                     return;
                 }
 

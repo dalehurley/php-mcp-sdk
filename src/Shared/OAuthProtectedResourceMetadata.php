@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Shared;
 
 /**
- * RFC 9728 OAuth Protected Resource Metadata
+ * RFC 9728 OAuth Protected Resource Metadata.
  */
 class OAuthProtectedResourceMetadata implements \JsonSerializable
 {
@@ -142,7 +142,7 @@ class OAuthProtectedResourceMetadata implements \JsonSerializable
             'tls_client_certificate_bound_access_tokens',
             'authorization_details_types_supported',
             'dpop_signing_alg_values_supported',
-            'dpop_bound_access_tokens_required'
+            'dpop_bound_access_tokens_required',
         ];
 
         foreach ($knownProperties as $property) {

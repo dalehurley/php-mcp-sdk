@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace MCP\Utils;
 
-use MCP\Types\McpError;
 use MCP\Types\ErrorCode;
+use MCP\Types\McpError;
 
 /**
- * JSON Schema validation utility for MCP server components
+ * JSON Schema validation utility for MCP server components.
  */
 class JsonSchemaValidator
 {
     /**
-     * Validate data against a JSON schema
+     * Validate data against a JSON schema.
      *
      * @param mixed $data The data to validate
      * @param array $schema The JSON schema to validate against
+     *
      * @throws McpError If validation fails
      */
     public static function validate($data, array $schema): void
@@ -26,16 +27,17 @@ class JsonSchemaValidator
         if (!empty($errors)) {
             throw new McpError(
                 ErrorCode::InvalidParams,
-                "Schema validation failed: " . implode(', ', $errors)
+                'Schema validation failed: ' . implode(', ', $errors)
             );
         }
     }
 
     /**
-     * Validate data against schema and return errors
+     * Validate data against schema and return errors.
      *
      * @param mixed $data
      * @param array $schema
+     *
      * @return array<string> Array of error messages
      */
     private static function validateSchema($data, array $schema, string $path = ''): array
@@ -47,6 +49,7 @@ class JsonSchemaValidator
             $typeError = self::validateType($data, $schema['type'], $path);
             if ($typeError) {
                 $errors[] = $typeError;
+
                 return $errors; // Early return on type mismatch
             }
         }
@@ -55,10 +58,11 @@ class JsonSchemaValidator
         if (isset($schema['type']) && $schema['type'] === 'object') {
             if (!is_array($data) && !is_object($data)) {
                 $errors[] = "Expected object at {$path}";
+
                 return $errors;
             }
 
-            $data = is_object($data) ? (array)$data : $data;
+            $data = is_object($data) ? (array) $data : $data;
 
             // Validate required properties
             if (isset($schema['required'])) {
@@ -94,6 +98,7 @@ class JsonSchemaValidator
         if (isset($schema['type']) && $schema['type'] === 'array') {
             if (!is_array($data)) {
                 $errors[] = "Expected array at {$path}";
+
                 return $errors;
             }
 
@@ -117,15 +122,15 @@ class JsonSchemaValidator
 
         // Handle string validation
         if (isset($schema['type']) && $schema['type'] === 'string') {
-            if (isset($schema['minLength']) && strlen((string)$data) < $schema['minLength']) {
+            if (isset($schema['minLength']) && strlen((string) $data) < $schema['minLength']) {
                 $errors[] = "String at {$path} must be at least {$schema['minLength']} characters";
             }
 
-            if (isset($schema['maxLength']) && strlen((string)$data) > $schema['maxLength']) {
+            if (isset($schema['maxLength']) && strlen((string) $data) > $schema['maxLength']) {
                 $errors[] = "String at {$path} must be at most {$schema['maxLength']} characters";
             }
 
-            if (isset($schema['pattern']) && !preg_match('/' . $schema['pattern'] . '/', (string)$data)) {
+            if (isset($schema['pattern']) && !preg_match('/' . $schema['pattern'] . '/', (string) $data)) {
                 $errors[] = "String at {$path} does not match required pattern";
             }
 
@@ -144,7 +149,7 @@ class JsonSchemaValidator
                 $errors[] = "Number at {$path} must be at most {$schema['maximum']}";
             }
 
-            if ($schema['type'] === 'integer' && !is_int($data) && !ctype_digit((string)$data)) {
+            if ($schema['type'] === 'integer' && !is_int($data) && !ctype_digit((string) $data)) {
                 $errors[] = "Value at {$path} must be an integer";
             }
         }
@@ -153,7 +158,7 @@ class JsonSchemaValidator
     }
 
     /**
-     * Validate data type
+     * Validate data type.
      */
     private static function validateType($data, string $expectedType, string $path): ?string
     {
@@ -169,7 +174,7 @@ class JsonSchemaValidator
                 }
                 break;
             case 'integer':
-                if (!is_int($data) && !ctype_digit((string)$data)) {
+                if (!is_int($data) && !ctype_digit((string) $data)) {
                     return "Expected integer at {$path}, got " . gettype($data);
                 }
                 break;
@@ -199,9 +204,10 @@ class JsonSchemaValidator
     }
 
     /**
-     * Convert a simple schema definition to JSON Schema format
+     * Convert a simple schema definition to JSON Schema format.
      *
      * @param mixed $schema The schema definition
+     *
      * @return array JSON Schema
      */
     public static function normalizeSchema($schema): array
@@ -216,7 +222,7 @@ class JsonSchemaValidator
             return [
                 'type' => 'object',
                 'properties' => $schema,
-                'additionalProperties' => false
+                'additionalProperties' => false,
             ];
         }
 
@@ -229,14 +235,15 @@ class JsonSchemaValidator
         return [
             'type' => 'object',
             'properties' => [],
-            'additionalProperties' => false
+            'additionalProperties' => false,
         ];
     }
 
     /**
-     * Extract prompt arguments from a schema
+     * Extract prompt arguments from a schema.
      *
      * @param mixed $schema
+     *
      * @return array<array> Array of PromptArgument-like structures
      */
     public static function extractPromptArguments($schema): array
@@ -269,10 +276,11 @@ class JsonSchemaValidator
     }
 
     /**
-     * Get a field from a schema by name
+     * Get a field from a schema by name.
      *
      * @param mixed $schema
      * @param string $fieldName
+     *
      * @return mixed The field schema or null if not found
      */
     public static function getSchemaField($schema, string $fieldName)

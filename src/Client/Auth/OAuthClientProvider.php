@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MCP\Client\Auth;
 
 use Amp\Future;
-use MCP\Shared\OAuthClientInformation;
 use MCP\Shared\OAuthClientInformationFull;
 use MCP\Shared\OAuthClientMetadata;
 use MCP\Shared\OAuthTokens;

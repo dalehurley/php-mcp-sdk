@@ -116,6 +116,7 @@ final class ImageContent implements ContentBlock
             if ($decoded === false) {
                 return false;
             }
+
             // Re-encode and compare to check if it's valid base64
             return base64_encode($decoded) === $data;
         } catch (\Exception) {

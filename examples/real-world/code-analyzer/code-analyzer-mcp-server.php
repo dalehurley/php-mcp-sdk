@@ -2,8 +2,8 @@
 <?php
 
 /**
- * Code Analyzer MCP Server - Real-World Application Example
- * 
+ * Code Analyzer MCP Server - Real-World Application Example.
+ *
  * This is a comprehensive code analysis system built with MCP that demonstrates:
  * - Static code analysis and quality metrics
  * - Security vulnerability scanning
@@ -13,32 +13,34 @@
  * - Code style and formatting checks
  * - Documentation coverage analysis
  * - Technical debt assessment
- * 
+ *
  * Perfect example of how MCP can power development tools and
  * integrate with existing development workflows.
- * 
+ *
  * Usage:
  *   php code-analyzer-mcp-server.php
  */
 
 require_once __DIR__ . '/../../../vendor/autoload.php';
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
 use MCP\Server\Transport\StdioServerTransport;
 use MCP\Types\Implementation;
 use MCP\Types\McpError;
-use function Amp\async;
 
 /**
- * Code Analysis Engine
+ * Code Analysis Engine.
  */
 class CodeAnalysisEngine
 {
     private array $analysisHistory = [];
+
     private array $metrics = [];
 
     /**
-     * Analyze a PHP file for various quality metrics
+     * Analyze a PHP file for various quality metrics.
      */
     public function analyzeFile(string $filePath): array
     {
@@ -61,7 +63,7 @@ class CodeAnalysisEngine
             'metrics' => [],
             'issues' => [],
             'suggestions' => [],
-            'quality_score' => 0
+            'quality_score' => 0,
         ];
 
         // Basic metrics
@@ -82,7 +84,7 @@ class CodeAnalysisEngine
     }
 
     /**
-     * Analyze a directory recursively
+     * Analyze a directory recursively.
      */
     public function analyzeDirectory(string $dirPath): array
     {
@@ -98,7 +100,7 @@ class CodeAnalysisEngine
             'total_size' => 0,
             'file_analyses' => [],
             'summary' => [],
-            'recommendations' => []
+            'recommendations' => [],
         ];
 
         $phpFiles = $this->findPHPFiles($dirPath);
@@ -113,7 +115,7 @@ class CodeAnalysisEngine
             } catch (Exception $e) {
                 $analysis['file_analyses'][] = [
                     'file_path' => $file,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -130,12 +132,11 @@ class CodeAnalysisEngine
         return [
             'file_size_bytes' => strlen($content),
             'line_count' => count($lines),
-            'non_empty_lines' => count(array_filter($lines, fn($line) => trim($line) !== '')),
-            'comment_lines' => count(array_filter($lines, fn($line) => preg_match('/^\s*(\/\/|\/\*|\*)/', $line))),
+            'non_empty_lines' => count(array_filter($lines, fn ($line) => trim($line) !== '')),
+            'comment_lines' => count(array_filter($lines, fn ($line) => preg_match('/^\s*(\/\/|\/\*|\*)/', $line))),
             'code_lines' => count(array_filter(
                 $lines,
-                fn($line) =>
-                trim($line) !== '' && !preg_match('/^\s*(\/\/|\/\*|\*)/', $line)
+                fn ($line) => trim($line) !== '' && !preg_match('/^\s*(\/\/|\/\*|\*)/', $line)
             )),
             'function_count' => preg_match_all('/\bfunction\s+\w+/', $content),
             'class_count' => preg_match_all('/\bclass\s+\w+/', $content),
@@ -144,7 +145,7 @@ class CodeAnalysisEngine
             'namespace_count' => preg_match_all('/\bnamespace\s+/', $content),
             'use_statements' => preg_match_all('/\buse\s+/', $content),
             'cyclomatic_complexity' => $this->calculateCyclomaticComplexity($content),
-            'maintainability_index' => $this->calculateMaintainabilityIndex($content, $lines)
+            'maintainability_index' => $this->calculateMaintainabilityIndex($content, $lines),
         ];
     }
 
@@ -158,7 +159,7 @@ class CodeAnalysisEngine
                 'type' => 'security',
                 'severity' => 'high',
                 'message' => 'Potentially dangerous function usage detected',
-                'category' => 'Security Vulnerability'
+                'category' => 'Security Vulnerability',
             ];
         }
 
@@ -167,7 +168,7 @@ class CodeAnalysisEngine
                 'type' => 'security',
                 'severity' => 'medium',
                 'message' => 'Direct superglobal usage without sanitization',
-                'category' => 'Input Validation'
+                'category' => 'Input Validation',
             ];
         }
 
@@ -180,7 +181,9 @@ class CodeAnalysisEngine
                 $functionLength = 0;
 
                 for ($i = 0; $i < strlen($functionContent); $i++) {
-                    if ($functionContent[$i] === '{') $braceCount++;
+                    if ($functionContent[$i] === '{') {
+                        $braceCount++;
+                    }
                     if ($functionContent[$i] === '}') {
                         $braceCount--;
                         if ($braceCount === 0) {
@@ -197,7 +200,7 @@ class CodeAnalysisEngine
                         'type' => 'maintainability',
                         'severity' => 'medium',
                         'message' => "Long function detected ({$functionLines} lines)",
-                        'category' => 'Code Complexity'
+                        'category' => 'Code Complexity',
                     ];
                 }
             }
@@ -209,7 +212,7 @@ class CodeAnalysisEngine
                 'type' => 'performance',
                 'severity' => 'medium',
                 'message' => 'Nested loops detected - potential performance issue',
-                'category' => 'Performance'
+                'category' => 'Performance',
             ];
         }
 
@@ -218,7 +221,7 @@ class CodeAnalysisEngine
                 'type' => 'deprecated',
                 'severity' => 'high',
                 'message' => 'Deprecated MySQL extension usage',
-                'category' => 'Deprecated Code'
+                'category' => 'Deprecated Code',
             ];
         }
 
@@ -231,7 +234,7 @@ class CodeAnalysisEngine
                 'type' => 'documentation',
                 'severity' => 'low',
                 'message' => 'Missing documentation blocks',
-                'category' => 'Documentation'
+                'category' => 'Documentation',
             ];
         }
 
@@ -254,7 +257,7 @@ class CodeAnalysisEngine
         // Simplified maintainability index
         $loc = count($lines);
         $complexity = $this->calculateCyclomaticComplexity($content);
-        $commentRatio = count(array_filter($lines, fn($line) => preg_match('/^\s*(\/\/|\/\*|\*)/', $line))) / max($loc, 1);
+        $commentRatio = count(array_filter($lines, fn ($line) => preg_match('/^\s*(\/\/|\/\*|\*)/', $line))) / max($loc, 1);
 
         // Simple formula (real MI is more complex)
         $mi = max(0, 100 - ($complexity * 2) - ($loc / 10) + ($commentRatio * 10));
@@ -359,8 +362,8 @@ class CodeAnalysisEngine
             'average_quality_score' => round($avgQualityScore, 2),
             'issues_by_type' => $issuesByType,
             'issues_by_severity' => $issuesBySeverity,
-            'files_with_issues' => count(array_filter($analysis['file_analyses'], fn($fa) => !empty($fa['issues'] ?? []))),
-            'technical_debt_ratio' => $totalIssues / max($analysis['total_lines'], 1) * 1000 // Issues per 1000 lines
+            'files_with_issues' => count(array_filter($analysis['file_analyses'], fn ($fa) => !empty($fa['issues'] ?? []))),
+            'technical_debt_ratio' => $totalIssues / max($analysis['total_lines'], 1) * 1000, // Issues per 1000 lines
         ];
     }
 
@@ -374,7 +377,7 @@ class CodeAnalysisEngine
                 'priority' => 'high',
                 'category' => 'Code Quality',
                 'message' => 'Overall code quality is below recommended threshold',
-                'action' => 'Focus on addressing high-severity issues first'
+                'action' => 'Focus on addressing high-severity issues first',
             ];
         }
 
@@ -383,7 +386,7 @@ class CodeAnalysisEngine
                 'priority' => 'medium',
                 'category' => 'Technical Debt',
                 'message' => 'High technical debt detected',
-                'action' => 'Allocate time for refactoring and code cleanup'
+                'action' => 'Allocate time for refactoring and code cleanup',
             ];
         }
 
@@ -392,7 +395,7 @@ class CodeAnalysisEngine
                 'priority' => 'critical',
                 'category' => 'Security',
                 'message' => 'High-severity security issues found',
-                'action' => 'Address security vulnerabilities immediately'
+                'action' => 'Address security vulnerabilities immediately',
             ];
         }
 
@@ -401,7 +404,7 @@ class CodeAnalysisEngine
                 'priority' => 'medium',
                 'category' => 'Code Standards',
                 'message' => 'More than 50% of files have quality issues',
-                'action' => 'Implement code review process and automated quality checks'
+                'action' => 'Implement code review process and automated quality checks',
             ];
         }
 
@@ -410,7 +413,7 @@ class CodeAnalysisEngine
 }
 
 /**
- * Security Scanner
+ * Security Scanner.
  */
 class SecurityScanner
 {
@@ -418,28 +421,28 @@ class SecurityScanner
         'sql_injection' => [
             'pattern' => '/\$\w+\s*\.\s*["\']SELECT|INSERT|UPDATE|DELETE/',
             'severity' => 'critical',
-            'description' => 'Potential SQL injection vulnerability'
+            'description' => 'Potential SQL injection vulnerability',
         ],
         'xss' => [
             'pattern' => '/echo\s+\$_(GET|POST|REQUEST)/',
             'severity' => 'high',
-            'description' => 'Potential XSS vulnerability - unescaped output'
+            'description' => 'Potential XSS vulnerability - unescaped output',
         ],
         'file_inclusion' => [
             'pattern' => '/(include|require)(_once)?\s*\(\s*\$_(GET|POST|REQUEST)/',
             'severity' => 'critical',
-            'description' => 'Potential file inclusion vulnerability'
+            'description' => 'Potential file inclusion vulnerability',
         ],
         'command_injection' => [
             'pattern' => '/(exec|system|shell_exec|passthru)\s*\(\s*\$/',
             'severity' => 'critical',
-            'description' => 'Potential command injection vulnerability'
+            'description' => 'Potential command injection vulnerability',
         ],
         'weak_crypto' => [
             'pattern' => '/\b(md5|sha1)\s*\(/',
             'severity' => 'medium',
-            'description' => 'Weak cryptographic function usage'
-        ]
+            'description' => 'Weak cryptographic function usage',
+        ],
     ];
 
     public function scanFile(string $content): array
@@ -454,7 +457,7 @@ class SecurityScanner
                         'severity' => $config['severity'],
                         'description' => $config['description'],
                         'line' => substr_count(substr($content, 0, $match[1]), "\n") + 1,
-                        'code_snippet' => trim($match[0])
+                        'code_snippet' => trim($match[0]),
                     ];
                 }
             }
@@ -465,7 +468,7 @@ class SecurityScanner
 }
 
 /**
- * Performance Analyzer
+ * Performance Analyzer.
  */
 class PerformanceAnalyzer
 {
@@ -479,7 +482,7 @@ class PerformanceAnalyzer
                 'type' => 'nested_loops',
                 'severity' => 'medium',
                 'description' => 'Nested loops can cause performance issues with large datasets',
-                'recommendation' => 'Consider optimizing algorithm or using more efficient data structures'
+                'recommendation' => 'Consider optimizing algorithm or using more efficient data structures',
             ];
         }
 
@@ -488,7 +491,7 @@ class PerformanceAnalyzer
                 'type' => 'blocking_io',
                 'severity' => 'medium',
                 'description' => 'Blocking HTTP calls can cause performance bottlenecks',
-                'recommendation' => 'Use async HTTP client or implement timeout handling'
+                'recommendation' => 'Use async HTTP client or implement timeout handling',
             ];
         }
 
@@ -497,7 +500,7 @@ class PerformanceAnalyzer
                 'type' => 'inefficient_query',
                 'severity' => 'low',
                 'description' => 'SELECT * queries can be inefficient',
-                'recommendation' => 'Select only needed columns to improve performance'
+                'recommendation' => 'Select only needed columns to improve performance',
             ];
         }
 
@@ -529,9 +532,9 @@ $server->tool(
             'file_path' => ['type' => 'string', 'description' => 'Path to PHP file to analyze'],
             'include_security' => ['type' => 'boolean', 'default' => true],
             'include_performance' => ['type' => 'boolean', 'default' => true],
-            'include_suggestions' => ['type' => 'boolean', 'default' => true]
+            'include_suggestions' => ['type' => 'boolean', 'default' => true],
         ],
-        'required' => ['file_path']
+        'required' => ['file_path'],
     ],
     function (array $args) use ($codeAnalyzer, $securityScanner, $performanceAnalyzer): array {
         $filePath = $args['file_path'];
@@ -557,12 +560,12 @@ $server->tool(
             }
 
             // Format report
-            $report = "🔍 Code Analysis Report: " . basename($filePath) . "\n";
-            $report .= "=" . str_repeat("=", 50) . "\n\n";
+            $report = '🔍 Code Analysis Report: ' . basename($filePath) . "\n";
+            $report .= '=' . str_repeat('=', 50) . "\n\n";
 
             $report .= "📊 File Metrics\n";
-            $report .= "-" . str_repeat("-", 15) . "\n";
-            $report .= "Size: " . number_format($analysis['file_size']) . " bytes\n";
+            $report .= '-' . str_repeat('-', 15) . "\n";
+            $report .= 'Size: ' . number_format($analysis['file_size']) . " bytes\n";
             $report .= "Lines: {$analysis['line_count']} total, {$analysis['metrics']['code_lines']} code, {$analysis['metrics']['comment_lines']} comments\n";
             $report .= "Functions: {$analysis['metrics']['function_count']}\n";
             $report .= "Classes: {$analysis['metrics']['class_count']}\n";
@@ -571,8 +574,8 @@ $server->tool(
             $report .= "Quality Score: {$analysis['quality_score']}/100\n\n";
 
             if (!empty($analysis['issues'])) {
-                $report .= "⚠️ Code Quality Issues (" . count($analysis['issues']) . ")\n";
-                $report .= "-" . str_repeat("-", 25) . "\n";
+                $report .= '⚠️ Code Quality Issues (' . count($analysis['issues']) . ")\n";
+                $report .= '-' . str_repeat('-', 25) . "\n";
                 foreach ($analysis['issues'] as $issue) {
                     $severityIcon = match ($issue['severity']) {
                         'critical' => '🔴',
@@ -586,8 +589,8 @@ $server->tool(
             }
 
             if ($includeSecurity && !empty($analysis['security_issues'])) {
-                $report .= "🔒 Security Issues (" . count($analysis['security_issues']) . ")\n";
-                $report .= "-" . str_repeat("-", 20) . "\n";
+                $report .= '🔒 Security Issues (' . count($analysis['security_issues']) . ")\n";
+                $report .= '-' . str_repeat('-', 20) . "\n";
                 foreach ($analysis['security_issues'] as $issue) {
                     $severityIcon = match ($issue['severity']) {
                         'critical' => '🔴',
@@ -602,8 +605,8 @@ $server->tool(
             }
 
             if ($includePerformance && !empty($analysis['performance_issues'])) {
-                $report .= "⚡ Performance Issues (" . count($analysis['performance_issues']) . ")\n";
-                $report .= "-" . str_repeat("-", 22) . "\n";
+                $report .= '⚡ Performance Issues (' . count($analysis['performance_issues']) . ")\n";
+                $report .= '-' . str_repeat('-', 22) . "\n";
                 foreach ($analysis['performance_issues'] as $issue) {
                     $report .= "• {$issue['description']}\n";
                     $report .= "  Recommendation: {$issue['recommendation']}\n";
@@ -613,7 +616,7 @@ $server->tool(
 
             if ($includeSuggestions && !empty($analysis['suggestions'])) {
                 $report .= "💡 Suggestions\n";
-                $report .= "-" . str_repeat("-", 13) . "\n";
+                $report .= '-' . str_repeat('-', 13) . "\n";
                 foreach ($analysis['suggestions'] as $suggestion) {
                     $report .= "• {$suggestion}\n";
                 }
@@ -623,12 +626,12 @@ $server->tool(
                 'content' => [
                     [
                         'type' => 'text',
-                        'text' => $report
-                    ]
-                ]
+                        'text' => $report,
+                    ],
+                ],
             ];
         } catch (Exception $e) {
-            throw new McpError(-32602, "Analysis failed: " . $e->getMessage());
+            throw new McpError(-32602, 'Analysis failed: ' . $e->getMessage());
         }
     }
 );
@@ -642,9 +645,9 @@ $server->tool(
         'properties' => [
             'directory_path' => ['type' => 'string', 'description' => 'Path to directory to analyze'],
             'recursive' => ['type' => 'boolean', 'default' => true],
-            'summary_only' => ['type' => 'boolean', 'default' => false, 'description' => 'Show only summary without file details']
+            'summary_only' => ['type' => 'boolean', 'default' => false, 'description' => 'Show only summary without file details'],
         ],
-        'required' => ['directory_path']
+        'required' => ['directory_path'],
     ],
     function (array $args) use ($codeAnalyzer): array {
         $dirPath = $args['directory_path'];
@@ -653,21 +656,21 @@ $server->tool(
         try {
             $analysis = $codeAnalyzer->analyzeDirectory($dirPath);
 
-            $report = "🏗️ Directory Analysis Report: " . basename($dirPath) . "\n";
-            $report .= "=" . str_repeat("=", 50) . "\n\n";
+            $report = '🏗️ Directory Analysis Report: ' . basename($dirPath) . "\n";
+            $report .= '=' . str_repeat('=', 50) . "\n\n";
 
             $report .= "📊 Overview\n";
-            $report .= "-" . str_repeat("-", 10) . "\n";
+            $report .= '-' . str_repeat('-', 10) . "\n";
             $report .= "Files Analyzed: {$analysis['files_analyzed']}\n";
-            $report .= "Total Lines: " . number_format($analysis['total_lines']) . "\n";
-            $report .= "Total Size: " . round($analysis['total_size'] / 1024, 2) . " KB\n";
+            $report .= 'Total Lines: ' . number_format($analysis['total_lines']) . "\n";
+            $report .= 'Total Size: ' . round($analysis['total_size'] / 1024, 2) . " KB\n";
             $report .= "Average Quality Score: {$analysis['summary']['average_quality_score']}/100\n";
             $report .= "Total Issues: {$analysis['summary']['total_issues']}\n";
-            $report .= "Technical Debt Ratio: " . round($analysis['summary']['technical_debt_ratio'], 2) . " issues/1000 lines\n\n";
+            $report .= 'Technical Debt Ratio: ' . round($analysis['summary']['technical_debt_ratio'], 2) . " issues/1000 lines\n\n";
 
             if (!empty($analysis['summary']['issues_by_severity'])) {
                 $report .= "🚨 Issues by Severity\n";
-                $report .= "-" . str_repeat("-", 20) . "\n";
+                $report .= '-' . str_repeat('-', 20) . "\n";
                 foreach ($analysis['summary']['issues_by_severity'] as $severity => $count) {
                     $icon = match ($severity) {
                         'critical' => '🔴',
@@ -682,7 +685,7 @@ $server->tool(
 
             if (!empty($analysis['summary']['issues_by_type'])) {
                 $report .= "📋 Issues by Type\n";
-                $report .= "-" . str_repeat("-", 16) . "\n";
+                $report .= '-' . str_repeat('-', 16) . "\n";
                 foreach ($analysis['summary']['issues_by_type'] as $type => $count) {
                     $report .= "• {$type}: {$count}\n";
                 }
@@ -691,7 +694,7 @@ $server->tool(
 
             if (!empty($analysis['recommendations'])) {
                 $report .= "🎯 Recommendations\n";
-                $report .= "-" . str_repeat("-", 17) . "\n";
+                $report .= '-' . str_repeat('-', 17) . "\n";
                 foreach ($analysis['recommendations'] as $rec) {
                     $priorityIcon = match ($rec['priority']) {
                         'critical' => '🔴',
@@ -706,11 +709,11 @@ $server->tool(
 
             if (!$summaryOnly && !empty($analysis['file_analyses'])) {
                 $report .= "📁 File Details\n";
-                $report .= "-" . str_repeat("-", 14) . "\n";
+                $report .= '-' . str_repeat('-', 14) . "\n";
 
                 // Show top 5 files with issues
-                $filesWithIssues = array_filter($analysis['file_analyses'], fn($fa) => !empty($fa['issues'] ?? []));
-                usort($filesWithIssues, fn($a, $b) => count($b['issues'] ?? []) <=> count($a['issues'] ?? []));
+                $filesWithIssues = array_filter($analysis['file_analyses'], fn ($fa) => !empty($fa['issues'] ?? []));
+                usort($filesWithIssues, fn ($a, $b) => count($b['issues'] ?? []) <=> count($a['issues'] ?? []));
                 $topFiles = array_slice($filesWithIssues, 0, 5);
 
                 foreach ($topFiles as $fileAnalysis) {
@@ -731,12 +734,12 @@ $server->tool(
                 'content' => [
                     [
                         'type' => 'text',
-                        'text' => $report
-                    ]
-                ]
+                        'text' => $report,
+                    ],
+                ],
             ];
         } catch (Exception $e) {
-            throw new McpError(-32602, "Directory analysis failed: " . $e->getMessage());
+            throw new McpError(-32602, 'Directory analysis failed: ' . $e->getMessage());
         }
     }
 );
@@ -748,36 +751,36 @@ $server->resource(
     [
         'title' => 'Code Analysis Standards and Metrics',
         'description' => 'Standards and thresholds used for code quality analysis',
-        'mimeType' => 'application/json'
+        'mimeType' => 'application/json',
     ],
     function (): string {
         return json_encode([
             'quality_metrics' => [
                 'cyclomatic_complexity' => [
                     'description' => 'Measure of code complexity',
-                    'thresholds' => ['low' => '1-5', 'medium' => '6-10', 'high' => '11-20', 'very_high' => '21+']
+                    'thresholds' => ['low' => '1-5', 'medium' => '6-10', 'high' => '11-20', 'very_high' => '21+'],
                 ],
                 'maintainability_index' => [
                     'description' => 'Overall maintainability score',
-                    'thresholds' => ['poor' => '0-25', 'fair' => '26-50', 'good' => '51-75', 'excellent' => '76-100']
+                    'thresholds' => ['poor' => '0-25', 'fair' => '26-50', 'good' => '51-75', 'excellent' => '76-100'],
                 ],
                 'quality_score' => [
                     'description' => 'Overall file quality score',
-                    'calculation' => 'Based on issues, complexity, and documentation'
-                ]
+                    'calculation' => 'Based on issues, complexity, and documentation',
+                ],
             ],
             'issue_categories' => [
                 'security' => 'Security vulnerabilities and risks',
                 'performance' => 'Performance bottlenecks and inefficiencies',
                 'maintainability' => 'Code complexity and structure issues',
                 'documentation' => 'Missing or inadequate documentation',
-                'deprecated' => 'Usage of deprecated functions or patterns'
+                'deprecated' => 'Usage of deprecated functions or patterns',
             ],
             'severity_levels' => [
                 'critical' => 'Immediate attention required - security risks',
                 'high' => 'Should be addressed soon - significant impact',
                 'medium' => 'Should be addressed - moderate impact',
-                'low' => 'Nice to fix - minor impact'
+                'low' => 'Nice to fix - minor impact',
             ],
             'analysis_features' => [
                 'static_analysis',
@@ -786,8 +789,8 @@ $server->resource(
                 'code_metrics',
                 'documentation_coverage',
                 'dependency_analysis',
-                'technical_debt_assessment'
-            ]
+                'technical_debt_assessment',
+            ],
         ], JSON_PRETTY_PRINT);
     }
 );
@@ -805,9 +808,9 @@ $server->prompt(
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => 'How do I improve my code quality using this analyzer?'
-                        ]
-                    ]
+                            'text' => 'How do I improve my code quality using this analyzer?',
+                        ],
+                    ],
                 ],
                 [
                     'role' => 'assistant',
@@ -841,11 +844,11 @@ $server->prompt(
                                 "3. Use file analysis for detailed investigation\n" .
                                 "4. Implement suggestions incrementally\n" .
                                 "5. Re-analyze to track improvement\n\n" .
-                                "Try: 'Analyze the current directory to see overall code quality'"
-                        ]
-                    ]
-                ]
-            ]
+                                "Try: 'Analyze the current directory to see overall code quality'",
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 );

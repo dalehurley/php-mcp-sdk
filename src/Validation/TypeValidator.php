@@ -20,7 +20,9 @@ interface TypeValidator
      * Validate data and return validated array.
      *
      * @param mixed $data
+     *
      * @return array<string, mixed>
+     *
      * @throws ValidationException
      */
     public function validate(mixed $data): array;

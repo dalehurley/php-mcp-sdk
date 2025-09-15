@@ -8,8 +8,10 @@ namespace MCP\Server;
  * Type for a completion callback function.
  *
  * @template T
+ *
  * @param T $value The current value to complete
  * @param array{arguments?: array<string, string>}|null $context The completion context
+ *
  * @return array<T>|\Amp\Future<array<T>> The completion suggestions
  */
 interface CompleteCallback
@@ -17,11 +19,11 @@ interface CompleteCallback
     /**
      * @param mixed $value
      * @param array{arguments?: array<string, string>}|null $context
+     *
      * @return array<mixed>|\Amp\Future<array<mixed>>
      */
     public function __invoke($value, ?array $context = null);
 }
-
 
 /**
  * A wrapper that provides autocompletion capabilities for values.
@@ -42,11 +44,13 @@ class Completable
     }
 
     /**
-     * Create a new completable value
+     * Create a new completable value.
      *
      * @template TType
+     *
      * @param TType $type The underlying type/schema
      * @param CompleteCallback $complete The completion callback
+     *
      * @return Completable<TType>
      */
     public static function create($type, CompleteCallback $complete): self
@@ -55,7 +59,7 @@ class Completable
     }
 
     /**
-     * Get the underlying type
+     * Get the underlying type.
      *
      * @return T
      */
@@ -65,7 +69,7 @@ class Completable
     }
 
     /**
-     * Get the completion callback
+     * Get the completion callback.
      */
     public function getCompleteCallback(): CompleteCallback
     {
@@ -73,9 +77,10 @@ class Completable
     }
 
     /**
-     * Parse the input value
+     * Parse the input value.
      *
      * @param mixed $input
+     *
      * @return mixed
      */
     public function parse($input)
@@ -86,7 +91,7 @@ class Completable
     }
 
     /**
-     * Check if this is a Completable instance
+     * Check if this is a Completable instance.
      */
     public static function isCompletable($value): bool
     {
@@ -99,8 +104,10 @@ class Completable
  * Wraps a type/schema to provide autocompletion capabilities.
  *
  * @template T
+ *
  * @param T $schema The underlying schema/type
  * @param callable(T, array{arguments?: array<string, string>}|null): array<T>|\Amp\Future<array<T>> $complete
+ *
  * @return Completable<T>
  */
 function completable($schema, callable $complete): Completable

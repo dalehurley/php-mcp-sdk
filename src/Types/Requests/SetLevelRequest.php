@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace MCP\Types\Requests;
 
-use MCP\Types\Request;
 use MCP\Types\LoggingLevel;
+use MCP\Types\Request;
 
 /**
  * A request from the client to the server, to enable or adjust logging.
  */
 final class SetLevelRequest extends Request
 {
-    public const METHOD = 'logging/setLevel';        /**
+    public const METHOD = 'logging/setLevel';
+
+    /**
      * @param array<string, mixed>|null|string $methodOrParams For backward compatibility, can be params array or method string
      * @param array<string, mixed>|null $params Only used when first parameter is method string
      */

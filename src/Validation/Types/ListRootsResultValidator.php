@@ -27,7 +27,9 @@ class ListRootsResultValidator implements TypeValidator
 
     /**
      * @param mixed $data
+     *
      * @return array<string, mixed>
+     *
      * @throws ValidationException
      */
     public function validate(mixed $data): array
@@ -67,6 +69,7 @@ class ListRootsResultValidator implements TypeValidator
     {
         try {
             $this->validate($data);
+
             return true;
         } catch (ValidationException) {
             return false;

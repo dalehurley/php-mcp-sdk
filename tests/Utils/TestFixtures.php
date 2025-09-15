@@ -4,26 +4,26 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Utils;
 
+use MCP\Types\CallToolResult;
+use MCP\Types\EmbeddedResource;
+use MCP\Types\GetPromptResult;
+use MCP\Types\ImageContent;
 use MCP\Types\Implementation;
-use MCP\Types\Tool;
-use MCP\Types\Resource;
-use MCP\Types\Prompt;
-use MCP\Types\PromptArgument;
+use MCP\Types\JSONRPCError;
 use MCP\Types\JSONRPCRequest;
 use MCP\Types\JSONRPCResponse;
-use MCP\Types\JSONRPCError;
-use MCP\Types\TextContent;
-use MCP\Types\ImageContent;
-use MCP\Types\EmbeddedResource;
-use MCP\Types\CallToolResult;
-use MCP\Types\GetPromptResult;
-use MCP\Types\ReadResourceResult;
-use MCP\Types\ListToolsResult;
-use MCP\Types\ListResourcesResult;
 use MCP\Types\ListPromptsResult;
+use MCP\Types\ListResourcesResult;
+use MCP\Types\ListToolsResult;
+use MCP\Types\Prompt;
+use MCP\Types\PromptArgument;
+use MCP\Types\ReadResourceResult;
+use MCP\Types\Resource;
+use MCP\Types\TextContent;
+use MCP\Types\Tool;
 
 /**
- * Test fixtures and sample data for testing
+ * Test fixtures and sample data for testing.
  */
 class TestFixtures
 {
@@ -45,16 +45,16 @@ class TestFixtures
                 'properties' => [
                     'message' => [
                         'type' => 'string',
-                        'description' => 'The message to process'
+                        'description' => 'The message to process',
                     ],
                     'count' => [
                         'type' => 'integer',
                         'description' => 'Number of times to repeat',
                         'minimum' => 1,
-                        'maximum' => 10
-                    ]
+                        'maximum' => 10,
+                    ],
                 ],
-                'required' => ['message']
+                'required' => ['message'],
             ]
         );
     }
@@ -84,7 +84,7 @@ class TestFixtures
                     name: 'tone',
                     description: 'The tone of the response',
                     required: false
-                )
+                ),
             ]
         );
     }
@@ -153,8 +153,8 @@ class TestFixtures
             messages: [
                 [
                     'role' => 'user',
-                    'content' => self::sampleTextContent('Please help me with this task')
-                ]
+                    'content' => self::sampleTextContent('Please help me with this task'),
+                ],
             ]
         );
     }
@@ -188,7 +188,7 @@ class TestFixtures
     }
 
     /**
-     * Generate a sample JSON-RPC message for testing
+     * Generate a sample JSON-RPC message for testing.
      */
     public static function sampleMessage(
         string $method = 'test/method',
@@ -212,7 +212,7 @@ class TestFixtures
     }
 
     /**
-     * Generate a sample error response
+     * Generate a sample error response.
      */
     public static function sampleErrorResponse(
         int $id = 1,
@@ -224,13 +224,13 @@ class TestFixtures
             'id' => $id,
             'error' => [
                 'code' => $code,
-                'message' => $message
-            ]
+                'message' => $message,
+            ],
         ];
     }
 
     /**
-     * Generate a sample success response
+     * Generate a sample success response.
      */
     public static function sampleSuccessResponse(
         int $id = 1,
@@ -239,12 +239,12 @@ class TestFixtures
         return [
             'jsonrpc' => '2.0',
             'id' => $id,
-            'result' => $result ?: ['success' => true]
+            'result' => $result ?: ['success' => true],
         ];
     }
 
     /**
-     * Generate sample tool call parameters
+     * Generate sample tool call parameters.
      */
     public static function sampleToolCallParams(): array
     {
@@ -252,23 +252,23 @@ class TestFixtures
             'name' => 'test-tool',
             'arguments' => [
                 'message' => 'Hello from test',
-                'count' => 3
-            ]
+                'count' => 3,
+            ],
         ];
     }
 
     /**
-     * Generate sample resource read parameters
+     * Generate sample resource read parameters.
      */
     public static function sampleResourceReadParams(): array
     {
         return [
-            'uri' => 'test://resource/sample.txt'
+            'uri' => 'test://resource/sample.txt',
         ];
     }
 
     /**
-     * Generate sample prompt get parameters
+     * Generate sample prompt get parameters.
      */
     public static function samplePromptGetParams(): array
     {
@@ -276,25 +276,25 @@ class TestFixtures
             'name' => 'test-prompt',
             'arguments' => [
                 'topic' => 'artificial intelligence',
-                'tone' => 'professional'
-            ]
+                'tone' => 'professional',
+            ],
         ];
     }
 
     /**
-     * Generate a large message for performance testing
+     * Generate a large message for performance testing.
      */
     public static function largeMessage(int $sizeKB = 1024): array
     {
         $largeData = str_repeat('x', $sizeKB * 1024);
 
         return self::sampleMessage('test/large', [
-            'data' => $largeData
+            'data' => $largeData,
         ]);
     }
 
     /**
-     * Generate multiple messages for batch testing
+     * Generate multiple messages for batch testing.
      */
     public static function batchMessages(int $count = 10): array
     {
@@ -306,6 +306,7 @@ class TestFixtures
                 $i + 1
             );
         }
+
         return $messages;
     }
 }

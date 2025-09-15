@@ -4,23 +4,20 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use function Amp\async;
+
 use Amp\Future;
 use MCP\Client\Client;
 use MCP\Client\ClientBuilder;
 use MCP\Client\ClientOptions;
-use MCP\Client\Middleware\LoggingMiddleware;
 use MCP\Client\Middleware\MiddlewareInterface;
-use MCP\Client\Middleware\RetryMiddleware;
-use MCP\Client\Transport\StdioClientTransport;
-use MCP\Client\Validation\CompiledValidator;
 use MCP\Client\Validation\JsonSchemaCompiler;
 use MCP\Types\Capabilities\ClientCapabilities;
 use MCP\Types\Implementation;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
-use Psr\Http\Message\RequestInterface;
 
-use function Amp\async;
+use Psr\Http\Message\RequestInterface;
 
 /**
  * Custom middleware example for request/response modification.
@@ -30,19 +27,20 @@ class CustomHeaderMiddleware implements MiddlewareInterface
     public function __construct(
         private readonly string $headerName,
         private readonly string $headerValue
-    ) {}
+    ) {
+    }
 
     public function process(RequestInterface $request, callable $next): Future
     {
         return async(function () use ($request, $next) {
             // Add custom header to request
             $modifiedRequest = $request->withHeader($this->headerName, $this->headerValue);
-            
+
             echo "Added custom header: {$this->headerName}: {$this->headerValue}\n";
-            
+
             // Process request through the chain
             $response = $next($modifiedRequest)->await();
-            
+
             // Could modify response here if needed
             return $response;
         });
@@ -59,21 +57,22 @@ class TimingMiddleware implements MiddlewareInterface
         return async(function () use ($request, $next) {
             $startTime = microtime(true);
             $method = $request->getMethod();
-            $uri = (string)$request->getUri();
-            
+            $uri = (string) $request->getUri();
+
             echo "Starting request: {$method} {$uri}\n";
-            
+
             try {
                 $response = $next($request)->await();
                 $duration = (microtime(true) - $startTime) * 1000;
-                
+
                 $status = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : 'N/A';
                 echo "Request completed: {$method} {$uri} - {$status} (" . number_format($duration, 2) . "ms)\n";
-                
+
                 return $response;
             } catch (\Throwable $e) {
                 $duration = (microtime(true) - $startTime) * 1000;
                 echo "Request failed: {$method} {$uri} - {$e->getMessage()} (" . number_format($duration, 2) . "ms)\n";
+
                 throw $e;
             }
         });
@@ -147,23 +146,23 @@ function demonstrateCompiledValidators(): void
             'name' => [
                 'type' => 'string',
                 'minLength' => 1,
-                'maxLength' => 100
+                'maxLength' => 100,
             ],
             'description' => [
                 'type' => 'string',
-                'minLength' => 1
+                'minLength' => 1,
             ],
             'parameters' => [
-                'type' => 'object'
-            ]
-        ]
+                'type' => 'object',
+            ],
+        ],
     ];
 
     echo "Compiling tool schema...\n";
     $validator = $compiler->compile($toolSchema);
-    
+
     echo "Schema compiled with hash: {$validator->getSchemaHash()}\n";
-    echo "Validator is valid: " . ($validator->isValid() ? 'Yes' : 'No') . "\n\n";
+    echo 'Validator is valid: ' . ($validator->isValid() ? 'Yes' : 'No') . "\n\n";
 
     // Test valid data
     $validTool = [
@@ -172,28 +171,28 @@ function demonstrateCompiledValidators(): void
         'parameters' => [
             'type' => 'object',
             'properties' => [
-                'expression' => ['type' => 'string']
-            ]
-        ]
+                'expression' => ['type' => 'string'],
+            ],
+        ],
     ];
 
     echo "Validating valid tool data...\n";
     $isValid = $validator->validate($validTool);
-    echo "Valid: " . ($isValid ? 'Yes' : 'No') . "\n";
+    echo 'Valid: ' . ($isValid ? 'Yes' : 'No') . "\n";
     if (!$isValid) {
-        echo "Errors: " . implode(', ', $validator->getErrors()) . "\n";
+        echo 'Errors: ' . implode(', ', $validator->getErrors()) . "\n";
     }
     echo "\n";
 
     // Test invalid data
     $invalidTool = [
         'name' => '', // Empty name (violates minLength)
-        'description' => 'A tool with invalid name'
+        'description' => 'A tool with invalid name',
     ];
 
     echo "Validating invalid tool data...\n";
     $isValid = $validator->validate($invalidTool);
-    echo "Valid: " . ($isValid ? 'Yes' : 'No') . "\n";
+    echo 'Valid: ' . ($isValid ? 'Yes' : 'No') . "\n";
     if (!$isValid) {
         echo "Errors:\n";
         foreach ($validator->getErrors() as $error) {
@@ -234,14 +233,16 @@ function demonstrateAdvancedFeatures(): void
 
     // Demonstrate server request handlers
     echo "Setting up server request handlers...\n";
-    
+
     $client->setSamplingHandler(function ($request) {
-        echo "Sampling request received: " . json_encode($request->getParams()) . "\n";
+        echo 'Sampling request received: ' . json_encode($request->getParams()) . "\n";
+
         return ['response' => 'Sampling handled'];
     });
 
     $client->setElicitationHandler(function ($request) {
         echo "Elicitation request received\n";
+
         return ['response' => 'Elicitation handled'];
     });
 
@@ -249,11 +250,11 @@ function demonstrateAdvancedFeatures(): void
 
     // Show client configuration
     echo "Client configuration:\n";
-    echo "- Has middleware: " . ($client->hasMiddleware() ? 'Yes' : 'No') . "\n";
+    echo '- Has middleware: ' . ($client->hasMiddleware() ? 'Yes' : 'No') . "\n";
     echo "- Middleware count: {$client->getMiddlewareCount()}\n";
-    echo "- Server capabilities: " . ($client->getServerCapabilities() ? 'Available' : 'Not available') . "\n";
-    echo "- Server version: " . ($client->getServerVersion()?->getName() ?? 'Unknown') . "\n";
-    echo "- Instructions: " . ($client->getInstructions() ?? 'None') . "\n";
+    echo '- Server capabilities: ' . ($client->getServerCapabilities() ? 'Available' : 'Not available') . "\n";
+    echo '- Server version: ' . ($client->getServerVersion()?->getName() ?? 'Unknown') . "\n";
+    echo '- Instructions: ' . ($client->getInstructions() ?? 'None') . "\n";
 }
 
 /**
@@ -272,8 +273,8 @@ function performanceComparison(): void
             'name' => ['type' => 'string', 'minLength' => 2, 'maxLength' => 50],
             'email' => ['type' => 'string', 'pattern' => '^[^@]+@[^@]+\.[^@]+$'],
             'age' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 150],
-            'active' => ['type' => 'boolean']
-        ]
+            'active' => ['type' => 'boolean'],
+        ],
     ];
 
     $testData = [
@@ -281,7 +282,7 @@ function performanceComparison(): void
         'name' => 'John Doe',
         'email' => 'john@example.com',
         'age' => 30,
-        'active' => true
+        'active' => true,
     ];
 
     $iterations = 1000;
@@ -292,14 +293,14 @@ function performanceComparison(): void
 
     echo "Testing compiled validator performance...\n";
     $startTime = microtime(true);
-    
+
     for ($i = 0; $i < $iterations; $i++) {
         $compiledValidator->validate($testData);
     }
-    
+
     $compiledTime = microtime(true) - $startTime;
     echo "Compiled validator: {$iterations} validations in " . number_format($compiledTime, 4) . "s\n";
-    echo "Average: " . ($compiledTime / $iterations * 1000) . "ms per validation\n\n";
+    echo 'Average: ' . ($compiledTime / $iterations * 1000) . "ms per validation\n\n";
 
     // Note: In a real implementation, you would compare with a runtime validator
     echo "Note: Runtime validator comparison would require a JSON schema validation library\n";
@@ -320,22 +321,22 @@ if (php_sapi_name() === 'cli') {
     try {
         // Demonstrate middleware
         demonstrateMiddleware();
-        
+
         // Demonstrate compiled validators
         demonstrateCompiledValidators();
-        
+
         // Demonstrate advanced features
         demonstrateAdvancedFeatures();
-        
+
         // Performance comparison
         performanceComparison();
-        
+
     } catch (\Throwable $e) {
         echo "Example failed: {$e->getMessage()}\n";
         echo "Stack trace:\n{$e->getTraceAsString()}\n";
         exit(1);
     }
-    
+
     echo "All examples completed successfully!\n";
 } else {
     echo "This example must be run from the command line.\n";

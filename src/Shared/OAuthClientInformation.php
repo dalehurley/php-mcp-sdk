@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Shared;
 
 /**
- * RFC 7591 OAuth 2.0 Dynamic Client Registration client information
+ * RFC 7591 OAuth 2.0 Dynamic Client Registration client information.
  */
 class OAuthClientInformation implements \JsonSerializable
 {

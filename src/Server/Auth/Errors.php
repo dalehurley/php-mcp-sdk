@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MCP\Server\Auth\Errors;
 
 use MCP\Shared\OAuthErrorResponse;
-use MCP\Types\McpError;
 
 /**
  * Base class for OAuth errors.

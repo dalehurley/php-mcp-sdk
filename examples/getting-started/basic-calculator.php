@@ -2,27 +2,28 @@
 <?php
 
 /**
- * Basic Calculator MCP Server
- * 
+ * Basic Calculator MCP Server.
+ *
  * A simple calculator server that demonstrates:
  * - Multiple tools with different input schemas
  * - Error handling and validation
  * - Returning different types of responses
- * 
+ *
  * This example shows how to build a practical MCP server with multiple
  * related tools that work together.
- * 
+ *
  * Usage:
  *   php basic-calculator.php
  */
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
 use MCP\Server\Transport\StdioServerTransport;
 use MCP\Types\Implementation;
 use MCP\Types\McpError;
-use function Amp\async;
 
 // Create calculator server
 $server = new McpServer(
@@ -41,19 +42,20 @@ $server->tool(
         'type' => 'object',
         'properties' => [
             'a' => ['type' => 'number', 'description' => 'First number'],
-            'b' => ['type' => 'number', 'description' => 'Second number']
+            'b' => ['type' => 'number', 'description' => 'Second number'],
         ],
-        'required' => ['a', 'b']
+        'required' => ['a', 'b'],
     ],
     function (array $args): array {
         $result = $args['a'] + $args['b'];
+
         return [
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => "{$args['a']} + {$args['b']} = {$result}"
-                ]
-            ]
+                    'text' => "{$args['a']} + {$args['b']} = {$result}",
+                ],
+            ],
         ];
     }
 );
@@ -65,19 +67,20 @@ $server->tool(
         'type' => 'object',
         'properties' => [
             'a' => ['type' => 'number', 'description' => 'First number'],
-            'b' => ['type' => 'number', 'description' => 'Second number']
+            'b' => ['type' => 'number', 'description' => 'Second number'],
         ],
-        'required' => ['a', 'b']
+        'required' => ['a', 'b'],
     ],
     function (array $args): array {
         $result = $args['a'] - $args['b'];
+
         return [
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => "{$args['a']} - {$args['b']} = {$result}"
-                ]
-            ]
+                    'text' => "{$args['a']} - {$args['b']} = {$result}",
+                ],
+            ],
         ];
     }
 );
@@ -89,19 +92,20 @@ $server->tool(
         'type' => 'object',
         'properties' => [
             'a' => ['type' => 'number', 'description' => 'First number'],
-            'b' => ['type' => 'number', 'description' => 'Second number']
+            'b' => ['type' => 'number', 'description' => 'Second number'],
         ],
-        'required' => ['a', 'b']
+        'required' => ['a', 'b'],
     ],
     function (array $args): array {
         $result = $args['a'] * $args['b'];
+
         return [
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => "{$args['a']} × {$args['b']} = {$result}"
-                ]
-            ]
+                    'text' => "{$args['a']} × {$args['b']} = {$result}",
+                ],
+            ],
         ];
     }
 );
@@ -113,9 +117,9 @@ $server->tool(
         'type' => 'object',
         'properties' => [
             'a' => ['type' => 'number', 'description' => 'Dividend (number to be divided)'],
-            'b' => ['type' => 'number', 'description' => 'Divisor (number to divide by)']
+            'b' => ['type' => 'number', 'description' => 'Divisor (number to divide by)'],
         ],
-        'required' => ['a', 'b']
+        'required' => ['a', 'b'],
     ],
     function (array $args): array {
         if ($args['b'] == 0) {
@@ -126,13 +130,14 @@ $server->tool(
         }
 
         $result = $args['a'] / $args['b'];
+
         return [
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => "{$args['a']} ÷ {$args['b']} = {$result}"
-                ]
-            ]
+                    'text' => "{$args['a']} ÷ {$args['b']} = {$result}",
+                ],
+            ],
         ];
     }
 );
@@ -144,19 +149,20 @@ $server->tool(
         'type' => 'object',
         'properties' => [
             'base' => ['type' => 'number', 'description' => 'Base number'],
-            'exponent' => ['type' => 'number', 'description' => 'Exponent']
+            'exponent' => ['type' => 'number', 'description' => 'Exponent'],
         ],
-        'required' => ['base', 'exponent']
+        'required' => ['base', 'exponent'],
     ],
     function (array $args): array {
         $result = pow($args['base'], $args['exponent']);
+
         return [
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => "{$args['base']}^{$args['exponent']} = {$result}"
-                ]
-            ]
+                    'text' => "{$args['base']}^{$args['exponent']} = {$result}",
+                ],
+            ],
         ];
     }
 );
@@ -167,9 +173,9 @@ $server->tool(
     [
         'type' => 'object',
         'properties' => [
-            'number' => ['type' => 'number', 'description' => 'Number to find square root of']
+            'number' => ['type' => 'number', 'description' => 'Number to find square root of'],
         ],
-        'required' => ['number']
+        'required' => ['number'],
     ],
     function (array $args): array {
         if ($args['number'] < 0) {
@@ -180,13 +186,14 @@ $server->tool(
         }
 
         $result = sqrt($args['number']);
+
         return [
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => "√{$args['number']} = {$result}"
-                ]
-            ]
+                    'text' => "√{$args['number']} = {$result}",
+                ],
+            ],
         ];
     }
 );
@@ -198,7 +205,7 @@ $server->resource(
     [
         'title' => 'Calculation History',
         'description' => 'History of recent calculations',
-        'mimeType' => 'text/plain'
+        'mimeType' => 'text/plain',
     ],
     function (): string {
         return "Calculator History:\n" .
@@ -222,9 +229,9 @@ $server->prompt(
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => 'How do I use this calculator?'
-                        ]
-                    ]
+                            'text' => 'How do I use this calculator?',
+                        ],
+                    ],
                 ],
                 [
                     'role' => 'assistant',
@@ -239,11 +246,11 @@ $server->prompt(
                                 "• **power** - Exponentiation: power(base, exponent)\n" .
                                 "• **sqrt** - Square root: sqrt(number)\n\n" .
                                 "All operations include error handling for invalid inputs.\n" .
-                                "Try: 'Use the add tool to calculate 5 + 3'"
-                        ]
-                    ]
-                ]
-            ]
+                                "Try: 'Use the add tool to calculate 5 + 3'",
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 );

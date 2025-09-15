@@ -15,7 +15,7 @@ class MetadataUtilsTest extends TestCase
         ?string $title = null,
         array $additionalProperties = []
     ): BaseMetadata {
-        return new class($name, $title, null, $additionalProperties) extends BaseMetadata {
+        return new class ($name, $title, null, $additionalProperties) extends BaseMetadata {
             public function __construct(
                 string $name,
                 ?string $title = null,
@@ -44,7 +44,7 @@ class MetadataUtilsTest extends TestCase
         // Test with annotations.title (tool-specific)
         $metadata = [
             'name' => 'test-tool',
-            'annotations' => ['title' => 'Annotated Title']
+            'annotations' => ['title' => 'Annotated Title'],
         ];
         $this->assertEquals('Annotated Title', MetadataUtils::getDisplayName($metadata));
 
@@ -52,7 +52,7 @@ class MetadataUtilsTest extends TestCase
         $metadata = [
             'name' => 'test-tool',
             'title' => 'Main Title',
-            'annotations' => ['title' => 'Annotated Title']
+            'annotations' => ['title' => 'Annotated Title'],
         ];
         $this->assertEquals('Main Title', MetadataUtils::getDisplayName($metadata));
     }
@@ -132,12 +132,12 @@ class MetadataUtilsTest extends TestCase
         // Array tests
         $this->assertTrue(MetadataUtils::hasDescription([
             'name' => 'test',
-            'description' => 'Description'
+            'description' => 'Description',
         ]));
         $this->assertFalse(MetadataUtils::hasDescription(['name' => 'test']));
         $this->assertFalse(MetadataUtils::hasDescription([
             'name' => 'test',
-            'description' => ''
+            'description' => '',
         ]));
 
         // Object tests
@@ -180,7 +180,7 @@ class MetadataUtilsTest extends TestCase
         // Test with annotations.title
         $metadata = [
             'name' => 'test-tool',
-            'annotations' => ['title' => 'Tool Title']
+            'annotations' => ['title' => 'Tool Title'],
         ];
         $this->assertEquals('test-tool (Tool Title)', MetadataUtils::getDisplayString($metadata));
     }
@@ -203,22 +203,22 @@ class MetadataUtilsTest extends TestCase
             'title' => '',  // Empty title should be ignored
             'annotations' => [
                 'title' => 'Annotation Title',
-                'other' => 'ignored'
-            ]
+                'other' => 'ignored',
+            ],
         ];
         $this->assertEquals('Annotation Title', MetadataUtils::getDisplayName($metadata));
 
         // Test with invalid annotations structure
         $metadata = [
             'name' => 'test',
-            'annotations' => 'not-an-array'
+            'annotations' => 'not-an-array',
         ];
         $this->assertEquals('test', MetadataUtils::getDisplayName($metadata));
 
         // Test with missing annotations.title
         $metadata = [
             'name' => 'test',
-            'annotations' => ['other' => 'value']
+            'annotations' => ['other' => 'value'],
         ];
         $this->assertEquals('test', MetadataUtils::getDisplayName($metadata));
     }

@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Factories;
 
-use PHPUnit\Framework\TestCase;
 use MCP\Factories\TypeFactoryService;
-use MCP\Types\Implementation;
-use MCP\Types\Tools\Tool;
-use MCP\Types\Resources\Resource;
-use MCP\Types\Prompts\Prompt;
 use MCP\Types\Content\TextContent;
-use MCP\Types\ProgressToken;
 use MCP\Types\Cursor;
+use MCP\Types\Implementation;
+use MCP\Types\ProgressToken;
+use MCP\Types\Prompts\Prompt;
 use MCP\Types\RequestId;
+use MCP\Types\Resources\Resource;
+use MCP\Types\Tools\Tool;
+use PHPUnit\Framework\TestCase;
 
 class TypeFactoryServiceTest extends TestCase
 {
@@ -28,7 +28,7 @@ class TypeFactoryServiceTest extends TestCase
     {
         $data = [
             'name' => 'test-server',
-            'version' => '1.0.0'
+            'version' => '1.0.0',
         ];
 
         $impl = $this->factory->createImplementation($data);
@@ -44,7 +44,7 @@ class TypeFactoryServiceTest extends TestCase
             'name' => 'test-server',
             'version' => '1.0.0',
             'description' => 'A test server implementation',
-            'author' => 'Test Author'
+            'author' => 'Test Author',
         ];
 
         $impl = $this->factory->createImplementation($data);
@@ -65,10 +65,10 @@ class TypeFactoryServiceTest extends TestCase
             'inputSchema' => [
                 'type' => 'object',
                 'properties' => [
-                    'message' => ['type' => 'string']
+                    'message' => ['type' => 'string'],
                 ],
-                'required' => ['message']
-            ]
+                'required' => ['message'],
+            ],
         ];
 
         $tool = $this->factory->createTool($data);
@@ -84,7 +84,7 @@ class TypeFactoryServiceTest extends TestCase
             'uri' => 'test://resource/1',
             'name' => 'Test Resource',
             'description' => 'A test resource',
-            'mimeType' => 'text/plain'
+            'mimeType' => 'text/plain',
         ];
 
         $resource = $this->factory->createResource($data);
@@ -98,7 +98,7 @@ class TypeFactoryServiceTest extends TestCase
         $data = [
             'name' => 'test-prompt',
             'description' => 'A test prompt',
-            'arguments' => []
+            'arguments' => [],
         ];
 
         $prompt = $this->factory->createPrompt($data);
@@ -111,7 +111,7 @@ class TypeFactoryServiceTest extends TestCase
     {
         $textData = [
             'type' => 'text',
-            'text' => 'Hello, World!'
+            'text' => 'Hello, World!',
         ];
 
         $content = $this->factory->createContentBlock($textData);
@@ -158,12 +158,12 @@ class TypeFactoryServiceTest extends TestCase
         $dataArray = [
             [
                 'type' => 'text',
-                'text' => 'First block'
+                'text' => 'First block',
             ],
             [
                 'type' => 'text',
-                'text' => 'Second block'
-            ]
+                'text' => 'Second block',
+            ],
         ];
 
         $blocks = $this->factory->createContentBlocks($dataArray);

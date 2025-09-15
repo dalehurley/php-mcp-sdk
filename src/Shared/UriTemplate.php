@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Shared;
 
 /**
- * RFC 6570 URI Template implementation
+ * RFC 6570 URI Template implementation.
  *
  * This is a Claude-authored implementation of a subset of RFC 6570 URI Templates.
  * It supports simple string expansion with {variable} syntax.
@@ -18,6 +18,7 @@ class UriTemplate
     private const MAX_REGEX_LENGTH = 1000000; // 1MB
 
     private string $template;
+
     /** @var array<int, string|array{name: string, operator: string, names: array<string>, exploded: bool}> */
     private array $parts;
 
@@ -37,14 +38,14 @@ class UriTemplate
     {
         if (strlen($str) > $max) {
             throw new \Error(
-                "{$context} exceeds maximum length of {$max} characters (got " . strlen($str) . ")"
+                "{$context} exceeds maximum length of {$max} characters (got " . strlen($str) . ')'
             );
         }
     }
 
     public function __construct(string $template)
     {
-        self::validateLength($template, self::MAX_TEMPLATE_LENGTH, "Template");
+        self::validateLength($template, self::MAX_TEMPLATE_LENGTH, 'Template');
         $this->template = $template;
         $this->parts = $this->parse($template);
     }
@@ -65,6 +66,7 @@ class UriTemplate
                 $names = array_merge($names, $part['names']);
             }
         }
+
         return $names;
     }
 
@@ -74,40 +76,40 @@ class UriTemplate
     private function parse(string $template): array
     {
         $parts = [];
-        $currentText = "";
+        $currentText = '';
         $i = 0;
         $expressionCount = 0;
 
         while ($i < strlen($template)) {
-            if ($template[$i] === "{") {
-                if ($currentText !== "") {
+            if ($template[$i] === '{') {
+                if ($currentText !== '') {
                     $parts[] = $currentText;
-                    $currentText = "";
+                    $currentText = '';
                 }
-                $end = strpos($template, "}", $i);
+                $end = strpos($template, '}', $i);
                 if ($end === false) {
-                    throw new \Error("Unclosed template expression");
+                    throw new \Error('Unclosed template expression');
                 }
 
                 $expressionCount++;
                 if ($expressionCount > self::MAX_TEMPLATE_EXPRESSIONS) {
                     throw new \Error(
-                        "Template contains too many expressions (max " . self::MAX_TEMPLATE_EXPRESSIONS . ")"
+                        'Template contains too many expressions (max ' . self::MAX_TEMPLATE_EXPRESSIONS . ')'
                     );
                 }
 
                 $expr = substr($template, $i + 1, $end - $i - 1);
                 $operator = $this->getOperator($expr);
-                $exploded = str_contains($expr, "*");
+                $exploded = str_contains($expr, '*');
                 $names = $this->getNames($expr);
-                $name = $names[0] ?? "";
+                $name = $names[0] ?? '';
 
                 // Validate variable name length
                 foreach ($names as $varName) {
                     self::validateLength(
                         $varName,
                         self::MAX_VARIABLE_LENGTH,
-                        "Variable name"
+                        'Variable name'
                     );
                 }
 
@@ -115,7 +117,7 @@ class UriTemplate
                     'name' => $name,
                     'operator' => $operator,
                     'names' => $names,
-                    'exploded' => $exploded
+                    'exploded' => $exploded,
                 ];
                 $i = $end + 1;
             } else {
@@ -124,7 +126,7 @@ class UriTemplate
             }
         }
 
-        if ($currentText !== "") {
+        if ($currentText !== '') {
             $parts[] = $currentText;
         }
 
@@ -133,13 +135,14 @@ class UriTemplate
 
     private function getOperator(string $expr): string
     {
-        $operators = ["+", "#", ".", "/", "?", "&"];
+        $operators = ['+', '#', '.', '/', '?', '&'];
         foreach ($operators as $op) {
             if (str_starts_with($expr, $op)) {
                 return $op;
             }
         }
-        return "";
+
+        return '';
     }
 
     /**
@@ -149,12 +152,12 @@ class UriTemplate
     {
         $operator = $this->getOperator($expr);
         $expr = substr($expr, strlen($operator));
-        $names = explode(",", $expr);
+        $names = explode(',', $expr);
         $result = [];
 
         foreach ($names as $name) {
-            $name = str_replace("*", "", trim($name));
-            if ($name !== "") {
+            $name = str_replace('*', '', trim($name));
+            if ($name !== '') {
                 $result[] = $name;
             }
         }
@@ -164,10 +167,11 @@ class UriTemplate
 
     private function encodeValue(string $value, string $operator): string
     {
-        self::validateLength($value, self::MAX_VARIABLE_LENGTH, "Variable value");
-        if ($operator === "+" || $operator === "#") {
+        self::validateLength($value, self::MAX_VARIABLE_LENGTH, 'Variable value');
+        if ($operator === '+' || $operator === '#') {
             return str_replace(['%2F'], ['/'], rawurlencode($value));
         }
+
         return rawurlencode($value);
     }
 
@@ -177,7 +181,7 @@ class UriTemplate
      */
     private function expandPart(array $part, array $variables): string
     {
-        if ($part['operator'] === "?" || $part['operator'] === "&") {
+        if ($part['operator'] === '?' || $part['operator'] === '&') {
             $pairs = [];
             foreach ($part['names'] as $name) {
                 if (!isset($variables[$name])) {
@@ -185,16 +189,17 @@ class UriTemplate
                 }
                 $value = $variables[$name];
                 $encoded = is_array($value)
-                    ? implode(",", array_map(fn($v) => $this->encodeValue($v, $part['operator']), $value))
+                    ? implode(',', array_map(fn ($v) => $this->encodeValue($v, $part['operator']), $value))
                     : $this->encodeValue((string) $value, $part['operator']);
                 $pairs[] = "{$name}={$encoded}";
             }
 
             if (count($pairs) === 0) {
-                return "";
+                return '';
             }
-            $separator = $part['operator'] === "?" ? "?" : "&";
-            return $separator . implode("&", $pairs);
+            $separator = $part['operator'] === '?' ? '?' : '&';
+
+            return $separator . implode('&', $pairs);
         }
 
         if (count($part['names']) > 1) {
@@ -206,32 +211,33 @@ class UriTemplate
                 }
             }
             if (count($values) === 0) {
-                return "";
+                return '';
             }
-            return implode(",", $values);
+
+            return implode(',', $values);
         }
 
         if (!isset($variables[$part['name']])) {
-            return "";
+            return '';
         }
 
         $value = $variables[$part['name']];
         $values = is_array($value) ? $value : [$value];
-        $encoded = array_map(fn($v) => $this->encodeValue((string) $v, $part['operator']), $values);
+        $encoded = array_map(fn ($v) => $this->encodeValue((string) $v, $part['operator']), $values);
 
         switch ($part['operator']) {
-            case "":
-                return implode(",", $encoded);
-            case "+":
-                return implode(",", $encoded);
-            case "#":
-                return "#" . implode(",", $encoded);
-            case ".":
-                return "." . implode(".", $encoded);
-            case "/":
-                return "/" . implode("/", $encoded);
+            case '':
+                return implode(',', $encoded);
+            case '+':
+                return implode(',', $encoded);
+            case '#':
+                return '#' . implode(',', $encoded);
+            case '.':
+                return '.' . implode('.', $encoded);
+            case '/':
+                return '/' . implode('/', $encoded);
             default:
-                return implode(",", $encoded);
+                return implode(',', $encoded);
         }
     }
 
@@ -240,7 +246,7 @@ class UriTemplate
      */
     public function expand(array $variables): string
     {
-        $result = "";
+        $result = '';
         $hasQueryParam = false;
 
         foreach ($this->parts as $part) {
@@ -250,18 +256,18 @@ class UriTemplate
             }
 
             $expanded = $this->expandPart($part, $variables);
-            if ($expanded === "") {
+            if ($expanded === '') {
                 continue;
             }
 
             // Convert ? to & if we already have a query parameter
-            if (($part['operator'] === "?" || $part['operator'] === "&") && $hasQueryParam) {
-                $result .= str_replace("?", "&", $expanded);
+            if (($part['operator'] === '?' || $part['operator'] === '&') && $hasQueryParam) {
+                $result .= str_replace('?', '&', $expanded);
             } else {
                 $result .= $expanded;
             }
 
-            if ($part['operator'] === "?" || $part['operator'] === "&") {
+            if ($part['operator'] === '?' || $part['operator'] === '&') {
                 $hasQueryParam = true;
             }
         }
@@ -276,6 +282,7 @@ class UriTemplate
 
     /**
      * @param array{name: string, operator: string, names: array<string>, exploded: bool} $part
+     *
      * @return array<array{pattern: string, name: string}>
      */
     private function partToRegExp(array $part): array
@@ -284,42 +291,44 @@ class UriTemplate
 
         // Validate variable name length for matching
         foreach ($part['names'] as $name) {
-            self::validateLength($name, self::MAX_VARIABLE_LENGTH, "Variable name");
+            self::validateLength($name, self::MAX_VARIABLE_LENGTH, 'Variable name');
         }
 
-        if ($part['operator'] === "?" || $part['operator'] === "&") {
+        if ($part['operator'] === '?' || $part['operator'] === '&') {
             for ($i = 0; $i < count($part['names']); $i++) {
                 $name = $part['names'][$i];
-                $prefix = $i === 0 ? "\\" . $part['operator'] : "&";
+                $prefix = $i === 0 ? '\\' . $part['operator'] : '&';
                 $patterns[] = [
-                    'pattern' => $prefix . $this->escapeRegExp($name) . "=([^&]+)",
-                    'name' => $name
+                    'pattern' => $prefix . $this->escapeRegExp($name) . '=([^&]+)',
+                    'name' => $name,
                 ];
             }
+
             return $patterns;
         }
 
         $name = $part['name'];
 
         switch ($part['operator']) {
-            case "":
-                $pattern = $part['exploded'] ? "([^/]+(?:,[^/]+)*)" : "([^/,]+)";
+            case '':
+                $pattern = $part['exploded'] ? '([^/]+(?:,[^/]+)*)' : '([^/,]+)';
                 break;
-            case "+":
-            case "#":
-                $pattern = "(.+)";
+            case '+':
+            case '#':
+                $pattern = '(.+)';
                 break;
-            case ".":
-                $pattern = "\\.([^/,]+)";
+            case '.':
+                $pattern = '\\.([^/,]+)';
                 break;
-            case "/":
-                $pattern = "/" . ($part['exploded'] ? "([^/]+(?:,[^/]+)*)" : "([^/,]+)");
+            case '/':
+                $pattern = '/' . ($part['exploded'] ? '([^/]+(?:,[^/]+)*)' : '([^/,]+)');
                 break;
             default:
-                $pattern = "([^/]+)";
+                $pattern = '([^/]+)';
         }
 
         $patterns[] = ['pattern' => $pattern, 'name' => $name];
+
         return $patterns;
     }
 
@@ -328,8 +337,8 @@ class UriTemplate
      */
     public function match(string $uri): ?array
     {
-        self::validateLength($uri, self::MAX_TEMPLATE_LENGTH, "URI");
-        $pattern = "^";
+        self::validateLength($uri, self::MAX_TEMPLATE_LENGTH, 'URI');
+        $pattern = '^';
         $names = [];
 
         foreach ($this->parts as $part) {
@@ -344,11 +353,11 @@ class UriTemplate
             }
         }
 
-        $pattern .= "$";
+        $pattern .= '$';
         self::validateLength(
             $pattern,
             self::MAX_REGEX_LENGTH,
-            "Generated regex pattern"
+            'Generated regex pattern'
         );
 
         $matches = [];
@@ -361,13 +370,13 @@ class UriTemplate
             $name = $names[$i]['name'];
             $exploded = $names[$i]['exploded'];
             $value = $matches[$i + 1];
-            $cleanName = str_replace("*", "", $name);
+            $cleanName = str_replace('*', '', $name);
 
             // Decode the value based on encoding
             $value = urldecode($value);
 
-            if ($exploded && str_contains($value, ",")) {
-                $result[$cleanName] = explode(",", $value);
+            if ($exploded && str_contains($value, ',')) {
+                $result[$cleanName] = explode(',', $value);
             } else {
                 $result[$cleanName] = $value;
             }

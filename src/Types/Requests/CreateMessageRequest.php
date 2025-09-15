@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace MCP\Types\Requests;
 
 use MCP\Types\Request;
-use MCP\Types\Sampling\SamplingMessage;
 use MCP\Types\Sampling\ModelPreferences;
+use MCP\Types\Sampling\SamplingMessage;
 
 /**
  * A request from the server to sample an LLM via the client. The client has
@@ -16,7 +16,9 @@ use MCP\Types\Sampling\ModelPreferences;
  */
 final class CreateMessageRequest extends Request
 {
-    public const METHOD = 'sampling/createMessage';        /**
+    public const METHOD = 'sampling/createMessage';
+
+    /**
      * @param array<string, mixed>|null|string $methodOrParams For backward compatibility, can be params array or method string
      * @param array<string, mixed>|null $params Only used when first parameter is method string
      */
@@ -53,7 +55,7 @@ final class CreateMessageRequest extends Request
         ?ModelPreferences $modelPreferences = null
     ): self {
         $params = [
-            'messages' => array_map(fn(SamplingMessage $msg) => $msg->jsonSerialize(), $messages),
+            'messages' => array_map(fn (SamplingMessage $msg) => $msg->jsonSerialize(), $messages),
             'maxTokens' => $maxTokens,
         ];
 

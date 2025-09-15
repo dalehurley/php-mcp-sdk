@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Types\Notifications;
 
-use MCP\Types\Notification;
 use MCP\Types\LoggingLevel;
+use MCP\Types\Notification;
 
 /**
  * Notification of a log message passed from server to client. If no logging/setLevel

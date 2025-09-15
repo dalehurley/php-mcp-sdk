@@ -4,26 +4,23 @@ declare(strict_types=1);
 
 namespace MCP\Client\Transport;
 
-use MCP\Shared\Transport;
-use MCP\Types\JsonRpc\JSONRPCMessage;
-use MCP\Types\JsonRpc\JSONRPCRequest;
-use MCP\Types\JsonRpc\JSONRPCResponse;
-use MCP\Types\JsonRpc\JSONRPCError;
-use MCP\Types\JsonRpc\JSONRPCNotification;
-use MCP\Types\Protocol;
+use function Amp\async;
+
+use Amp\ByteStream\BufferedReader;
+use Amp\DeferredCancellation;
+
+use function Amp\delay;
+
 use Amp\Future;
 use Amp\Http\Client\HttpClient;
 use Amp\Http\Client\HttpClientBuilder;
 use Amp\Http\Client\Request;
 use Amp\Http\Client\Response;
-use Amp\ByteStream\BufferedReader;
-use Amp\DeferredCancellation;
-use MCP\Client\Transport\StreamableHttpReconnectionOptions;
-use MCP\Client\Transport\StreamableHttpClientTransportOptions;
-use MCP\Client\Transport\StreamableHttpError;
+use MCP\Shared\Transport;
+use MCP\Types\JsonRpc\JSONRPCMessage;
 
-use function Amp\async;
-use function Amp\delay;
+use MCP\Types\JsonRpc\JSONRPCNotification;
+use MCP\Types\Protocol;
 
 /**
  * Client transport for Streamable HTTP: this implements the MCP Streamable HTTP transport specification.
@@ -33,10 +30,15 @@ use function Amp\delay;
 class StreamableHttpClientTransport implements Transport
 {
     private string $_url;
+
     private StreamableHttpClientTransportOptions $_options;
+
     private HttpClient $_httpClient;
+
     private ?string $_sessionId;
+
     private ?string $_protocolVersion = null;
+
     private bool $_started = false;
 
     /** @var DeferredCancellation|null */
@@ -97,8 +99,8 @@ class StreamableHttpClientTransport implements Transport
         return async(function () {
             if ($this->_started) {
                 throw new \RuntimeException(
-                    "StreamableHttpClientTransport already started! If using Client class, " .
-                        "note that connect() calls start() automatically."
+                    'StreamableHttpClientTransport already started! If using Client class, ' .
+                        'note that connect() calls start() automatically.'
                 );
             }
 
@@ -118,7 +120,7 @@ class StreamableHttpClientTransport implements Transport
     }
 
     /**
-     * Start or reconnect the SSE stream
+     * Start or reconnect the SSE stream.
      */
     private function startSseStream(?string $resumptionToken = null): void
     {
@@ -145,7 +147,7 @@ class StreamableHttpClientTransport implements Transport
                 if ($response->getStatus() !== 200) {
                     throw new StreamableHttpError(
                         $response->getStatus(),
-                        "Failed to open SSE stream: " . $response->getReason()
+                        'Failed to open SSE stream: ' . $response->getReason()
                     );
                 }
 
@@ -165,7 +167,7 @@ class StreamableHttpClientTransport implements Transport
     }
 
     /**
-     * Handle Server-Sent Events stream
+     * Handle Server-Sent Events stream.
      */
     private function handleSseStream(Response $response): void
     {
@@ -230,7 +232,7 @@ class StreamableHttpClientTransport implements Transport
     }
 
     /**
-     * Process a complete SSE event
+     * Process a complete SSE event.
      */
     private function processEvent(string $data, ?string $eventId): void
     {
@@ -239,7 +241,7 @@ class StreamableHttpClientTransport implements Transport
             $decoded = json_decode($data, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new \RuntimeException("Invalid JSON in SSE event: " . json_last_error_msg());
+                throw new \RuntimeException('Invalid JSON in SSE event: ' . json_last_error_msg());
             }
 
             $message = JSONRPCMessage::fromArray($decoded);
@@ -255,7 +257,7 @@ class StreamableHttpClientTransport implements Transport
     }
 
     /**
-     * Schedule reconnection with exponential backoff
+     * Schedule reconnection with exponential backoff.
      */
     private function scheduleReconnection(): void
     {
@@ -265,6 +267,7 @@ class StreamableHttpClientTransport implements Transport
             if ($this->onerror !== null) {
                 ($this->onerror)(new \Error("Maximum reconnection attempts ({$options->maxRetries}) exceeded."));
             }
+
             return;
         }
 
@@ -281,7 +284,7 @@ class StreamableHttpClientTransport implements Transport
     }
 
     /**
-     * Calculate next reconnection delay with exponential backoff
+     * Calculate next reconnection delay with exponential backoff.
      */
     private function getNextReconnectionDelay(): int
     {
@@ -300,7 +303,7 @@ class StreamableHttpClientTransport implements Transport
     {
         return async(function () use ($message) {
             if (!$this->_started) {
-                throw new \RuntimeException("Transport not started");
+                throw new \RuntimeException('Transport not started');
             }
 
             $request = new Request($this->_url, 'POST');
@@ -323,7 +326,7 @@ class StreamableHttpClientTransport implements Transport
                 }
 
                 if ($response->getStatus() === 401) {
-                    throw new StreamableHttpError(401, "Unauthorized");
+                    throw new StreamableHttpError(401, 'Unauthorized');
                 }
 
                 if ($response->getStatus() === 202) {
@@ -336,11 +339,13 @@ class StreamableHttpClientTransport implements Transport
                         // Start SSE stream after initialization
                         $this->startSseStream();
                     }
+
                     return;
                 }
 
                 if (!in_array($response->getStatus(), [200, 202], true)) {
                     $body = $response->getBody()->buffer();
+
                     throw new StreamableHttpError(
                         $response->getStatus(),
                         "Error POSTing to endpoint (HTTP {$response->getStatus()}): $body"
@@ -370,7 +375,7 @@ class StreamableHttpClientTransport implements Transport
                         $data = json_decode($body, true);
 
                         if (json_last_error() !== JSON_ERROR_NONE) {
-                            throw new \RuntimeException("Invalid JSON response: " . json_last_error_msg());
+                            throw new \RuntimeException('Invalid JSON response: ' . json_last_error_msg());
                         }
 
                         $responseMessages = is_array($data) && isset($data[0]) ? $data : [$data];
@@ -389,6 +394,7 @@ class StreamableHttpClientTransport implements Transport
                 if ($this->onerror !== null) {
                     ($this->onerror)($e);
                 }
+
                 throw $e;
             }
         });
@@ -419,7 +425,7 @@ class StreamableHttpClientTransport implements Transport
     }
 
     /**
-     * Terminate the current session by sending a DELETE request
+     * Terminate the current session by sending a DELETE request.
      */
     public function terminateSession(): Future
     {
@@ -438,7 +444,7 @@ class StreamableHttpClientTransport implements Transport
                 if (!in_array($response->getStatus(), [200, 405], true)) {
                     throw new StreamableHttpError(
                         $response->getStatus(),
-                        "Failed to terminate session: " . $response->getReason()
+                        'Failed to terminate session: ' . $response->getReason()
                     );
                 }
 
@@ -447,13 +453,14 @@ class StreamableHttpClientTransport implements Transport
                 if ($this->onerror !== null) {
                     ($this->onerror)($e);
                 }
+
                 throw $e;
             }
         });
     }
 
     /**
-     * Apply common headers to a request
+     * Apply common headers to a request.
      */
     private function applyCommonHeaders(Request $request): void
     {
@@ -476,7 +483,7 @@ class StreamableHttpClientTransport implements Transport
     }
 
     /**
-     * Get the current session ID
+     * Get the current session ID.
      */
     public function getSessionId(): ?string
     {
@@ -484,7 +491,7 @@ class StreamableHttpClientTransport implements Transport
     }
 
     /**
-     * Set the protocol version to use
+     * Set the protocol version to use.
      */
     public function setProtocolVersion(string $version): void
     {
@@ -492,7 +499,7 @@ class StreamableHttpClientTransport implements Transport
     }
 
     /**
-     * Get the protocol version
+     * Get the protocol version.
      */
     public function getProtocolVersion(): ?string
     {

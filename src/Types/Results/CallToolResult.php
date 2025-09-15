@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace MCP\Types\Results;
 
-use MCP\Types\Result;
 use MCP\Types\Content\ContentBlock;
 use MCP\Types\Content\ContentBlockFactory;
+use MCP\Types\Result;
 
 /**
  * The server's response to a tool call.
@@ -106,7 +106,7 @@ final class CallToolResult extends Result
 
         // Content is always present, but may be empty
         $data['content'] = array_map(
-            fn(ContentBlock $block) => $block->jsonSerialize(),
+            fn (ContentBlock $block) => $block->jsonSerialize(),
             $this->content
         );
 

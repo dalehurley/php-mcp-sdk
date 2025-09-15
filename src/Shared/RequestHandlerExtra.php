@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace MCP\Shared;
 
-use MCP\Types\Request;
+use Amp\Future;
 use MCP\Types\Notification;
+use MCP\Types\Request;
 use MCP\Types\RequestId;
 use MCP\Types\RequestMeta;
 use MCP\Validation\ValidationService;
-use Amp\Future;
 
 /**
  * Extra data given to request handlers.

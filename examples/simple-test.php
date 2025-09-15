@@ -2,27 +2,22 @@
 <?php
 
 /**
- * Simple Test Script for PHP MCP SDK Examples
- * 
+ * Simple Test Script for PHP MCP SDK Examples.
+ *
  * This script runs a basic test to ensure the core examples work.
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use MCP\Server\McpServer;
-use MCP\Server\ServerOptions;
-use MCP\Server\Transport\StdioServerTransport;
 use MCP\Client\Client;
 use MCP\Client\ClientOptions;
-use MCP\Client\Transport\StdioClientTransport;
-use MCP\Client\Transport\StdioServerParameters;
-use MCP\Types\Implementation;
+use MCP\Server\McpServer;
+use MCP\Server\ServerOptions;
 use MCP\Types\Capabilities\ClientCapabilities;
 use MCP\Types\Capabilities\ServerCapabilities;
-use MCP\Types\Results\CallToolResult;
 use MCP\Types\Content\TextContent;
-use function Amp\async;
-use function Amp\await;
+use MCP\Types\Implementation;
+use MCP\Types\Results\CallToolResult;
 
 echo "🧪 Simple MCP SDK Test\n";
 echo "======================\n\n";
@@ -47,11 +42,12 @@ try {
         [
             'message' => [
                 'type' => 'string',
-                'description' => 'Message to echo back'
-            ]
+                'description' => 'Message to echo back',
+            ],
         ],
         function (array $args) {
             $message = $args['message'] ?? 'Hello, World!';
+
             return new CallToolResult(
                 content: [new TextContent("Echo: $message")]
             );
@@ -60,7 +56,7 @@ try {
 
     echo "   ✅ Server created successfully\n";
 } catch (\Exception $e) {
-    echo "   ❌ Server creation failed: " . $e->getMessage() . "\n";
+    echo '   ❌ Server creation failed: ' . $e->getMessage() . "\n";
     exit(1);
 }
 
@@ -77,7 +73,7 @@ try {
 
     echo "   ✅ Client created successfully\n";
 } catch (\Exception $e) {
-    echo "   ❌ Client creation failed: " . $e->getMessage() . "\n";
+    echo '   ❌ Client creation failed: ' . $e->getMessage() . "\n";
     exit(1);
 }
 
@@ -86,7 +82,7 @@ echo "\n3. Testing example file syntax...\n";
 
 $examples = [
     'examples/server/simple-server.php',
-    'examples/client/simple-stdio-client.php'
+    'examples/client/simple-stdio-client.php',
 ];
 
 foreach ($examples as $example) {
@@ -94,13 +90,13 @@ foreach ($examples as $example) {
 
     $output = [];
     $returnCode = 0;
-    exec("php -l " . escapeshellarg($example) . " 2>&1", $output, $returnCode);
+    exec('php -l ' . escapeshellarg($example) . ' 2>&1', $output, $returnCode);
 
     if ($returnCode === 0) {
         echo "✅ OK\n";
     } else {
         echo "❌ FAIL\n";
-        echo "      " . implode("\n      ", $output) . "\n";
+        echo '      ' . implode("\n      ", $output) . "\n";
     }
 }
 

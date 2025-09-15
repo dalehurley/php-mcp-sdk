@@ -20,11 +20,11 @@ class RequestInfoTest extends TestCase
         $headers = [
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer token123',
-            'X-Custom' => ['value1', 'value2']
+            'X-Custom' => ['value1', 'value2'],
         ];
-        
+
         $requestInfo = new RequestInfo($headers);
-        
+
         $this->assertEquals($headers, $requestInfo->getHeaders());
         $this->assertEquals('application/json', $requestInfo->getHeader('Content-Type'));
         $this->assertEquals('Bearer token123', $requestInfo->getHeader('Authorization'));
@@ -37,7 +37,7 @@ class RequestInfoTest extends TestCase
     public function testGetHeaderNonExistent(): void
     {
         $requestInfo = new RequestInfo(['Content-Type' => 'text/plain']);
-        
+
         $this->assertNull($requestInfo->getHeader('Authorization'));
     }
 
@@ -48,9 +48,9 @@ class RequestInfoTest extends TestCase
     {
         $requestInfo = new RequestInfo([
             'Content-Type' => 'application/json',
-            'X-Empty' => null
+            'X-Empty' => null,
         ]);
-        
+
         $this->assertTrue($requestInfo->hasHeader('Content-Type'));
         $this->assertTrue($requestInfo->hasHeader('X-Empty'));
         $this->assertFalse($requestInfo->hasHeader('Authorization'));
@@ -64,12 +64,12 @@ class RequestInfoTest extends TestCase
         $data = [
             'headers' => [
                 'Accept' => 'application/json',
-                'User-Agent' => 'MCP Client/1.0'
-            ]
+                'User-Agent' => 'MCP Client/1.0',
+            ],
         ];
-        
+
         $requestInfo = RequestInfo::fromArray($data);
-        
+
         $this->assertEquals('application/json', $requestInfo->getHeader('Accept'));
         $this->assertEquals('MCP Client/1.0', $requestInfo->getHeader('User-Agent'));
     }
@@ -81,7 +81,7 @@ class RequestInfoTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('RequestInfo must have a headers property');
-        
+
         RequestInfo::fromArray(['other' => 'data']);
     }
 
@@ -92,7 +92,7 @@ class RequestInfoTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('RequestInfo must have a headers property');
-        
+
         RequestInfo::fromArray(['headers' => 'not-array']);
     }
 }

@@ -4,60 +4,55 @@ declare(strict_types=1);
 
 namespace MCP\Server;
 
-use MCP\Shared\Transport;
-use MCP\Shared\RequestHandlerExtra;
-use MCP\Server\Auth\AuthInfo;
-use MCP\Server\Auth\OAuthServerProvider;
-use MCP\Types\Implementation;
-use MCP\Types\Tools\Tool;
-use MCP\Types\Tools\ToolAnnotations;
-use MCP\Types\Prompts\Prompt;
-use MCP\Types\Prompts\PromptArgument;
-use MCP\Types\Resources\Resource;
-use MCP\Types\References\PromptReference;
-use MCP\Types\References\ResourceTemplateReference;
-use MCP\Types\Results\ListToolsResult;
-use MCP\Types\Results\CallToolResult;
-use MCP\Types\Results\ListPromptsResult;
-use MCP\Types\Content\ContentBlockFactory;
-use MCP\Types\Sampling\SamplingMessage;
-use MCP\Types\Sampling\ModelPreferences;
-use MCP\Types\Results\GetPromptResult;
-use MCP\Types\Results\ListResourcesResult;
-use MCP\Types\Results\ListResourceTemplatesResult;
-use MCP\Types\Results\ReadResourceResult;
-use MCP\Types\Results\CompleteResult;
-use MCP\Types\Requests\ListToolsRequest;
-use MCP\Types\Requests\CallToolRequest;
-use MCP\Types\Requests\ListPromptsRequest;
-use MCP\Types\Requests\GetPromptRequest;
-use MCP\Types\Requests\ListResourcesRequest;
-use MCP\Types\Requests\ListResourceTemplatesRequest;
-use MCP\Types\Requests\ReadResourceRequest;
-use MCP\Types\Requests\CompleteRequest;
-use MCP\Types\Requests\SubscribeRequest;
-use MCP\Types\Requests\UnsubscribeRequest;
-use MCP\Types\EmptyResult;
-use MCP\Types\Notifications\LoggingMessageNotification;
-use MCP\Types\McpError;
-use MCP\Types\ErrorCode;
-use MCP\Types\Capabilities\ServerCapabilities;
-use MCP\Utils\JsonSchemaValidator;
-
 use function Amp\async;
 use function Amp\Future\await;
 
-/**
- * Empty JSON Schema for tools without input
- */
+use MCP\Server\Auth\OAuthServerProvider;
+use MCP\Shared\RequestHandlerExtra;
+use MCP\Shared\Transport;
+use MCP\Types\Capabilities\ServerCapabilities;
+use MCP\Types\Content\ContentBlockFactory;
+use MCP\Types\EmptyResult;
+use MCP\Types\ErrorCode;
+use MCP\Types\Implementation;
+use MCP\Types\McpError;
+use MCP\Types\Prompts\Prompt;
+use MCP\Types\References\PromptReference;
+use MCP\Types\References\ResourceTemplateReference;
+use MCP\Types\Requests\CallToolRequest;
+use MCP\Types\Requests\CompleteRequest;
+use MCP\Types\Requests\GetPromptRequest;
+use MCP\Types\Requests\ListPromptsRequest;
+use MCP\Types\Requests\ListResourcesRequest;
+use MCP\Types\Requests\ListResourceTemplatesRequest;
+use MCP\Types\Requests\ListToolsRequest;
+use MCP\Types\Requests\ReadResourceRequest;
+use MCP\Types\Requests\SubscribeRequest;
+use MCP\Types\Requests\UnsubscribeRequest;
+use MCP\Types\Resources\Resource;
+use MCP\Types\Results\CallToolResult;
+use MCP\Types\Results\CompleteResult;
+use MCP\Types\Results\ListPromptsResult;
+use MCP\Types\Results\ListResourcesResult;
+use MCP\Types\Results\ListResourceTemplatesResult;
+use MCP\Types\Results\ListToolsResult;
+use MCP\Types\Sampling\ModelPreferences;
+use MCP\Types\Sampling\SamplingMessage;
+use MCP\Types\Tools\Tool;
 
+use MCP\Types\Tools\ToolAnnotations;
+use MCP\Utils\JsonSchemaValidator;
+
+/**
+ * Empty JSON Schema for tools without input.
+ */
 define('EMPTY_OBJECT_JSON_SCHEMA', [
     'type' => 'object',
-    'properties' => (object)[],
+    'properties' => (object) [],
 ]);
 
 /**
- * Empty completion result
+ * Empty completion result.
  */
 define('EMPTY_COMPLETION_RESULT', [
     'completion' => [
@@ -91,18 +86,22 @@ class McpServer
     private array $_registeredPrompts = [];
 
     private bool $_toolHandlersInitialized = false;
+
     private bool $_completionHandlerInitialized = false;
+
     private bool $_resourceHandlersInitialized = false;
+
     private bool $_promptHandlersInitialized = false;
 
     /**
-     * Map of sessionId => set of subscribed resource URIs
+     * Map of sessionId => set of subscribed resource URIs.
+     *
      * @var array<string, array<string, bool>>
      */
     private array $_resourceSubscriptionsBySession = [];
 
     /**
-     * OAuth authentication provider
+     * OAuth authentication provider.
      */
     private ?OAuthServerProvider $authProvider = null;
 
@@ -159,6 +158,7 @@ class McpServer
 
     /**
      * Checks if the server is connected to a transport.
+     *
      * @return bool True if the server is connected
      */
     public function isConnected(): bool
@@ -256,7 +256,7 @@ class McpServer
                             content: [
                                 ContentBlockFactory::fromArray([
                                     'type' => 'text',
-                                    'text' => $error instanceof \Error ? $error->getMessage() : (string)$error,
+                                    'text' => $error instanceof \Error ? $error->getMessage() : (string) $error,
                                 ]),
                             ],
                             isError: true
@@ -289,7 +289,7 @@ class McpServer
 
     /**
      * Register a tool with the server
-     * Multiple overloads are supported to match TypeScript SDK
+     * Multiple overloads are supported to match TypeScript SDK.
      */
     public function tool(string $name, ...$args): RegisteredTool
     {
@@ -340,10 +340,10 @@ class McpServer
         $callback = $args[$argIndex] ?? null;
 
         if (!is_callable($callback)) {
-            throw new \InvalidArgumentException("Tool callback must be callable");
+            throw new \InvalidArgumentException('Tool callback must be callable');
         }
 
-        $callbackWrapper = new class($callback) implements ToolCallback {
+        $callbackWrapper = new class ($callback) implements ToolCallback {
             private $callback;
 
             public function __construct(callable $callback)
@@ -397,7 +397,7 @@ class McpServer
                 : ToolAnnotations::fromArray($config['annotations']);
         }
 
-        $callbackWrapper = new class($callback) implements ToolCallback {
+        $callbackWrapper = new class ($callback) implements ToolCallback {
             private $callback;
 
             public function __construct(callable $callback)
@@ -548,7 +548,7 @@ class McpServer
                 foreach ($this->_registeredResourceTemplates as $name => $template) {
                     $templateData = [
                         'name' => $name,
-                        'uriTemplate' => (string)$template->resourceTemplate->getUriTemplate(),
+                        'uriTemplate' => (string) $template->resourceTemplate->getUriTemplate(),
                     ];
 
                     if ($template->title !== null) {
@@ -632,6 +632,7 @@ class McpServer
 
                 $this->_resourceSubscriptionsBySession[$sessionId] ??= [];
                 $this->_resourceSubscriptionsBySession[$sessionId][$uri] = true;
+
                 return new EmptyResult();
             }
         );
@@ -668,7 +669,7 @@ class McpServer
 
     /**
      * Register a resource with the server
-     * Multiple overloads are supported to match TypeScript SDK
+     * Multiple overloads are supported to match TypeScript SDK.
      */
     public function resource(string $name, $uriOrTemplate, ...$args)
     {
@@ -688,7 +689,7 @@ class McpServer
         }
 
         if (!is_callable($readCallback)) {
-            throw new \InvalidArgumentException("Resource callback must be callable");
+            throw new \InvalidArgumentException('Resource callback must be callable');
         }
 
         if (is_string($uriOrTemplate)) {
@@ -697,7 +698,7 @@ class McpServer
                 throw new \Error("Resource {$uriOrTemplate} is already registered");
             }
 
-            $callbackWrapper = new class($readCallback) implements ReadResourceCallback {
+            $callbackWrapper = new class ($readCallback) implements ReadResourceCallback {
                 private $callback;
 
                 public function __construct(callable $callback)
@@ -724,7 +725,7 @@ class McpServer
                 throw new \Error("Resource template {$name} is already registered");
             }
 
-            $callbackWrapper = new class($readCallback) implements ReadResourceTemplateCallback {
+            $callbackWrapper = new class ($readCallback) implements ReadResourceTemplateCallback {
                 private $callback;
 
                 public function __construct(callable $callback)
@@ -768,7 +769,7 @@ class McpServer
                 throw new \Error("Resource {$uriOrTemplate} is already registered");
             }
 
-            $callbackWrapper = new class($readCallback) implements ReadResourceCallback {
+            $callbackWrapper = new class ($readCallback) implements ReadResourceCallback {
                 private $callback;
 
                 public function __construct(callable $callback)
@@ -794,7 +795,7 @@ class McpServer
                 throw new \Error("Resource template {$name} is already registered");
             }
 
-            $callbackWrapper = new class($readCallback) implements ReadResourceTemplateCallback {
+            $callbackWrapper = new class ($readCallback) implements ReadResourceTemplateCallback {
                 private $callback;
 
                 public function __construct(callable $callback)
@@ -987,7 +988,7 @@ class McpServer
 
     /**
      * Register a prompt with the server
-     * Multiple overloads are supported to match TypeScript SDK
+     * Multiple overloads are supported to match TypeScript SDK.
      */
     public function prompt(string $name, ...$args): RegisteredPrompt
     {
@@ -1014,10 +1015,10 @@ class McpServer
         }
 
         if (!is_callable($callback)) {
-            throw new \InvalidArgumentException("Prompt callback must be callable");
+            throw new \InvalidArgumentException('Prompt callback must be callable');
         }
 
-        $callbackWrapper = new class($callback) implements PromptCallback {
+        $callbackWrapper = new class ($callback) implements PromptCallback {
             private $callback;
 
             public function __construct(callable $callback)
@@ -1064,7 +1065,7 @@ class McpServer
         $description = $config['description'] ?? null;
         $argsSchema = $config['argsSchema'] ?? null;
 
-        $callbackWrapper = new class($callback) implements PromptCallback {
+        $callbackWrapper = new class ($callback) implements PromptCallback {
             private $callback;
 
             public function __construct(callable $callback)
@@ -1153,7 +1154,7 @@ class McpServer
                     } else {
                         throw new McpError(
                             ErrorCode::InvalidParams,
-                            "Invalid completion reference type"
+                            'Invalid completion reference type'
                         );
                     }
                 });
@@ -1210,7 +1211,7 @@ class McpServer
     {
         $template = null;
         foreach ($this->_registeredResourceTemplates as $t) {
-            if ((string)$t->resourceTemplate->getUriTemplate() === $ref->getUri()) {
+            if ((string) $t->resourceTemplate->getUriTemplate() === $ref->getUri()) {
                 $template = $t;
                 break;
             }
@@ -1263,7 +1264,7 @@ class McpServer
 
     /**
      * Sends a logging message to the client, if connected.
-     * Note: You only need to send the parameters object, not the entire JSON RPC message
+     * Note: You only need to send the parameters object, not the entire JSON RPC message.
      *
      * @param array{level: string, logger?: string, data?: mixed, timestamp?: string} $params
      * @param string|null $sessionId optional for stateless and backward compatibility
@@ -1309,6 +1310,7 @@ class McpServer
      * @param string $message The message to display to the user
      * @param array<string, mixed> $schema JSON schema for the requested input
      * @param string[]|null $required Required fields
+     *
      * @return \Amp\Future<array{action: string, content?: array<string, mixed>}>
      */
     public function elicitUserInput(
@@ -1321,7 +1323,7 @@ class McpServer
             'requestedSchema' => [
                 'type' => 'object',
                 'properties' => $schema,
-            ]
+            ],
         ];
 
         if ($required !== null) {
@@ -1342,6 +1344,7 @@ class McpServer
      * @param string[]|null $stopSequences
      * @param array<string, mixed>|null $metadata
      * @param ModelPreferences|null $modelPreferences
+     *
      * @return \Amp\Future<array{model: string, role: string, content: array}>
      */
     public function createMessage(
@@ -1355,7 +1358,7 @@ class McpServer
         ?ModelPreferences $modelPreferences = null
     ): \Amp\Future {
         $params = [
-            'messages' => array_map(fn(SamplingMessage $msg) => $msg->jsonSerialize(), $messages),
+            'messages' => array_map(fn (SamplingMessage $msg) => $msg->jsonSerialize(), $messages),
             'maxTokens' => $maxTokens,
         ];
 
@@ -1389,7 +1392,7 @@ class McpServer
     // Helper Methods
 
     /**
-     * Check if a value looks like a schema (has validation properties)
+     * Check if a value looks like a schema (has validation properties).
      */
     private function isSchema($value): bool
     {
@@ -1406,7 +1409,7 @@ class McpServer
     }
 
     /**
-     * Convert schema to JSON Schema format
+     * Convert schema to JSON Schema format.
      */
     private function schemaToJsonSchema($schema): array
     {
@@ -1414,7 +1417,7 @@ class McpServer
     }
 
     /**
-     * Extract prompt arguments from schema
+     * Extract prompt arguments from schema.
      */
     private function promptArgumentsFromSchema($schema): array
     {
@@ -1422,7 +1425,7 @@ class McpServer
     }
 
     /**
-     * Get a field from a schema by name
+     * Get a field from a schema by name.
      */
     private function getSchemaField($schema, string $fieldName)
     {

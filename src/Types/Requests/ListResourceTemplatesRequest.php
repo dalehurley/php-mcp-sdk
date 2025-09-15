@@ -11,7 +11,9 @@ use MCP\Types\PaginatedRequest;
  */
 final class ListResourceTemplatesRequest extends PaginatedRequest
 {
-    public const METHOD = 'resources/templates/list';        /**
+    public const METHOD = 'resources/templates/list';
+
+    /**
      * @param array<string, mixed>|null|string $methodOrParams For backward compatibility, can be params array or method string
      * @param array<string, mixed>|null $params Only used when first parameter is method string
      */

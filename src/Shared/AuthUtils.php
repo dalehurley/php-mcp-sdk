@@ -15,6 +15,7 @@ class AuthUtils
      * Keeps everything else unchanged (scheme, domain, port, path, query).
      *
      * @param string|\Psr\Http\Message\UriInterface $url
+     *
      * @return \Psr\Http\Message\UriInterface
      */
     public static function resourceUrlFromServerUrl(string|\Psr\Http\Message\UriInterface $url): \Psr\Http\Message\UriInterface
@@ -36,6 +37,7 @@ class AuthUtils
      * and its path starts with the configured resource's path.
      *
      * @param array{requestedResource: string|\Psr\Http\Message\UriInterface, configuredResource: string|\Psr\Http\Message\UriInterface} $params
+     *
      * @return bool true if the requested resource matches the configured resource, false otherwise
      */
     public static function checkResourceAllowed(array $params): bool
@@ -84,11 +86,13 @@ class AuthUtils
      * or PKCE code verifier.
      *
      * @param int $length The length of the random string to generate
+     *
      * @return string Base64url-encoded random string
      */
     public static function generateRandomString(int $length = 32): string
     {
         $bytes = random_bytes($length);
+
         // Use base64url encoding (URL-safe base64)
         return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
     }
@@ -113,11 +117,13 @@ class AuthUtils
      * Uses SHA256 as the challenge method.
      *
      * @param string $codeVerifier
+     *
      * @return string Base64url-encoded SHA256 hash of the code verifier
      */
     public static function generateCodeChallenge(string $codeVerifier): string
     {
         $hash = hash('sha256', $codeVerifier, true);
+
         // Use base64url encoding
         return rtrim(strtr(base64_encode($hash), '+/', '-_'), '=');
     }
@@ -143,6 +149,7 @@ class AuthUtils
      * It should only be used when the token has already been verified by another process.
      *
      * @param string $token The JWT token
+     *
      * @return array{header: array<string, mixed>, payload: array<string, mixed>}|null
      */
     public static function parseJwtWithoutVerification(string $token): ?array
@@ -162,7 +169,7 @@ class AuthUtils
 
             return [
                 'header' => $header,
-                'payload' => $payload
+                'payload' => $payload,
             ];
         } catch (\Exception $e) {
             return null;
@@ -173,11 +180,13 @@ class AuthUtils
      * Extract claims from a JWT token without verification.
      *
      * @param string $token
+     *
      * @return array<string, mixed>|null The payload claims or null if invalid
      */
     public static function extractJwtClaims(string $token): ?array
     {
         $parsed = self::parseJwtWithoutVerification($token);
+
         return $parsed['payload'] ?? null;
     }
 
@@ -185,6 +194,7 @@ class AuthUtils
      * Check if a JWT token is expired based on the exp claim.
      *
      * @param string $token
+     *
      * @return bool True if expired, false if not expired or no exp claim
      */
     public static function isJwtExpired(string $token): bool
@@ -198,9 +208,10 @@ class AuthUtils
     }
 
     /**
-     * Base64url decode
+     * Base64url decode.
      *
      * @param string $input
+     *
      * @return string
      */
     private static function base64UrlDecode(string $input): string
@@ -210,6 +221,7 @@ class AuthUtils
             $padlen = 4 - $remainder;
             $input .= str_repeat('=', $padlen);
         }
+
         return base64_decode(strtr($input, '-_', '+/'));
     }
 
@@ -218,6 +230,7 @@ class AuthUtils
      *
      * @param string $authorizationEndpoint
      * @param array<string, string> $params Query parameters (client_id, redirect_uri, etc.)
+     *
      * @return string
      */
     public static function buildAuthorizationUrl(string $authorizationEndpoint, array $params): string

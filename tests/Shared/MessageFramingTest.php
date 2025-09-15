@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Shared;
 
-use PHPUnit\Framework\TestCase;
 use MCP\Shared\MessageFraming;
-use MCP\Types\JsonRpc\JSONRPCRequest;
 use MCP\Types\JsonRpc\JSONRPCNotification;
-use MCP\Types\JsonRpc\JSONRPCResponse;
+use MCP\Types\JsonRpc\JSONRPCRequest;
 use MCP\Types\RequestId;
-use MCP\Types\Result;
+use PHPUnit\Framework\TestCase;
 
 class MessageFramingTest extends TestCase
 {
@@ -19,7 +17,7 @@ class MessageFramingTest extends TestCase
         $message = [
             'jsonrpc' => '2.0',
             'method' => 'test',
-            'id' => 1
+            'id' => 1,
         ];
 
         $serialized = MessageFraming::serializeMessage($message);
@@ -73,7 +71,7 @@ class MessageFramingTest extends TestCase
         $validRequest = [
             'jsonrpc' => '2.0',
             'method' => 'test',
-            'id' => 1
+            'id' => 1,
         ];
 
         $this->expectNotToPerformAssertions();
@@ -85,7 +83,7 @@ class MessageFramingTest extends TestCase
         $invalidMessage = [
             'jsonrpc' => '1.0',
             'method' => 'test',
-            'id' => 1
+            'id' => 1,
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -99,7 +97,7 @@ class MessageFramingTest extends TestCase
         $invalidMessage = [
             'jsonrpc' => '2.0',
             'method' => '',
-            'id' => 1
+            'id' => 1,
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -113,7 +111,7 @@ class MessageFramingTest extends TestCase
         $message = [
             'jsonrpc' => '2.0',
             'method' => 'test',
-            'id' => 1
+            'id' => 1,
         ];
 
         $chunks = MessageFraming::createChunkedStream($message, 20);
@@ -131,7 +129,7 @@ class MessageFramingTest extends TestCase
         $originalMessage = [
             'jsonrpc' => '2.0',
             'method' => 'test',
-            'id' => 1
+            'id' => 1,
         ];
 
         $chunks = MessageFraming::createChunkedStream($originalMessage, 20);
@@ -186,7 +184,7 @@ class MessageFramingTest extends TestCase
             'jsonrpc' => '2.0',
             'method' => 'test',
             'id' => 1,
-            'params' => ['data' => $largeData]
+            'params' => ['data' => $largeData],
         ];
 
         $this->expectException(\InvalidArgumentException::class);

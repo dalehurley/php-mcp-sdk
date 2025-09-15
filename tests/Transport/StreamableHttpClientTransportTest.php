@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Transport;
 
-use PHPUnit\Framework\TestCase;
 use MCP\Client\Transport\StreamableHttpClientTransport;
 use MCP\Client\Transport\StreamableHttpClientTransportOptions;
-use Amp\Future;
+use PHPUnit\Framework\TestCase;
 
 class StreamableHttpClientTransportTest extends TestCase
 {
@@ -24,7 +23,7 @@ class StreamableHttpClientTransportTest extends TestCase
         $options = new StreamableHttpClientTransportOptions(
             headers: [
                 'Authorization' => 'Bearer token123',
-                'User-Agent' => 'MCP-Client/1.0'
+                'User-Agent' => 'MCP-Client/1.0',
             ],
             sessionId: 'test-session'
         );

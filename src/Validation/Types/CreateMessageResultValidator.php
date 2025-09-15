@@ -26,7 +26,9 @@ class CreateMessageResultValidator implements TypeValidator
 
     /**
      * @param mixed $data
+     *
      * @return array<string, mixed>
+     *
      * @throws ValidationException
      */
     public function validate(mixed $data): array
@@ -86,6 +88,7 @@ class CreateMessageResultValidator implements TypeValidator
     {
         try {
             $this->validate($data);
+
             return true;
         } catch (ValidationException) {
             return false;

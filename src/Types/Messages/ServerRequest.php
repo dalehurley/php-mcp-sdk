@@ -45,7 +45,9 @@ final class ServerRequest
      * Create a request from an array based on the method.
      *
      * @param array<string, mixed> $data
+     *
      * @return Requests\PingRequest|Requests\CreateMessageRequest|Requests\ElicitRequest|Requests\ListRootsRequest
+     *
      * @throws \InvalidArgumentException
      */
     public static function fromArray(array $data): object

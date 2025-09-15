@@ -43,7 +43,7 @@ final class Prompt extends BaseMetadata
         $arguments = null;
         if (isset($data['arguments']) && is_array($data['arguments'])) {
             $arguments = array_map(
-                fn(array $arg) => PromptArgument::fromArray($arg),
+                fn (array $arg) => PromptArgument::fromArray($arg),
                 $data['arguments']
             );
         }
@@ -119,7 +119,7 @@ final class Prompt extends BaseMetadata
         }
 
         return array_map(
-            fn(PromptArgument $arg) => $arg->getName(),
+            fn (PromptArgument $arg) => $arg->getName(),
             $this->arguments
         );
     }
@@ -137,7 +137,7 @@ final class Prompt extends BaseMetadata
 
         return array_values(array_filter(
             array_map(
-                fn(PromptArgument $arg) => $arg->isRequired() ? $arg->getName() : null,
+                fn (PromptArgument $arg) => $arg->isRequired() ? $arg->getName() : null,
                 $this->arguments
             )
         ));
@@ -156,7 +156,7 @@ final class Prompt extends BaseMetadata
 
         if ($this->arguments !== null) {
             $data['arguments'] = array_map(
-                fn(PromptArgument $arg) => $arg->jsonSerialize(),
+                fn (PromptArgument $arg) => $arg->jsonSerialize(),
                 $this->arguments
             );
         }

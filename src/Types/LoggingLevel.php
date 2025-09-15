@@ -51,9 +51,10 @@ enum LoggingLevel: string
     public function getHigherLevels(): array
     {
         $currentSeverity = $this->getSeverity();
+
         return array_filter(
             self::cases(),
-            fn(self $level) => $level->getSeverity() >= $currentSeverity
+            fn (self $level) => $level->getSeverity() >= $currentSeverity
         );
     }
 }

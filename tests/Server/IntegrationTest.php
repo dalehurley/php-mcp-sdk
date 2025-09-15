@@ -4,60 +4,54 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Server;
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
 use MCP\Server\Server;
 use MCP\Shared\Transport;
-use MCP\Types\Implementation;
-use MCP\Types\Capabilities\ServerCapabilities;
-use MCP\Types\Capabilities\ClientCapabilities;
-use MCP\Types\Requests\InitializeRequest;
-use MCP\Types\Requests\ListToolsRequest;
-use MCP\Types\Requests\CallToolRequest;
-use MCP\Types\Requests\ListResourcesRequest;
-use MCP\Types\Requests\ReadResourceRequest;
-use MCP\Types\Requests\ListPromptsRequest;
-use MCP\Types\Requests\GetPromptRequest;
-use MCP\Types\Results\CallToolResult;
-use MCP\Types\Results\ReadResourceResult;
-use MCP\Types\Results\GetPromptResult;
 use MCP\Types\Content\TextContent;
-use MCP\Types\Resources\TextResourceContents;
-use MCP\Types\Prompts\PromptMessage;
-use MCP\Types\Notifications\InitializedNotification;
-use MCP\Types\Protocol as ProtocolConstants;
-use MCP\Types\McpError;
 use MCP\Types\ErrorCode;
-use MCP\Shared\RequestHandlerExtra;
+use MCP\Types\Implementation;
+use MCP\Types\Prompts\PromptMessage;
+use MCP\Types\Protocol as ProtocolConstants;
+use MCP\Types\Resources\TextResourceContents;
+use MCP\Types\Results\CallToolResult;
+use MCP\Types\Results\GetPromptResult;
+use MCP\Types\Results\ReadResourceResult;
 use PHPUnit\Framework\TestCase;
-use PHPUnit\Framework\MockObject\MockObject;
-use function Amp\async;
-use function Amp\delay;
 
 /**
- * Mock transport for testing
+ * Mock transport for testing.
  */
 class MockTransport implements Transport
 {
     /** @var callable|null */
     private $messageHandler = null;
+
     /** @var callable|null */
     private $closeHandler = null;
+
     /** @var callable|null */
     private $errorHandler = null;
+
     private array $sentMessages = [];
+
     private bool $started = false;
+
     private bool $closed = false;
 
     public function start(): \Amp\Future
     {
         $this->started = true;
-        return async(fn() => null);
+
+        return async(fn () => null);
     }
 
     public function send(array $message): \Amp\Future
     {
         $this->sentMessages[] = $message;
-        return async(fn() => null);
+
+        return async(fn () => null);
     }
 
     public function close(): \Amp\Future
@@ -66,7 +60,8 @@ class MockTransport implements Transport
         if ($this->closeHandler) {
             ($this->closeHandler)();
         }
-        return async(fn() => null);
+
+        return async(fn () => null);
     }
 
     public function setMessageHandler(callable $handler): void
@@ -116,7 +111,9 @@ class MockTransport implements Transport
 class IntegrationTest extends TestCase
 {
     private MockTransport $transport;
+
     private McpServer $server;
+
     private Implementation $serverInfo;
 
     protected function setUp(): void
@@ -150,13 +147,13 @@ class IntegrationTest extends TestCase
             'params' => [
                 'protocolVersion' => ProtocolConstants::LATEST_PROTOCOL_VERSION,
                 'capabilities' => [
-                    'roots' => ['listChanged' => true]
+                    'roots' => ['listChanged' => true],
                 ],
                 'clientInfo' => [
                     'name' => 'test-client',
-                    'version' => '1.0.0'
-                ]
-            ]
+                    'version' => '1.0.0',
+                ],
+            ],
         ];
 
         $this->transport->simulateMessage($initRequest);
@@ -180,7 +177,7 @@ class IntegrationTest extends TestCase
         $this->transport->clearSentMessages();
         $initializedNotification = [
             'jsonrpc' => '2.0',
-            'method' => 'notifications/initialized'
+            'method' => 'notifications/initialized',
         ];
 
         $this->transport->simulateMessage($initializedNotification);
@@ -200,15 +197,16 @@ class IntegrationTest extends TestCase
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
-                        'expression' => ['type' => 'string']
+                        'expression' => ['type' => 'string'],
                     ],
-                    'required' => ['expression']
-                ]
+                    'required' => ['expression'],
+                ],
             ],
             function (array $args): CallToolResult {
                 $result = eval('return ' . $args['expression'] . ';');
+
                 return new CallToolResult([
-                    new TextContent((string)$result)
+                    new TextContent((string) $result),
                 ]);
             }
         );
@@ -225,7 +223,7 @@ class IntegrationTest extends TestCase
         $listToolsRequest = [
             'jsonrpc' => '2.0',
             'id' => 2,
-            'method' => 'tools/list'
+            'method' => 'tools/list',
         ];
 
         $this->transport->simulateMessage($listToolsRequest);
@@ -256,9 +254,9 @@ class IntegrationTest extends TestCase
             'params' => [
                 'name' => 'calculator',
                 'arguments' => [
-                    'expression' => '2 + 2'
-                ]
-            ]
+                    'expression' => '2 + 2',
+                ],
+            ],
         ];
 
         $this->transport->simulateMessage($callToolRequest);
@@ -285,7 +283,7 @@ class IntegrationTest extends TestCase
             ['title' => 'Test File', 'mimeType' => 'text/plain'],
             function (string $uri): ReadResourceResult {
                 return new ReadResourceResult([
-                    new TextResourceContents($uri, 'Test file content')
+                    new TextResourceContents($uri, 'Test file content'),
                 ]);
             }
         );
@@ -302,7 +300,7 @@ class IntegrationTest extends TestCase
         $listResourcesRequest = [
             'jsonrpc' => '2.0',
             'id' => 4,
-            'method' => 'resources/list'
+            'method' => 'resources/list',
         ];
 
         $this->transport->simulateMessage($listResourcesRequest);
@@ -331,8 +329,8 @@ class IntegrationTest extends TestCase
             'id' => 5,
             'method' => 'resources/read',
             'params' => [
-                'uri' => 'file://test.txt'
-            ]
+                'uri' => 'file://test.txt',
+            ],
         ];
 
         $this->transport->simulateMessage($readResourceRequest);
@@ -361,17 +359,17 @@ class IntegrationTest extends TestCase
                 'argsSchema' => [
                     'type' => 'object',
                     'properties' => [
-                        'name' => ['type' => 'string']
+                        'name' => ['type' => 'string'],
                     ],
-                    'required' => ['name']
-                ]
+                    'required' => ['name'],
+                ],
             ],
             function (array $args): GetPromptResult {
                 return new GetPromptResult([
                     new PromptMessage(
                         'user',
                         new TextContent("Hello, {$args['name']}!")
-                    )
+                    ),
                 ]);
             }
         );
@@ -388,7 +386,7 @@ class IntegrationTest extends TestCase
         $listPromptsRequest = [
             'jsonrpc' => '2.0',
             'id' => 6,
-            'method' => 'prompts/list'
+            'method' => 'prompts/list',
         ];
 
         $this->transport->simulateMessage($listPromptsRequest);
@@ -419,9 +417,9 @@ class IntegrationTest extends TestCase
             'params' => [
                 'name' => 'greeting',
                 'arguments' => [
-                    'name' => 'World'
-                ]
-            ]
+                    'name' => 'World',
+                ],
+            ],
         ];
 
         $this->transport->simulateMessage($getPromptRequest);
@@ -456,8 +454,8 @@ class IntegrationTest extends TestCase
             'method' => 'tools/call',
             'params' => [
                 'name' => 'nonexistent',
-                'arguments' => []
-            ]
+                'arguments' => [],
+            ],
         ];
 
         $this->transport->simulateMessage($callToolRequest);
@@ -484,14 +482,14 @@ class IntegrationTest extends TestCase
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
-                        'required_param' => ['type' => 'string']
+                        'required_param' => ['type' => 'string'],
                     ],
-                    'required' => ['required_param']
-                ]
+                    'required' => ['required_param'],
+                ],
             ],
             function (array $args): CallToolResult {
                 return new CallToolResult([
-                    ['type' => 'text', 'text' => 'Success']
+                    ['type' => 'text', 'text' => 'Success'],
                 ]);
             }
         );
@@ -511,8 +509,8 @@ class IntegrationTest extends TestCase
             'method' => 'tools/call',
             'params' => [
                 'name' => 'strict-tool',
-                'arguments' => [] // Missing required parameter
-            ]
+                'arguments' => [], // Missing required parameter
+            ],
         ];
 
         $this->transport->simulateMessage($callToolRequest);
@@ -552,7 +550,7 @@ class IntegrationTest extends TestCase
         $listToolsRequest = [
             'jsonrpc' => '2.0',
             'id' => 10,
-            'method' => 'tools/list'
+            'method' => 'tools/list',
         ];
 
         $this->transport->simulateMessage($listToolsRequest);
@@ -572,8 +570,8 @@ class IntegrationTest extends TestCase
             'method' => 'tools/call',
             'params' => [
                 'name' => 'disabled-tool',
-                'arguments' => []
-            ]
+                'arguments' => [],
+            ],
         ];
 
         $this->transport->simulateMessage($callToolRequest);
@@ -597,8 +595,8 @@ class IntegrationTest extends TestCase
             'params' => [
                 'protocolVersion' => ProtocolConstants::LATEST_PROTOCOL_VERSION,
                 'capabilities' => [],
-                'clientInfo' => ['name' => 'test-client', 'version' => '1.0.0']
-            ]
+                'clientInfo' => ['name' => 'test-client', 'version' => '1.0.0'],
+            ],
         ];
 
         $this->transport->simulateMessage($initRequest);
@@ -606,7 +604,7 @@ class IntegrationTest extends TestCase
 
         $initializedNotification = [
             'jsonrpc' => '2.0',
-            'method' => 'notifications/initialized'
+            'method' => 'notifications/initialized',
         ];
 
         $this->transport->simulateMessage($initializedNotification);

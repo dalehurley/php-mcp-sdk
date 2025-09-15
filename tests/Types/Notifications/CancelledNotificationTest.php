@@ -20,13 +20,13 @@ class CancelledNotificationTest extends TestCase
     {
         $requestId = RequestId::fromString('req-123');
         $notification = CancelledNotification::create($requestId, 'User cancelled');
-        
+
         $this->assertEquals('notifications/cancelled', $notification->getMethod());
-        
+
         $id = $notification->getRequestId();
         $this->assertNotNull($id);
         $this->assertEquals('req-123', $id->getValue());
-        
+
         $this->assertEquals('User cancelled', $notification->getReason());
     }
 
@@ -37,11 +37,11 @@ class CancelledNotificationTest extends TestCase
     {
         $requestId = RequestId::fromInt(456);
         $notification = CancelledNotification::create($requestId);
-        
+
         $id = $notification->getRequestId();
         $this->assertNotNull($id);
         $this->assertEquals(456, $id->getValue());
-        
+
         $this->assertNull($notification->getReason());
     }
 
@@ -52,24 +52,24 @@ class CancelledNotificationTest extends TestCase
     {
         // String ID
         $notification = new CancelledNotification([
-            'requestId' => 'string-id'
+            'requestId' => 'string-id',
         ]);
-        
+
         $id = $notification->getRequestId();
         $this->assertNotNull($id);
         $this->assertTrue($id->isString());
         $this->assertEquals('string-id', $id->getValue());
-        
+
         // Integer ID
         $notification = new CancelledNotification([
-            'requestId' => 789
+            'requestId' => 789,
         ]);
-        
+
         $id = $notification->getRequestId();
         $this->assertNotNull($id);
         $this->assertTrue($id->isInt());
         $this->assertEquals(789, $id->getValue());
-        
+
         // No params
         $notification = new CancelledNotification();
         $this->assertNull($notification->getRequestId());
@@ -82,16 +82,16 @@ class CancelledNotificationTest extends TestCase
     {
         $notification = new CancelledNotification([
             'requestId' => 'id',
-            'reason' => 'Timeout exceeded'
+            'reason' => 'Timeout exceeded',
         ]);
-        
+
         $this->assertEquals('Timeout exceeded', $notification->getReason());
-        
+
         // No reason
         $notification = new CancelledNotification([
-            'requestId' => 'id'
+            'requestId' => 'id',
         ]);
-        
+
         $this->assertNull($notification->getReason());
     }
 
@@ -103,33 +103,33 @@ class CancelledNotificationTest extends TestCase
         // Valid notification
         $this->assertTrue(CancelledNotification::isValid([
             'method' => 'notifications/cancelled',
-            'params' => ['requestId' => 'req-123']
+            'params' => ['requestId' => 'req-123'],
         ]));
-        
+
         // Valid with reason
         $this->assertTrue(CancelledNotification::isValid([
             'method' => 'notifications/cancelled',
             'params' => [
                 'requestId' => 456,
-                'reason' => 'Cancelled by user'
-            ]
+                'reason' => 'Cancelled by user',
+            ],
         ]));
-        
+
         // Wrong method
         $this->assertFalse(CancelledNotification::isValid([
             'method' => 'notifications/other',
-            'params' => ['requestId' => 'req-123']
+            'params' => ['requestId' => 'req-123'],
         ]));
-        
+
         // Missing requestId
         $this->assertFalse(CancelledNotification::isValid([
             'method' => 'notifications/cancelled',
-            'params' => ['reason' => 'No ID']
+            'params' => ['reason' => 'No ID'],
         ]));
-        
+
         // No params
         $this->assertFalse(CancelledNotification::isValid([
-            'method' => 'notifications/cancelled'
+            'method' => 'notifications/cancelled',
         ]));
     }
 
@@ -140,9 +140,9 @@ class CancelledNotificationTest extends TestCase
     {
         $requestId = RequestId::fromString('json-req');
         $notification = CancelledNotification::create($requestId, 'Test reason');
-        
+
         $json = $notification->jsonSerialize();
-        
+
         $this->assertEquals('notifications/cancelled', $json['method']);
         $this->assertArrayHasKey('params', $json);
         $this->assertEquals('json-req', $json['params']['requestId']);
@@ -156,9 +156,9 @@ class CancelledNotificationTest extends TestCase
     {
         $requestId = RequestId::fromInt(999);
         $notification = CancelledNotification::create($requestId);
-        
+
         $json = $notification->jsonSerialize();
-        
+
         $this->assertEquals(999, $json['params']['requestId']);
         $this->assertArrayNotHasKey('reason', $json['params']);
     }

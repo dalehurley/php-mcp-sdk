@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Types\Requests;
 
-use MCP\Types\Request;
 use MCP\Types\Elicitation\PrimitiveSchemaDefinition;
+use MCP\Types\Request;
 
 /**
  * A request from the server to elicit user input via the client.
@@ -13,7 +13,9 @@ use MCP\Types\Elicitation\PrimitiveSchemaDefinition;
  */
 final class ElicitRequest extends Request
 {
-    public const METHOD = 'elicitation/create';        /**
+    public const METHOD = 'elicitation/create';
+
+    /**
      * @param array<string, mixed>|null|string $methodOrParams For backward compatibility, can be params array or method string
      * @param array<string, mixed>|null $params Only used when first parameter is method string
      */
@@ -49,7 +51,7 @@ final class ElicitRequest extends Request
             [
                 'type' => 'object',
                 'properties' => array_map(
-                    fn(PrimitiveSchemaDefinition $prop) => $prop->jsonSerialize(),
+                    fn (PrimitiveSchemaDefinition $prop) => $prop->jsonSerialize(),
                     $properties
                 ),
             ],

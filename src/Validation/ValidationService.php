@@ -80,7 +80,9 @@ class ValidationService
      * Validate data against a type.
      *
      * @param mixed $data
+     *
      * @return array<string, mixed>
+     *
      * @throws ValidationException
      */
     public function validate(string $type, mixed $data): array
@@ -104,11 +106,13 @@ class ValidationService
      * Validate progress token.
      *
      * @param mixed $data
+     *
      * @throws ValidationException
      */
     public function validateProgressToken(mixed $data): string|int
     {
         $this->validate('progressToken', $data);
+
         return $data;
     }
 
@@ -116,11 +120,13 @@ class ValidationService
      * Validate request ID.
      *
      * @param mixed $data
+     *
      * @throws ValidationException
      */
     public function validateRequestId(mixed $data): string|int
     {
         $this->validate('requestId', $data);
+
         return $data;
     }
 
@@ -132,6 +138,7 @@ class ValidationService
     public function validateCursor(mixed $data): string
     {
         $this->validate('cursor', $data);
+
         return $data;
     }
 
@@ -139,6 +146,7 @@ class ValidationService
      * Validate JSON-RPC request.
      *
      * @return array<string, mixed>
+     *
      * @throws ValidationException
      */
     public function validateJSONRPCRequest(mixed $data): array
@@ -150,6 +158,7 @@ class ValidationService
      * Validate content block.
      *
      * @return array<string, mixed>
+     *
      * @throws ValidationException
      */
     public function validateContentBlock(mixed $data): array
@@ -161,6 +170,7 @@ class ValidationService
      * Validate tool.
      *
      * @return array<string, mixed>
+     *
      * @throws ValidationException
      */
     public function validateTool(mixed $data): array
@@ -172,6 +182,7 @@ class ValidationService
      * Validate create message result.
      *
      * @return array<string, mixed>
+     *
      * @throws ValidationException
      */
     public function validateCreateMessageResult(mixed $data): array
@@ -183,6 +194,7 @@ class ValidationService
      * Validate elicit result.
      *
      * @return array<string, mixed>
+     *
      * @throws ValidationException
      */
     public function validateElicitResult(mixed $data): array
@@ -194,6 +206,7 @@ class ValidationService
      * Validate list roots result.
      *
      * @return array<string, mixed>
+     *
      * @throws ValidationException
      */
     public function validateListRootsResult(mixed $data): array

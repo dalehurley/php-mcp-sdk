@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace MCP\Client\Middleware;
 
+use function Amp\async;
+
 use Amp\Future;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
 
-use function Amp\async;
+use Psr\Log\LogLevel;
 
 /**
  * Middleware that logs HTTP requests and responses.
@@ -31,7 +32,7 @@ class LoggingMiddleware implements MiddlewareInterface
         return async(function () use ($request, $next) {
             $startTime = microtime(true);
             $method = $request->getMethod();
-            $uri = (string)$request->getUri();
+            $uri = (string) $request->getUri();
 
             try {
                 $response = $next($request)->await();
@@ -46,6 +47,7 @@ class LoggingMiddleware implements MiddlewareInterface
             } catch (\Throwable $exception) {
                 $duration = (microtime(true) - $startTime) * 1000;
                 $this->logError($method, $uri, $duration, $exception, $request);
+
                 throw $exception;
             }
         });
@@ -124,6 +126,7 @@ class LoggingMiddleware implements MiddlewareInterface
         foreach ($headers as $name => $values) {
             $formatted[$name] = implode(', ', $values);
         }
+
         return $formatted;
     }
 }

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace MCP\Server;
 
-use MCP\Server\ResourceTemplate;
-use MCP\Server\ResourceMetadata;
-
 /**
  * Represents a registered resource template in the MCP server.
  */
@@ -31,7 +28,7 @@ class RegisteredResourceTemplate
     }
 
     /**
-     * Enable the resource template
+     * Enable the resource template.
      */
     public function enable(): void
     {
@@ -40,7 +37,7 @@ class RegisteredResourceTemplate
     }
 
     /**
-     * Disable the resource template
+     * Disable the resource template.
      */
     public function disable(): void
     {
@@ -49,7 +46,7 @@ class RegisteredResourceTemplate
     }
 
     /**
-     * Update resource template properties
+     * Update resource template properties.
      *
      * @param array{
      *   name?: string|null,
@@ -88,7 +85,7 @@ class RegisteredResourceTemplate
     }
 
     /**
-     * Remove the resource template
+     * Remove the resource template.
      *
      * @param callable $onRemove Callback to handle removal
      */

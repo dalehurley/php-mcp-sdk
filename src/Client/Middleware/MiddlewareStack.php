@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace MCP\Client\Middleware;
 
+use function Amp\async;
+
 use Amp\Future;
 use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 
-use function Amp\async;
+use Psr\Http\Message\RequestInterface;
 
 /**
  * Middleware stack that chains multiple middleware together.
@@ -34,6 +34,7 @@ class MiddlewareStack implements MiddlewareInterface
     public function add(MiddlewareInterface $middleware): self
     {
         $this->middleware[] = $middleware;
+
         return $this;
     }
 
@@ -52,6 +53,7 @@ class MiddlewareStack implements MiddlewareInterface
     {
         return async(function () use ($request) {
             $handler = $this->createHandler(0);
+
             return $handler($request)->await();
         });
     }
@@ -100,6 +102,7 @@ class MiddlewareStack implements MiddlewareInterface
     public function clear(): self
     {
         $this->middleware = [];
+
         return $this;
     }
 
@@ -112,6 +115,7 @@ class MiddlewareStack implements MiddlewareInterface
         foreach ($middleware as $mw) {
             $stack->add($mw);
         }
+
         return $stack;
     }
 }

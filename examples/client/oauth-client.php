@@ -2,8 +2,8 @@
 <?php
 
 /**
- * OAuth Client Example
- * 
+ * OAuth Client Example.
+ *
  * This example demonstrates how to:
  * - Implement OAuth 2.0 authentication flow
  * - Manage access tokens and refresh tokens
@@ -13,17 +13,16 @@
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use function Amp\async;
+use function Amp\delay;
+
+use GuzzleHttp\Client as HttpClient;
 use MCP\Client\Client;
 use MCP\Client\ClientOptions;
 use MCP\Client\Transport\StdioClientTransport;
 use MCP\Client\Transport\StdioServerParameters;
-use MCP\Client\Auth\OAuthAuthProvider;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ClientCapabilities;
-use GuzzleHttp\Client as HttpClient;
-use function Amp\async;
-use function Amp\await;
-use function Amp\delay;
+use MCP\Types\Implementation;
 
 // OAuth Configuration
 $oauthConfig = [
@@ -32,7 +31,7 @@ $oauthConfig = [
     'authorization_url' => $_ENV['OAUTH_AUTH_URL'] ?? 'https://auth.example.com/oauth/authorize',
     'token_url' => $_ENV['OAUTH_TOKEN_URL'] ?? 'https://auth.example.com/oauth/token',
     'redirect_uri' => $_ENV['OAUTH_REDIRECT_URI'] ?? 'http://localhost:8080/callback',
-    'scopes' => ['read', 'write']
+    'scopes' => ['read', 'write'],
 ];
 
 // Token storage (in production, use secure storage)
@@ -40,7 +39,7 @@ $tokenStorage = [
     'access_token' => null,
     'refresh_token' => null,
     'expires_at' => null,
-    'token_type' => 'Bearer'
+    'token_type' => 'Bearer',
 ];
 
 // Create HTTP client for OAuth requests
@@ -48,8 +47,8 @@ $httpClient = new HttpClient([
     'timeout' => 30,
     'headers' => [
         'User-Agent' => 'PHP-MCP-OAuth-Client/1.0.0',
-        'Accept' => 'application/json'
-    ]
+        'Accept' => 'application/json',
+    ],
 ]);
 
 async(function () use ($oauthConfig, &$tokenStorage, $httpClient) {
@@ -100,7 +99,7 @@ async(function () use ($oauthConfig, &$tokenStorage, $httpClient) {
         $transport = new StdioClientTransport($serverParams);
         $client->connect($transport)->await();
 
-        echo "✅ Connected! Server info: " . json_encode($client->getServerVersion()) . "\n\n";
+        echo '✅ Connected! Server info: ' . json_encode($client->getServerVersion()) . "\n\n";
 
         // Demonstrate authenticated operations
         demonstrateAuthenticatedOperations($client, $tokenStorage)->await();
@@ -116,14 +115,14 @@ async(function () use ($oauthConfig, &$tokenStorage, $httpClient) {
         $client->close()->await();
         echo "✅ OAuth client demo completed!\n";
     } catch (\Throwable $e) {
-        echo "❌ Error: " . $e->getMessage() . "\n";
+        echo '❌ Error: ' . $e->getMessage() . "\n";
         echo $e->getTraceAsString() . "\n";
         exit(1);
     }
 })->await();
 
 /**
- * Check if token is expired
+ * Check if token is expired.
  */
 function isTokenExpired(array $tokenStorage): bool
 {
@@ -136,7 +135,7 @@ function isTokenExpired(array $tokenStorage): bool
 }
 
 /**
- * Perform OAuth 2.0 authorization code flow
+ * Perform OAuth 2.0 authorization code flow.
  */
 function performOAuthFlow(HttpClient $httpClient, array $config, array &$tokenStorage): \Amp\Future
 {
@@ -158,7 +157,7 @@ function performOAuthFlow(HttpClient $httpClient, array $config, array &$tokenSt
             'client_id' => $config['client_id'],
             'redirect_uri' => $config['redirect_uri'],
             'scope' => implode(' ', $config['scopes']),
-            'state' => $state
+            'state' => $state,
         ];
 
         $authUrl = $config['authorization_url'] . '?' . http_build_query($authParams);
@@ -181,7 +180,7 @@ function performOAuthFlow(HttpClient $httpClient, array $config, array &$tokenSt
                 'refresh_token' => 'refresh_' . bin2hex(random_bytes(16)),
                 'token_type' => 'Bearer',
                 'expires_in' => 3600,
-                'scope' => implode(' ', $config['scopes'])
+                'scope' => implode(' ', $config['scopes']),
             ];
 
             // In a real implementation, you would make this request:
@@ -195,7 +194,7 @@ function performOAuthFlow(HttpClient $httpClient, array $config, array &$tokenSt
                 'redirect_uri' => $config['redirect_uri']
             ]
         ]);
-        
+
         $tokenResponse = json_decode($response->getBody(), true);
         */
 
@@ -207,21 +206,21 @@ function performOAuthFlow(HttpClient $httpClient, array $config, array &$tokenSt
             $tokenStorage['scope'] = $tokenResponse['scope'] ?? implode(' ', $config['scopes']);
 
             echo "✅ Access token obtained successfully!\n";
-            echo "🕒 Token expires at: " . date('Y-m-d H:i:s', $tokenStorage['expires_at']) . "\n";
+            echo '🕒 Token expires at: ' . date('Y-m-d H:i:s', $tokenStorage['expires_at']) . "\n";
         } catch (\Exception $e) {
-            throw new \Exception("Failed to exchange authorization code: " . $e->getMessage());
+            throw new \Exception('Failed to exchange authorization code: ' . $e->getMessage());
         }
     });
 }
 
 /**
- * Refresh access token using refresh token
+ * Refresh access token using refresh token.
  */
 function refreshAccessToken(HttpClient $httpClient, array $config, array &$tokenStorage): \Amp\Future
 {
     return async(function () use ($httpClient, $config, &$tokenStorage) {
         if (!$tokenStorage['refresh_token']) {
-            throw new \Exception("No refresh token available");
+            throw new \Exception('No refresh token available');
         }
 
         try {
@@ -231,7 +230,7 @@ function refreshAccessToken(HttpClient $httpClient, array $config, array &$token
                 'refresh_token' => $tokenStorage['refresh_token'], // Usually stays the same
                 'token_type' => 'Bearer',
                 'expires_in' => 3600,
-                'scope' => $tokenStorage['scope'] ?? implode(' ', $config['scopes'])
+                'scope' => $tokenStorage['scope'] ?? implode(' ', $config['scopes']),
             ];
 
             // In a real implementation:
@@ -244,7 +243,7 @@ function refreshAccessToken(HttpClient $httpClient, array $config, array &$token
                 'refresh_token' => $tokenStorage['refresh_token']
             ]
         ]);
-        
+
         $tokenResponse = json_decode($response->getBody(), true);
         */
 
@@ -257,13 +256,13 @@ function refreshAccessToken(HttpClient $httpClient, array $config, array &$token
 
             echo "✅ Access token refreshed successfully!\n";
         } catch (\Exception $e) {
-            throw new \Exception("Failed to refresh access token: " . $e->getMessage());
+            throw new \Exception('Failed to refresh access token: ' . $e->getMessage());
         }
     });
 }
 
 /**
- * Create MCP client with OAuth authentication
+ * Create MCP client with OAuth authentication.
  */
 function createAuthenticatedClient(array $tokenStorage): Client
 {
@@ -279,9 +278,10 @@ function createAuthenticatedClient(array $tokenStorage): Client
     $client->setRequestInterceptor(function ($request) use ($tokenStorage) {
         // Add Authorization header to all requests
         if ($tokenStorage['access_token']) {
-            $request['headers'] = $request['headers'] ?? [];
+            $request['headers'] ??= [];
             $request['headers']['Authorization'] = $tokenStorage['token_type'] . ' ' . $tokenStorage['access_token'];
         }
+
         return $request;
     });
 
@@ -289,7 +289,7 @@ function createAuthenticatedClient(array $tokenStorage): Client
 }
 
 /**
- * Demonstrate authenticated operations
+ * Demonstrate authenticated operations.
  */
 function demonstrateAuthenticatedOperations(Client $client, array $tokenStorage): \Amp\Future
 {
@@ -299,6 +299,7 @@ function demonstrateAuthenticatedOperations(Client $client, array $tokenStorage)
 
         // List available tools (should include protected tools)
         echo "📋 Listing available tools...\n";
+
         try {
             $tools = $client->listTools()->await();
             foreach ($tools->getTools() as $tool) {
@@ -306,11 +307,12 @@ function demonstrateAuthenticatedOperations(Client $client, array $tokenStorage)
             }
             echo "\n";
         } catch (\Exception $e) {
-            echo "❌ Failed to list tools: " . $e->getMessage() . "\n\n";
+            echo '❌ Failed to list tools: ' . $e->getMessage() . "\n\n";
         }
 
         // List resources (including protected ones)
         echo "📁 Listing available resources...\n";
+
         try {
             $resources = $client->listResources()->await();
             foreach ($resources->getResources() as $resource) {
@@ -318,11 +320,12 @@ function demonstrateAuthenticatedOperations(Client $client, array $tokenStorage)
             }
             echo "\n";
         } catch (\Exception $e) {
-            echo "❌ Failed to list resources: " . $e->getMessage() . "\n\n";
+            echo '❌ Failed to list resources: ' . $e->getMessage() . "\n\n";
         }
 
         // Read user profile (requires authentication)
         echo "👤 Reading user profile...\n";
+
         try {
             $profile = $client->readResourceByUri('user://profile')->await();
             foreach ($profile->getContents() as $content) {
@@ -331,13 +334,13 @@ function demonstrateAuthenticatedOperations(Client $client, array $tokenStorage)
                 }
             }
         } catch (\Exception $e) {
-            echo "❌ Failed to read profile: " . $e->getMessage() . "\n\n";
+            echo '❌ Failed to read profile: ' . $e->getMessage() . "\n\n";
         }
     });
 }
 
 /**
- * Test token validation
+ * Test token validation.
  */
 function testTokenValidation(Client $client, array $tokenStorage): \Amp\Future
 {
@@ -347,24 +350,24 @@ function testTokenValidation(Client $client, array $tokenStorage): \Amp\Future
 
         try {
             $result = $client->callToolByName('validate-token', [
-                'token' => $tokenStorage['access_token']
+                'token' => $tokenStorage['access_token'],
             ])->await();
 
             if ($result->isError()) {
-                echo "❌ Token validation failed: " . getResultText($result) . "\n";
+                echo '❌ Token validation failed: ' . getResultText($result) . "\n";
             } else {
                 echo "✅ Token validation successful:\n";
                 echo getResultText($result) . "\n";
             }
             echo "\n";
         } catch (\Exception $e) {
-            echo "❌ Token validation error: " . $e->getMessage() . "\n\n";
+            echo '❌ Token validation error: ' . $e->getMessage() . "\n\n";
         }
     });
 }
 
 /**
- * Test scope-based access control
+ * Test scope-based access control.
  */
 function testScopedAccess(Client $client, array $tokenStorage): \Amp\Future
 {
@@ -377,35 +380,35 @@ function testScopedAccess(Client $client, array $tokenStorage): \Amp\Future
                 'tool' => 'list-users',
                 'params' => ['include_profiles' => true],
                 'required_scope' => 'read',
-                'description' => 'List users (requires read scope)'
+                'description' => 'List users (requires read scope)',
             ],
             [
                 'tool' => 'update-profile',
                 'params' => ['field' => 'role', 'value' => 'Senior Developer'],
                 'required_scope' => 'write',
-                'description' => 'Update profile (requires write scope)'
+                'description' => 'Update profile (requires write scope)',
             ],
             [
                 'tool' => 'admin-stats',
                 'params' => [],
                 'required_scope' => 'admin',
-                'description' => 'Get admin statistics (requires admin scope)'
-            ]
+                'description' => 'Get admin statistics (requires admin scope)',
+            ],
         ];
 
         $userScopes = explode(' ', $tokenStorage['scope'] ?? '');
-        echo "🏷️  User scopes: " . implode(', ', $userScopes) . "\n\n";
+        echo '🏷️  User scopes: ' . implode(', ', $userScopes) . "\n\n";
 
         foreach ($scopeTests as $test) {
             echo "🧪 Testing: {$test['description']}\n";
             echo "   Required scope: {$test['required_scope']}\n";
-            echo "   User has scope: " . (in_array($test['required_scope'], $userScopes) ? '✅ Yes' : '❌ No') . "\n";
+            echo '   User has scope: ' . (in_array($test['required_scope'], $userScopes) ? '✅ Yes' : '❌ No') . "\n";
 
             try {
                 $result = $client->callToolByName($test['tool'], $test['params'])->await();
 
                 if ($result->isError()) {
-                    echo "   Result: ❌ " . getResultText($result) . "\n";
+                    echo '   Result: ❌ ' . getResultText($result) . "\n";
                 } else {
                     echo "   Result: ✅ Access granted\n";
                     // Show first line of result
@@ -417,7 +420,7 @@ function testScopedAccess(Client $client, array $tokenStorage): \Amp\Future
                     echo "   Data: $firstLine\n";
                 }
             } catch (\Exception $e) {
-                echo "   Result: ❌ Exception: " . $e->getMessage() . "\n";
+                echo '   Result: ❌ Exception: ' . $e->getMessage() . "\n";
             }
 
             echo "\n";
@@ -426,7 +429,7 @@ function testScopedAccess(Client $client, array $tokenStorage): \Amp\Future
 }
 
 /**
- * Extract text content from a result
+ * Extract text content from a result.
  */
 function getResultText($result): string
 {
@@ -452,7 +455,7 @@ function getResultText($result): string
 }
 
 /**
- * Clean up function to revoke tokens on exit
+ * Clean up function to revoke tokens on exit.
  */
 function cleanupTokens(array $config, array $tokenStorage): void
 {

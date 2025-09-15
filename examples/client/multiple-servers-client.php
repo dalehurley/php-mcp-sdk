@@ -2,8 +2,8 @@
 <?php
 
 /**
- * Multiple Servers Client Example
- * 
+ * Multiple Servers Client Example.
+ *
  * This example demonstrates how to:
  * - Connect to multiple MCP servers simultaneously
  * - Coordinate operations across different servers
@@ -20,14 +20,15 @@ require_once __DIR__ . '/../../src/Client/ClientOptions.php';
 require_once __DIR__ . '/../../src/Client/Client.php';
 require_once __DIR__ . '/../../src/Client/Transport/StdioClientTransport.php';
 
+use function Amp\async;
+use function Amp\Future\await;
+
 use MCP\Client\Client;
 use MCP\Client\ClientOptions;
 use MCP\Client\Transport\StdioClientTransport;
 use MCP\Client\Transport\StdioServerParameters;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ClientCapabilities;
-use function Amp\async;
-use function Amp\Future\await;
+use MCP\Types\Implementation;
 
 // Server configurations
 $serverConfigs = [
@@ -36,36 +37,36 @@ $serverConfigs = [
         'transport' => 'stdio',
         'command' => 'php',
         'args' => [__DIR__ . '/../server/simple-server.php'],
-        'description' => 'Mathematical calculations and basic operations'
+        'description' => 'Mathematical calculations and basic operations',
     ],
     'weather' => [
         'name' => 'Weather Server',
         'transport' => 'stdio',
         'command' => 'php',
         'args' => [__DIR__ . '/../server/weather-server.php'],
-        'description' => 'Weather information and forecasts'
+        'description' => 'Weather information and forecasts',
     ],
     'database' => [
         'name' => 'Database Server',
         'transport' => 'stdio',
         'command' => 'php',
         'args' => [__DIR__ . '/../server/sqlite-server.php'],
-        'description' => 'Database queries and management'
+        'description' => 'Database queries and management',
     ],
     'resources' => [
         'name' => 'Resource Server',
         'transport' => 'stdio',
         'command' => 'php',
         'args' => [__DIR__ . '/../server/resource-server.php'],
-        'description' => 'File and resource management'
-    ]
+        'description' => 'File and resource management',
+    ],
 ];
 
 async(function () use ($serverConfigs) {
     try {
         echo "🌐 Multiple Servers MCP Client\n";
         echo "=============================\n";
-        echo "Connecting to " . count($serverConfigs) . " servers simultaneously...\n\n";
+        echo 'Connecting to ' . count($serverConfigs) . " servers simultaneously...\n\n";
 
         // Demonstrate sequential connections
         demonstrateSequentialConnections($serverConfigs)->await();
@@ -78,14 +79,14 @@ async(function () use ($serverConfigs) {
 
         echo "✅ Multiple servers demo completed!\n";
     } catch (\Throwable $e) {
-        echo "❌ Error: " . $e->getMessage() . "\n";
+        echo '❌ Error: ' . $e->getMessage() . "\n";
         echo $e->getTraceAsString() . "\n";
         exit(1);
     }
 })->await();
 
 /**
- * Demonstrate connecting to servers sequentially
+ * Demonstrate connecting to servers sequentially.
  */
 function demonstrateSequentialConnections(array $serverConfigs): \Amp\Future
 {
@@ -129,16 +130,16 @@ function demonstrateSequentialConnections(array $serverConfigs): \Amp\Future
                 $connectionResults[$serverId] = [
                     'success' => true,
                     'time' => $connectionTime,
-                    'server_info' => $serverInfo
+                    'server_info' => $serverInfo,
                 ];
 
-                echo "  ✅ Connected in " . round($connectionTime * 1000, 2) . "ms\n";
+                echo '  ✅ Connected in ' . round($connectionTime * 1000, 2) . "ms\n";
                 echo "  📋 Server: {$serverInfo['name']} v{$serverInfo['version']}\n";
             } catch (\Exception $e) {
-                echo "  ❌ Failed: " . $e->getMessage() . "\n";
+                echo '  ❌ Failed: ' . $e->getMessage() . "\n";
                 $connectionResults[$serverId] = [
                     'success' => false,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
 
@@ -153,7 +154,7 @@ function demonstrateSequentialConnections(array $serverConfigs): \Amp\Future
         foreach ($clients as $serverId => $client) {
             try {
                 $client->close()->await();
-                echo "  ✅ Closed connection to " . $serverConfigs[$serverId]['name'] . "\n";
+                echo '  ✅ Closed connection to ' . $serverConfigs[$serverId]['name'] . "\n";
             } catch (\Exception $e) {
                 echo "  ⚠️  Error closing {$serverConfigs[$serverId]['name']}: " . $e->getMessage() . "\n";
             }
@@ -163,7 +164,7 @@ function demonstrateSequentialConnections(array $serverConfigs): \Amp\Future
 }
 
 /**
- * Demonstrate connecting to servers in parallel
+ * Demonstrate connecting to servers in parallel.
  */
 function demonstrateParallelConnections(array $serverConfigs): \Amp\Future
 {
@@ -207,14 +208,14 @@ function demonstrateParallelConnections(array $serverConfigs): \Amp\Future
                         'client' => $client,
                         'success' => true,
                         'time' => $connectionTime,
-                        'server_info' => $client->getServerVersion()
+                        'server_info' => $client->getServerVersion(),
                     ];
                 } catch (\Exception $e) {
                     return [
                         'client' => null,
                         'success' => false,
                         'time' => microtime(true) - $startTime,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ];
                 }
             });
@@ -224,7 +225,7 @@ function demonstrateParallelConnections(array $serverConfigs): \Amp\Future
         $results = await($connectionPromises);
         $totalTime = microtime(true) - $overallStart;
 
-        echo "⏱️  Total parallel connection time: " . round($totalTime * 1000, 2) . "ms\n\n";
+        echo '⏱️  Total parallel connection time: ' . round($totalTime * 1000, 2) . "ms\n\n";
 
         // Process results
         $successfulClients = [];
@@ -251,6 +252,7 @@ function demonstrateParallelConnections(array $serverConfigs): \Amp\Future
             $closePromises[] = async(function () use ($client, $serverId, $serverConfigs) {
                 try {
                     $client->close()->await();
+
                     return "✅ Closed {$serverConfigs[$serverId]['name']}";
                 } catch (\Exception $e) {
                     return "⚠️  Error closing {$serverConfigs[$serverId]['name']}: " . $e->getMessage();
@@ -267,7 +269,7 @@ function demonstrateParallelConnections(array $serverConfigs): \Amp\Future
 }
 
 /**
- * Test basic operations on each server
+ * Test basic operations on each server.
  */
 function testBasicOperationsOnServers(array $clients): \Amp\Future
 {
@@ -281,15 +283,15 @@ function testBasicOperationsOnServers(array $clients): \Amp\Future
             try {
                 // List tools
                 $tools = $client->listTools()->await();
-                echo "  🔧 Tools: " . count($tools->getTools()) . " available\n";
+                echo '  🔧 Tools: ' . count($tools->getTools()) . " available\n";
 
                 // List resources
                 $resources = $client->listResources()->await();
-                echo "  📁 Resources: " . count($resources->getResources()) . " available\n";
+                echo '  📁 Resources: ' . count($resources->getResources()) . " available\n";
 
                 // List prompts
                 $prompts = $client->listPrompts()->await();
-                echo "  💬 Prompts: " . count($prompts->getPrompts()) . " available\n";
+                echo '  💬 Prompts: ' . count($prompts->getPrompts()) . " available\n";
             } catch (\Exception $e) {
                 echo "  ❌ Error testing $serverId: " . $e->getMessage() . "\n";
             }
@@ -300,7 +302,7 @@ function testBasicOperationsOnServers(array $clients): \Amp\Future
 }
 
 /**
- * Demonstrate parallel operations across servers
+ * Demonstrate parallel operations across servers.
  */
 function demonstrateParallelOperations(array $clients, array $serverConfigs): \Amp\Future
 {
@@ -313,27 +315,27 @@ function demonstrateParallelOperations(array $clients, array $serverConfigs): \A
             'calculator' => [
                 'tool' => 'calculate',
                 'params' => ['expression' => '(10 + 5) * 2'],
-                'description' => 'Mathematical calculation'
+                'description' => 'Mathematical calculation',
             ],
             'weather' => [
                 'tool' => 'cache-status',
                 'params' => [],
-                'description' => 'Weather cache status'
+                'description' => 'Weather cache status',
             ],
             'database' => [
                 'tool' => 'table-stats',
                 'params' => [],
-                'description' => 'Database statistics'
+                'description' => 'Database statistics',
             ],
             'resources' => [
                 'tool' => 'create-resource',
                 'params' => [
                     'id' => 'parallel-test-' . time(),
                     'title' => 'Parallel Test Resource',
-                    'data' => ['created_by' => 'parallel-client', 'timestamp' => time()]
+                    'data' => ['created_by' => 'parallel-client', 'timestamp' => time()],
                 ],
-                'description' => 'Create test resource'
-            ]
+                'description' => 'Create test resource',
+            ],
         ];
 
         echo "🚀 Starting parallel operations...\n";
@@ -348,16 +350,17 @@ function demonstrateParallelOperations(array $clients, array $serverConfigs): \A
                     try {
                         $result = $clients[$serverId]->callToolByName($operation['tool'], $operation['params'])->await();
                         $success = !$result->isError();
+
                         return [
                             'success' => $success,
                             'result' => $result,
-                            'error' => $success ? null : getResultText($result)
+                            'error' => $success ? null : getResultText($result),
                         ];
                     } catch (\Exception $e) {
                         return [
                             'success' => false,
                             'result' => null,
-                            'error' => $e->getMessage()
+                            'error' => $e->getMessage(),
                         ];
                     }
                 });
@@ -368,7 +371,7 @@ function demonstrateParallelOperations(array $clients, array $serverConfigs): \A
         $operationResults = await($operationPromises);
         $totalTime = microtime(true) - $startTime;
 
-        echo "⏱️  Total operation time: " . round($totalTime * 1000, 2) . "ms\n\n";
+        echo '⏱️  Total operation time: ' . round($totalTime * 1000, 2) . "ms\n\n";
 
         // Display results
         echo "📊 Operation Results:\n";
@@ -396,7 +399,7 @@ function demonstrateParallelOperations(array $clients, array $serverConfigs): \A
 }
 
 /**
- * Demonstrate cross-server operations
+ * Demonstrate cross-server operations.
  */
 function demonstrateCrossServerOperations(array $serverConfigs): \Amp\Future
 {
@@ -412,7 +415,9 @@ function demonstrateCrossServerOperations(array $serverConfigs): \Amp\Future
             $serversToConnect = ['calculator', 'database'];
 
             foreach ($serversToConnect as $serverId) {
-                if (!isset($serverConfigs[$serverId])) continue;
+                if (!isset($serverConfigs[$serverId])) {
+                    continue;
+                }
 
                 $config = $serverConfigs[$serverId];
                 echo "🔌 Connecting to {$config['name']} for cross-server demo...\n";
@@ -443,7 +448,7 @@ function demonstrateCrossServerOperations(array $serverConfigs): \Amp\Future
                 if (isset($clients['calculator'])) {
                     echo "  1. Calculating result...\n";
                     $calcResult = $clients['calculator']->callToolByName('calculate', [
-                        'expression' => '(25 + 15) * 3'
+                        'expression' => '(25 + 15) * 3',
                     ])->await();
 
                     if (!$calcResult->isError()) {
@@ -454,7 +459,7 @@ function demonstrateCrossServerOperations(array $serverConfigs): \Amp\Future
                         if (isset($clients['database'])) {
                             echo "  2. Querying database for comparison...\n";
                             $dbResult = $clients['database']->callToolByName('query-select', [
-                                'query' => 'SELECT COUNT(*) as total_records FROM users'
+                                'query' => 'SELECT COUNT(*) as total_records FROM users',
                             ])->await();
 
                             if (!$dbResult->isError()) {
@@ -479,13 +484,13 @@ function demonstrateCrossServerOperations(array $serverConfigs): \Amp\Future
 
             echo "\n✅ Cross-server operations demo completed\n\n";
         } catch (\Exception $e) {
-            echo "❌ Cross-server operations error: " . $e->getMessage() . "\n\n";
+            echo '❌ Cross-server operations error: ' . $e->getMessage() . "\n\n";
         }
     });
 }
 
 /**
- * Extract text content from a result
+ * Extract text content from a result.
  */
 function getResultText($result): string
 {
@@ -511,7 +516,7 @@ function getResultText($result): string
 }
 
 /**
- * Monitor connection health across multiple servers
+ * Monitor connection health across multiple servers.
  */
 function monitorConnectionHealth(array $clients, array $serverConfigs): \Amp\Future
 {
@@ -534,13 +539,13 @@ function monitorConnectionHealth(array $clients, array $serverConfigs): \Amp\Fut
                         'server' => $serverId,
                         'healthy' => true,
                         'response_time' => $responseTime,
-                        'tools_count' => count($tools->getTools())
+                        'tools_count' => count($tools->getTools()),
                     ];
                 } catch (\Exception $e) {
                     return [
                         'server' => $serverId,
                         'healthy' => false,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ];
                 }
             });

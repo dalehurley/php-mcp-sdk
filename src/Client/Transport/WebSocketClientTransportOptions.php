@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Client\Transport;
 
 /**
- * Configuration options for WebSocket client transport
+ * Configuration options for WebSocket client transport.
  *
  * This class provides comprehensive configuration options for WebSocket client transport,
  * including connection parameters, reconnection behavior, heartbeat settings, and message handling.

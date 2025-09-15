@@ -11,7 +11,9 @@ namespace MCP\Client\Validation;
 class CompiledValidator implements CompiledValidatorInterface
 {
     private array $errors = [];
+
     private array $validationRules = [];
+
     private bool $isValid = true;
 
     public function __construct(
@@ -35,6 +37,7 @@ class CompiledValidator implements CompiledValidatorInterface
             return true;
         } catch (\Throwable $e) {
             $this->errors[] = "Validation error: {$e->getMessage()}";
+
             return false;
         }
     }
@@ -66,7 +69,7 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         $this->validationRules[] = [
             'type' => 'type_check',
-            'expected_type' => $expectedType
+            'expected_type' => $expectedType,
         ];
     }
 
@@ -77,7 +80,7 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         $this->validationRules[] = [
             'type' => 'required_check',
-            'required' => $requiredProperties
+            'required' => $requiredProperties,
         ];
     }
 
@@ -89,7 +92,7 @@ class CompiledValidator implements CompiledValidatorInterface
         $this->validationRules[] = [
             'type' => 'property_check',
             'property' => $property,
-            'schema' => $propertySchema
+            'schema' => $propertySchema,
         ];
     }
 
@@ -100,7 +103,7 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         $this->validationRules[] = [
             'type' => 'items_check',
-            'items_schema' => $itemsSchema
+            'items_schema' => $itemsSchema,
         ];
     }
 
@@ -111,7 +114,7 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         $this->validationRules[] = [
             'type' => 'enum_check',
-            'allowed_values' => $allowedValues
+            'allowed_values' => $allowedValues,
         ];
     }
 
@@ -122,7 +125,7 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         $this->validationRules[] = [
             'type' => 'pattern_check',
-            'pattern' => $pattern
+            'pattern' => $pattern,
         ];
     }
 
@@ -133,7 +136,7 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         $this->validationRules[] = [
             'type' => 'minimum_check',
-            'minimum' => $minimum
+            'minimum' => $minimum,
         ];
     }
 
@@ -144,7 +147,7 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         $this->validationRules[] = [
             'type' => 'maximum_check',
-            'maximum' => $maximum
+            'maximum' => $maximum,
         ];
     }
 
@@ -155,7 +158,7 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         $this->validationRules[] = [
             'type' => 'min_length_check',
-            'min_length' => $minLength
+            'min_length' => $minLength,
         ];
     }
 
@@ -166,7 +169,7 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         $this->validationRules[] = [
             'type' => 'max_length_check',
-            'max_length' => $maxLength
+            'max_length' => $maxLength,
         ];
     }
 
@@ -208,6 +211,7 @@ class CompiledValidator implements CompiledValidatorInterface
 
             default:
                 $this->errors[] = "Unknown validation rule: {$rule['type']}";
+
                 return false;
         }
     }
@@ -218,6 +222,7 @@ class CompiledValidator implements CompiledValidatorInterface
 
         if ($actualType !== $expectedType) {
             $this->errors[] = "Expected type '{$expectedType}', got '{$actualType}'";
+
             return false;
         }
 
@@ -228,14 +233,16 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         if (!is_array($data) && !is_object($data)) {
             $this->errors[] = 'Required properties check requires object or array';
+
             return false;
         }
 
-        $data = (array)$data;
+        $data = (array) $data;
 
         foreach ($required as $property) {
             if (!array_key_exists($property, $data)) {
                 $this->errors[] = "Required property '{$property}' is missing";
+
                 return false;
             }
         }
@@ -249,7 +256,7 @@ class CompiledValidator implements CompiledValidatorInterface
             return true; // Skip property validation for non-objects
         }
 
-        $data = (array)$data;
+        $data = (array) $data;
 
         if (!array_key_exists($property, $data)) {
             return true; // Property is optional if not in required list
@@ -262,6 +269,7 @@ class CompiledValidator implements CompiledValidatorInterface
 
             if ($actualType !== $schema['type']) {
                 $this->errors[] = "Property '{$property}' expected type '{$schema['type']}', got '{$actualType}'";
+
                 return false;
             }
         }
@@ -273,6 +281,7 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         if (!is_array($data)) {
             $this->errors[] = 'Items validation requires array data';
+
             return false;
         }
 
@@ -281,6 +290,7 @@ class CompiledValidator implements CompiledValidatorInterface
                 $actualType = $this->getJsonType($item);
                 if ($actualType !== $itemsSchema['type']) {
                     $this->errors[] = "Array item at index {$index} expected type '{$itemsSchema['type']}', got '{$actualType}'";
+
                     return false;
                 }
             }
@@ -295,6 +305,7 @@ class CompiledValidator implements CompiledValidatorInterface
             $allowed = implode(', ', array_map('json_encode', $allowedValues));
             $actual = json_encode($data);
             $this->errors[] = "Value {$actual} is not one of allowed values: {$allowed}";
+
             return false;
         }
 
@@ -305,11 +316,13 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         if (!is_string($data)) {
             $this->errors[] = 'Pattern validation requires string data';
+
             return false;
         }
 
         if (!preg_match("/{$pattern}/", $data)) {
             $this->errors[] = "String does not match pattern: {$pattern}";
+
             return false;
         }
 
@@ -320,11 +333,13 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         if (!is_numeric($data)) {
             $this->errors[] = 'Minimum validation requires numeric data';
+
             return false;
         }
 
-        if ((float)$data < $minimum) {
+        if ((float) $data < $minimum) {
             $this->errors[] = "Value {$data} is less than minimum {$minimum}";
+
             return false;
         }
 
@@ -335,11 +350,13 @@ class CompiledValidator implements CompiledValidatorInterface
     {
         if (!is_numeric($data)) {
             $this->errors[] = 'Maximum validation requires numeric data';
+
             return false;
         }
 
-        if ((float)$data > $maximum) {
+        if ((float) $data > $maximum) {
             $this->errors[] = "Value {$data} is greater than maximum {$maximum}";
+
             return false;
         }
 
@@ -354,11 +371,13 @@ class CompiledValidator implements CompiledValidatorInterface
             $length = count($data);
         } else {
             $this->errors[] = 'MinLength validation requires string or array data';
+
             return false;
         }
 
         if ($length < $minLength) {
             $this->errors[] = "Length {$length} is less than minimum length {$minLength}";
+
             return false;
         }
 
@@ -373,11 +392,13 @@ class CompiledValidator implements CompiledValidatorInterface
             $length = count($data);
         } else {
             $this->errors[] = 'MaxLength validation requires string or array data';
+
             return false;
         }
 
         if ($length > $maxLength) {
             $this->errors[] = "Length {$length} is greater than maximum length {$maxLength}";
+
             return false;
         }
 

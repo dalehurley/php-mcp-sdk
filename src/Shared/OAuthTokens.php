@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Shared;
 
 /**
- * OAuth 2.1 token response
+ * OAuth 2.1 token response.
  */
 class OAuthTokens implements \JsonSerializable
 {

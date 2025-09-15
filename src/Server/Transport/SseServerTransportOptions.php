@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace MCP\Server\Transport;
 
 /**
- * Configuration options for SSE server transport
+ * Configuration options for SSE server transport.
  *
  * @deprecated Use StreamableHttpServerTransport instead
+ *
  * @internal This class will be removed in a future version
  */
 class SseServerTransportOptions

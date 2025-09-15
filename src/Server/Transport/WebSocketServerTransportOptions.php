@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Server\Transport;
 
 /**
- * Configuration options for WebSocketServerTransport
+ * Configuration options for WebSocketServerTransport.
  */
 class WebSocketServerTransportOptions
 {
@@ -77,7 +77,7 @@ class WebSocketServerTransportOptions
     }
 
     /**
-     * Create options for development (default settings)
+     * Create options for development (default settings).
      */
     public static function development(): self
     {
@@ -85,7 +85,7 @@ class WebSocketServerTransportOptions
     }
 
     /**
-     * Create options for production with TLS
+     * Create options for production with TLS.
      */
     public static function production(string $certPath, string $keyPath, int $port = 443): self
     {
@@ -101,7 +101,7 @@ class WebSocketServerTransportOptions
     }
 
     /**
-     * Create options with custom host and port
+     * Create options with custom host and port.
      */
     public static function create(string $host, int $port): self
     {
@@ -109,7 +109,7 @@ class WebSocketServerTransportOptions
     }
 
     /**
-     * Create options with CORS configuration
+     * Create options with CORS configuration.
      */
     public static function withCors(array $allowedOrigins): self
     {
@@ -117,16 +117,17 @@ class WebSocketServerTransportOptions
     }
 
     /**
-     * Get the server address string
+     * Get the server address string.
      */
     public function getAddress(): string
     {
         $scheme = $this->enableTls ? 'wss' : 'ws';
+
         return "{$scheme}://{$this->host}:{$this->port}";
     }
 
     /**
-     * Convert to array for logging/debugging
+     * Convert to array for logging/debugging.
      */
     public function toArray(): array
     {

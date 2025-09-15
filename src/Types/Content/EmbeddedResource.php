@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MCP\Types\Content;
 
 use MCP\Types\Resources\BlobResourceContents;
-use MCP\Types\Resources\ResourceContents;
 use MCP\Types\Resources\TextResourceContents;
 
 /**

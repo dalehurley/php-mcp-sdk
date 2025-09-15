@@ -28,7 +28,7 @@ class RegisteredPrompt
     }
 
     /**
-     * Enable the prompt
+     * Enable the prompt.
      */
     public function enable(): void
     {
@@ -37,7 +37,7 @@ class RegisteredPrompt
     }
 
     /**
-     * Disable the prompt
+     * Disable the prompt.
      */
     public function disable(): void
     {
@@ -46,7 +46,7 @@ class RegisteredPrompt
     }
 
     /**
-     * Update prompt properties
+     * Update prompt properties.
      *
      * @param array{
      *   name?: string|null,
@@ -85,7 +85,7 @@ class RegisteredPrompt
     }
 
     /**
-     * Remove the prompt
+     * Remove the prompt.
      *
      * @param callable $onRemove Callback to handle removal
      */

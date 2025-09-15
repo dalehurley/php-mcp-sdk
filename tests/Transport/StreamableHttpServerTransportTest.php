@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Transport;
 
-use PHPUnit\Framework\TestCase;
+use Amp\Future;
 use MCP\Server\Transport\StreamableHttpServerTransport;
 use MCP\Server\Transport\StreamableHttpServerTransportOptions;
-use Amp\Future;
+use PHPUnit\Framework\TestCase;
 
 class StreamableHttpServerTransportTest extends TestCase
 {
@@ -16,7 +16,7 @@ class StreamableHttpServerTransportTest extends TestCase
     protected function setUp(): void
     {
         $options = new StreamableHttpServerTransportOptions(
-            sessionIdGenerator: fn() => 'test-session-' . uniqid(),
+            sessionIdGenerator: fn () => 'test-session-' . uniqid(),
             enableJsonResponse: true
         );
 

@@ -34,7 +34,7 @@ class RegisteredTool
     }
 
     /**
-     * Enable the tool
+     * Enable the tool.
      */
     public function enable(): void
     {
@@ -44,7 +44,7 @@ class RegisteredTool
     }
 
     /**
-     * Disable the tool
+     * Disable the tool.
      */
     public function disable(): void
     {
@@ -54,7 +54,7 @@ class RegisteredTool
     }
 
     /**
-     * Update tool properties
+     * Update tool properties.
      *
      * @param array{
      *   name?: string|null,
@@ -103,7 +103,7 @@ class RegisteredTool
     }
 
     /**
-     * Remove the tool
+     * Remove the tool.
      *
      * @param callable $onRemove Callback to handle removal
      */

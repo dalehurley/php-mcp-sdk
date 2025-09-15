@@ -17,7 +17,9 @@ interface TypeFactory
      * Create an instance from array data.
      *
      * @param array<string, mixed> $data
+     *
      * @return T
+     *
      * @throws ValidationException
      */
     public function create(array $data): object;
@@ -26,7 +28,9 @@ interface TypeFactory
      * Create multiple instances from array data.
      *
      * @param array<array<string, mixed>> $dataArray
+     *
      * @return T[]
+     *
      * @throws ValidationException
      */
     public function createMultiple(array $dataArray): array;
@@ -35,6 +39,7 @@ interface TypeFactory
      * Validate data before creating an instance.
      *
      * @param array<string, mixed> $data
+     *
      * @throws ValidationException
      */
     public function validate(array $data): void;

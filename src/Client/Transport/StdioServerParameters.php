@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Client\Transport;
 
 /**
- * Parameters for starting a stdio server process
+ * Parameters for starting a stdio server process.
  */
 class StdioServerParameters
 {

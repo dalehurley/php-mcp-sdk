@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MCP\Shared;
 
 /**
- * OAuth 2.1 error response
+ * OAuth 2.1 error response.
  */
 class OAuthErrorResponse implements \JsonSerializable
 {

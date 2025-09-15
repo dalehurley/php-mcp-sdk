@@ -4,20 +4,15 @@ declare(strict_types=1);
 
 namespace MCP\Client\Transport;
 
-use MCP\Shared\Transport;
-use MCP\Shared\ReadBuffer;
-use MCP\Client\Transport\StdioServerParameters;
-use Amp\ByteStream\ReadableStream;
-use Amp\ByteStream\WritableStream;
-use Amp\Process\Process;
-use Amp\Future;
-use Amp\DeferredFuture;
-use Amp\Cancellation;
-use Amp\TimeoutCancellation;
-use Amp\DeferredCancellation;
-
 use function Amp\async;
-use function Amp\ByteStream\buffer;
+
+use Amp\Cancellation;
+use Amp\DeferredCancellation;
+use Amp\Future;
+use Amp\Process\Process;
+use MCP\Shared\ReadBuffer;
+
+use MCP\Shared\Transport;
 
 /**
  * Client transport for stdio: this will connect to a server by spawning a
@@ -26,8 +21,11 @@ use function Amp\ByteStream\buffer;
 class StdioClientTransport implements Transport
 {
     private ?Process $_process = null;
+
     private ReadBuffer $_readBuffer;
+
     private StdioServerParameters $_serverParams;
+
     private bool $_started = false;
 
     /** @var callable(array): void|null */
@@ -43,7 +41,7 @@ class StdioClientTransport implements Transport
     private ?DeferredCancellation $deferredCancellation = null;
 
     /**
-     * Default environment variables to inherit for security
+     * Default environment variables to inherit for security.
      */
     private const DEFAULT_INHERITED_ENV_VARS = [
         'HOME',
@@ -55,11 +53,11 @@ class StdioClientTransport implements Transport
         'LANG',
         'LC_ALL',
         'LC_CTYPE',
-        'TZ'
+        'TZ',
     ];
 
     /**
-     * Windows-specific environment variables
+     * Windows-specific environment variables.
      */
     private const WINDOWS_ENV_VARS = [
         'APPDATA',
@@ -73,7 +71,7 @@ class StdioClientTransport implements Transport
         'TEMP',
         'USERNAME',
         'USERPROFILE',
-        'PROGRAMFILES'
+        'PROGRAMFILES',
     ];
 
     public function __construct(StdioServerParameters $serverParams)
@@ -107,7 +105,7 @@ class StdioClientTransport implements Transport
     }
 
     /**
-     * Get default environment variables deemed safe to inherit
+     * Get default environment variables deemed safe to inherit.
      */
     private function getDefaultEnvironment(): array
     {
@@ -135,8 +133,8 @@ class StdioClientTransport implements Transport
         return async(function () {
             if ($this->_started) {
                 throw new \RuntimeException(
-                    "StdioClientTransport already started! If using Client class, " .
-                        "note that connect() calls start() automatically."
+                    'StdioClientTransport already started! If using Client class, ' .
+                        'note that connect() calls start() automatically.'
                 );
             }
 
@@ -163,7 +161,7 @@ class StdioClientTransport implements Transport
 
             // Check if process started successfully
             if (!$this->_process->isRunning()) {
-                throw new \RuntimeException("Failed to start server process");
+                throw new \RuntimeException('Failed to start server process');
             }
 
             // Create cancellation token
@@ -190,7 +188,7 @@ class StdioClientTransport implements Transport
     }
 
     /**
-     * Read from process stdout in the background
+     * Read from process stdout in the background.
      */
     private function readStdout(): void
     {
@@ -215,7 +213,7 @@ class StdioClientTransport implements Transport
     }
 
     /**
-     * Handle stderr output
+     * Handle stderr output.
      */
     private function handleStderr(): void
     {
@@ -234,7 +232,7 @@ class StdioClientTransport implements Transport
     }
 
     /**
-     * Process buffered data and emit complete messages
+     * Process buffered data and emit complete messages.
      */
     private function processReadBuffer(): void
     {
@@ -263,7 +261,7 @@ class StdioClientTransport implements Transport
     {
         return async(function () use ($message) {
             if ($this->_process === null || !$this->_process->isRunning()) {
-                throw new \RuntimeException("Not connected");
+                throw new \RuntimeException('Not connected');
             }
 
             try {
@@ -274,6 +272,7 @@ class StdioClientTransport implements Transport
                 if ($this->onerror !== null) {
                     ($this->onerror)($e);
                 }
+
                 throw $e;
             }
         });
@@ -296,6 +295,7 @@ class StdioClientTransport implements Transport
 
                 // Give process time to exit gracefully
                 $timeout = new \Amp\TimeoutCancellation(5); // 5 seconds
+
                 try {
                     $this->_process->join($timeout);
                 } catch (\Amp\CancelledException $e) {
@@ -315,7 +315,7 @@ class StdioClientTransport implements Transport
     }
 
     /**
-     * Get the process ID of the spawned server
+     * Get the process ID of the spawned server.
      *
      * @return int|null The PID or null if process not started
      */
@@ -325,7 +325,7 @@ class StdioClientTransport implements Transport
     }
 
     /**
-     * Check if the server process is running
+     * Check if the server process is running.
      */
     public function isRunning(): bool
     {

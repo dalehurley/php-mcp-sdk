@@ -6,15 +6,17 @@ namespace MCP\Server;
 
 use MCP\Shared\RequestHandlerExtra;
 use MCP\Types\Results\CallToolResult;
-use MCP\Types\ServerRequest;
 use MCP\Types\ServerNotification;
+use MCP\Types\ServerRequest;
 
 /**
  * Callback for a tool handler.
  *
  * @template Args
+ *
  * @param Args $args The parsed and validated arguments (if schema provided)
  * @param RequestHandlerExtra<ServerRequest, ServerNotification> $extra
+ *
  * @return CallToolResult|\Amp\Future<CallToolResult>
  */
 interface ToolCallback

@@ -2,15 +2,12 @@
 <?php
 
 /**
- * Test Runner for PHP MCP SDK Examples
- * 
+ * Test Runner for PHP MCP SDK Examples.
+ *
  * This script tests the basic functionality of all examples to ensure they work properly.
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
-
-use function Amp\async;
-use function Amp\await;
 
 // Test configuration
 $tests = [
@@ -20,17 +17,17 @@ $tests = [
             'examples/server/simple-server.php',
             'examples/client/simple-stdio-client.php',
             'examples/utils/inspector.php',
-            'examples/utils/monitor.php'
-        ]
+            'examples/utils/monitor.php',
+        ],
     ],
     'basic_server' => [
         'name' => 'Basic Server Test',
-        'timeout' => 5
+        'timeout' => 5,
     ],
     'client_connection' => [
         'name' => 'Client Connection Test',
-        'timeout' => 10
-    ]
+        'timeout' => 10,
+    ],
 ];
 
 // Colors for output
@@ -40,7 +37,7 @@ const YELLOW = "\033[33m";
 const BLUE = "\033[34m";
 const RESET = "\033[0m";
 
-echo BLUE . "🧪 PHP MCP SDK Examples Test Runner" . RESET . "\n";
+echo BLUE . '🧪 PHP MCP SDK Examples Test Runner' . RESET . "\n";
 echo "====================================\n\n";
 
 $totalTests = 0;
@@ -48,30 +45,30 @@ $passedTests = 0;
 $failedTests = 0;
 
 // Test 1: Syntax Check
-echo YELLOW . "1. PHP Syntax Check" . RESET . "\n";
+echo YELLOW . '1. PHP Syntax Check' . RESET . "\n";
 foreach ($tests['syntax_check']['files'] as $file) {
     $totalTests++;
     echo "   Checking: $file ... ";
 
     $output = [];
     $returnCode = 0;
-    exec("php -l " . escapeshellarg($file) . " 2>&1", $output, $returnCode);
+    exec('php -l ' . escapeshellarg($file) . ' 2>&1', $output, $returnCode);
 
     if ($returnCode === 0) {
-        echo GREEN . "✅ PASS" . RESET . "\n";
+        echo GREEN . '✅ PASS' . RESET . "\n";
         $passedTests++;
     } else {
-        echo RED . "❌ FAIL" . RESET . "\n";
-        echo "      Error: " . implode("\n      ", $output) . "\n";
+        echo RED . '❌ FAIL' . RESET . "\n";
+        echo '      Error: ' . implode("\n      ", $output) . "\n";
         $failedTests++;
     }
 }
 echo "\n";
 
 // Test 2: Basic Server Startup Test
-echo YELLOW . "2. Basic Server Startup Test" . RESET . "\n";
+echo YELLOW . '2. Basic Server Startup Test' . RESET . "\n";
 $totalTests++;
-echo "   Testing server startup ... ";
+echo '   Testing server startup ... ';
 
 try {
     // Start server in background and test if it starts without immediate errors
@@ -80,14 +77,14 @@ try {
         [
             0 => ['pipe', 'r'],  // stdin
             1 => ['pipe', 'w'],  // stdout
-            2 => ['pipe', 'w']   // stderr
+            2 => ['pipe', 'w'],   // stderr
         ],
         $pipes,
         dirname(__DIR__)
     );
 
     if (!is_resource($serverProcess)) {
-        throw new Exception("Failed to start server process");
+        throw new Exception('Failed to start server process');
     }
 
     // Give server a moment to start
@@ -97,7 +94,7 @@ try {
     $status = proc_get_status($serverProcess);
 
     if ($status['running']) {
-        echo GREEN . "✅ PASS" . RESET . "\n";
+        echo GREEN . '✅ PASS' . RESET . "\n";
         $passedTests++;
 
         // Clean up
@@ -106,11 +103,12 @@ try {
     } else {
         // Read any error output
         $stderr = stream_get_contents($pipes[2]);
-        throw new Exception("Server exited immediately. Error: " . $stderr);
+
+        throw new Exception('Server exited immediately. Error: ' . $stderr);
     }
 } catch (Exception $e) {
-    echo RED . "❌ FAIL" . RESET . "\n";
-    echo "      Error: " . $e->getMessage() . "\n";
+    echo RED . '❌ FAIL' . RESET . "\n";
+    echo '      Error: ' . $e->getMessage() . "\n";
     $failedTests++;
 
     // Clean up if needed
@@ -122,9 +120,9 @@ try {
 echo "\n";
 
 // Test 3: Inspector Tool Test
-echo YELLOW . "3. Inspector Tool Test" . RESET . "\n";
+echo YELLOW . '3. Inspector Tool Test' . RESET . "\n";
 $totalTests++;
-echo "   Testing inspector with help flag ... ";
+echo '   Testing inspector with help flag ... ';
 
 try {
     $output = [];
@@ -138,25 +136,25 @@ try {
             strpos($helpText, 'MCP Server Inspector') !== false &&
             strpos($helpText, '--server=PATH') !== false
         ) {
-            echo GREEN . "✅ PASS" . RESET . "\n";
+            echo GREEN . '✅ PASS' . RESET . "\n";
             $passedTests++;
         } else {
             throw new Exception("Help output doesn't contain expected content");
         }
     } else {
-        throw new Exception("Inspector help command failed or produced no output");
+        throw new Exception('Inspector help command failed or produced no output');
     }
 } catch (Exception $e) {
-    echo RED . "❌ FAIL" . RESET . "\n";
-    echo "      Error: " . $e->getMessage() . "\n";
+    echo RED . '❌ FAIL' . RESET . "\n";
+    echo '      Error: ' . $e->getMessage() . "\n";
     $failedTests++;
 }
 echo "\n";
 
 // Test 4: Monitor Tool Test
-echo YELLOW . "4. Monitor Tool Test" . RESET . "\n";
+echo YELLOW . '4. Monitor Tool Test' . RESET . "\n";
 $totalTests++;
-echo "   Testing monitor with help flag ... ";
+echo '   Testing monitor with help flag ... ';
 
 try {
     $output = [];
@@ -169,36 +167,36 @@ try {
             strpos($helpText, 'MCP Server Monitor') !== false &&
             strpos($helpText, '--server=PATH') !== false
         ) {
-            echo GREEN . "✅ PASS" . RESET . "\n";
+            echo GREEN . '✅ PASS' . RESET . "\n";
             $passedTests++;
         } else {
             throw new Exception("Help output doesn't contain expected content");
         }
     } else {
-        throw new Exception("Monitor help command failed or produced no output");
+        throw new Exception('Monitor help command failed or produced no output');
     }
 } catch (Exception $e) {
-    echo RED . "❌ FAIL" . RESET . "\n";
-    echo "      Error: " . $e->getMessage() . "\n";
+    echo RED . '❌ FAIL' . RESET . "\n";
+    echo '      Error: ' . $e->getMessage() . "\n";
     $failedTests++;
 }
 echo "\n";
 
 // Test 5: Docker Configuration Test
-echo YELLOW . "5. Docker Configuration Test" . RESET . "\n";
+echo YELLOW . '5. Docker Configuration Test' . RESET . "\n";
 $totalTests++;
-echo "   Validating docker-compose.yml ... ";
+echo '   Validating docker-compose.yml ... ';
 
 try {
     if (!file_exists('examples/docker/docker-compose.yml')) {
-        throw new Exception("Docker compose file not found");
+        throw new Exception('Docker compose file not found');
     }
 
     // Basic YAML syntax check (if available)
     if (function_exists('yaml_parse_file')) {
         $parsed = yaml_parse_file('examples/docker/docker-compose.yml');
         if ($parsed === false) {
-            throw new Exception("Invalid YAML syntax");
+            throw new Exception('Invalid YAML syntax');
         }
     }
 
@@ -212,23 +210,23 @@ try {
         }
     }
 
-    echo GREEN . "✅ PASS" . RESET . "\n";
+    echo GREEN . '✅ PASS' . RESET . "\n";
     $passedTests++;
 } catch (Exception $e) {
-    echo RED . "❌ FAIL" . RESET . "\n";
-    echo "      Error: " . $e->getMessage() . "\n";
+    echo RED . '❌ FAIL' . RESET . "\n";
+    echo '      Error: ' . $e->getMessage() . "\n";
     $failedTests++;
 }
 echo "\n";
 
 // Test 6: Example README Test
-echo YELLOW . "6. Documentation Test" . RESET . "\n";
+echo YELLOW . '6. Documentation Test' . RESET . "\n";
 $totalTests++;
-echo "   Checking examples README ... ";
+echo '   Checking examples README ... ';
 
 try {
     if (!file_exists('examples/README.md')) {
-        throw new Exception("Examples README not found");
+        throw new Exception('Examples README not found');
     }
 
     $readme = file_get_contents('examples/README.md');
@@ -237,7 +235,7 @@ try {
         '## 🔧 Server Examples',
         '## 💻 Client Examples',
         '## 🛠️ Utility Tools',
-        '## 🐳 Docker Examples'
+        '## 🐳 Docker Examples',
     ];
 
     foreach ($requiredSections as $section) {
@@ -246,24 +244,24 @@ try {
         }
     }
 
-    echo GREEN . "✅ PASS" . RESET . "\n";
+    echo GREEN . '✅ PASS' . RESET . "\n";
     $passedTests++;
 } catch (Exception $e) {
-    echo RED . "❌ FAIL" . RESET . "\n";
-    echo "      Error: " . $e->getMessage() . "\n";
+    echo RED . '❌ FAIL' . RESET . "\n";
+    echo '      Error: ' . $e->getMessage() . "\n";
     $failedTests++;
 }
 echo "\n";
 
 // Summary
 echo "====================================\n";
-echo BLUE . "Test Summary:" . RESET . "\n";
+echo BLUE . 'Test Summary:' . RESET . "\n";
 echo "  Total Tests: $totalTests\n";
-echo "  " . GREEN . "Passed: $passedTests" . RESET . "\n";
-echo "  " . RED . "Failed: $failedTests" . RESET . "\n";
+echo '  ' . GREEN . "Passed: $passedTests" . RESET . "\n";
+echo '  ' . RED . "Failed: $failedTests" . RESET . "\n";
 
 if ($failedTests === 0) {
-    echo "\n" . GREEN . "🎉 All tests passed!" . RESET . "\n";
+    echo "\n" . GREEN . '🎉 All tests passed!' . RESET . "\n";
     echo "\nYou can now run the examples:\n";
     echo "  • Start a server: php examples/server/simple-server.php\n";
     echo "  • Connect a client: php examples/client/simple-stdio-client.php\n";
@@ -272,6 +270,6 @@ if ($failedTests === 0) {
     echo "  • Use Docker: cd examples/docker && docker-compose up\n";
     exit(0);
 } else {
-    echo "\n" . RED . "❌ Some tests failed. Please fix the issues above before running examples." . RESET . "\n";
+    echo "\n" . RED . '❌ Some tests failed. Please fix the issues above before running examples.' . RESET . "\n";
     exit(1);
 }

@@ -18,7 +18,7 @@ class BooleanSchemaTest extends TestCase
     public function testBasicConstruction(): void
     {
         $schema = new BooleanSchema();
-        
+
         $this->assertEquals('boolean', $schema->getType());
         $this->assertNull($schema->getTitle());
         $this->assertNull($schema->getDescription());
@@ -35,7 +35,7 @@ class BooleanSchemaTest extends TestCase
             description: 'Whether the feature is enabled',
             default: true
         );
-        
+
         $this->assertEquals('boolean', $schema->getType());
         $this->assertEquals('Enabled', $schema->getTitle());
         $this->assertEquals('Whether the feature is enabled', $schema->getDescription());
@@ -51,11 +51,11 @@ class BooleanSchemaTest extends TestCase
             'type' => 'boolean',
             'title' => 'Active',
             'description' => 'Is active?',
-            'default' => false
+            'default' => false,
         ];
-        
+
         $schema = BooleanSchema::fromArray($data);
-        
+
         $this->assertEquals('boolean', $schema->getType());
         $this->assertEquals('Active', $schema->getTitle());
         $this->assertEquals('Is active?', $schema->getDescription());
@@ -69,7 +69,7 @@ class BooleanSchemaTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('BooleanSchema must have type "boolean"');
-        
+
         BooleanSchema::fromArray(['type' => 'string']);
     }
 
@@ -83,9 +83,9 @@ class BooleanSchemaTest extends TestCase
             description: 'Please confirm',
             default: true
         );
-        
+
         $json = $schema->jsonSerialize();
-        
+
         $this->assertEquals('boolean', $json['type']);
         $this->assertEquals('Confirm', $json['title']);
         $this->assertEquals('Please confirm', $json['description']);
@@ -99,7 +99,7 @@ class BooleanSchemaTest extends TestCase
     {
         $schema = new BooleanSchema();
         $json = $schema->jsonSerialize();
-        
+
         $this->assertEquals(['type' => 'boolean'], $json);
     }
 
@@ -112,12 +112,12 @@ class BooleanSchemaTest extends TestCase
             'type' => 'boolean',
             'title' => 'Test',
             'x-custom' => 'value',
-            'readOnly' => true
+            'readOnly' => true,
         ];
-        
+
         $schema = BooleanSchema::fromArray($data);
         $json = $schema->jsonSerialize();
-        
+
         $this->assertEquals('boolean', $json['type']);
         $this->assertEquals('Test', $json['title']);
         $this->assertEquals('value', $json['x-custom']);

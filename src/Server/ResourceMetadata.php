@@ -25,7 +25,7 @@ class ResourceMetadata
     }
 
     /**
-     * Convert to array for merging with resource data
+     * Convert to array for merging with resource data.
      *
      * @return array<string, mixed>
      */

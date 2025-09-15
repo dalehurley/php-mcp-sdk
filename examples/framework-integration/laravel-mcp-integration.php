@@ -1,30 +1,32 @@
 <?php
 
 /**
- * Laravel MCP Integration Example
- * 
+ * Laravel MCP Integration Example.
+ *
  * This example demonstrates how to integrate the PHP MCP SDK with Laravel.
  * It shows patterns for:
  * - Using Laravel's service container with MCP
  * - Integrating with Laravel's database system
  * - Using Laravel's validation and middleware
  * - Leveraging Laravel's event system
- * 
+ *
  * This is a standalone example that demonstrates Laravel patterns
  * without requiring a full Laravel installation.
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
 use MCP\Server\Transport\StdioServerTransport;
 use MCP\Types\Implementation;
-use function Amp\async;
 
 // Mock Laravel-style Service Container
 class MockContainer
 {
     private array $bindings = [];
+
     private array $instances = [];
 
     public function bind(string $abstract, callable $concrete): void
@@ -46,6 +48,7 @@ class MockContainer
         if (isset($this->bindings[$abstract])) {
             $instance = $this->bindings[$abstract]();
             $this->instances[$abstract] = $instance;
+
             return $instance;
         }
 
@@ -71,6 +74,7 @@ class MockDatabase
     public function table(string $table): self
     {
         $this->currentTable = $table;
+
         return $this;
     }
 
@@ -115,6 +119,7 @@ class MockDatabase
     }
 
     private string $currentTable;
+
     private ?array $filteredData = null;
 }
 
@@ -126,6 +131,7 @@ class MockValidator
         $validator = new self();
         $validator->data = $data;
         $validator->rules = $rules;
+
         return $validator;
     }
 
@@ -142,7 +148,7 @@ class MockValidator
                     $this->errors[$field][] = "The {$field} must be a valid email address.";
                 }
                 if (str_starts_with($rule, 'min:') && isset($this->data[$field])) {
-                    $min = (int)substr($rule, 4);
+                    $min = (int) substr($rule, 4);
                     if (strlen($this->data[$field]) < $min) {
                         $this->errors[$field][] = "The {$field} must be at least {$min} characters.";
                     }
@@ -159,7 +165,9 @@ class MockValidator
     }
 
     private array $data;
+
     private array $rules;
+
     private array $errors = [];
 }
 
@@ -167,8 +175,8 @@ class MockValidator
 $container = new MockContainer();
 
 // Bind services to container
-$container->singleton('db', fn() => new MockDatabase());
-$container->singleton('validator', fn() => MockValidator::class);
+$container->singleton('db', fn () => new MockDatabase());
+$container->singleton('validator', fn () => MockValidator::class);
 
 // Create MCP Server with Laravel integration
 $server = new McpServer(
@@ -189,9 +197,9 @@ $server->tool(
             'role' => [
                 'type' => 'string',
                 'description' => 'Filter users by role (optional)',
-                'enum' => ['admin', 'user']
-            ]
-        ]
+                'enum' => ['admin', 'user'],
+            ],
+        ],
     ],
     function (array $args) use ($container): array {
         $db = $container->make('db');
@@ -208,14 +216,13 @@ $server->tool(
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => "Found " . count($users) . " users:\n\n" .
+                    'text' => 'Found ' . count($users) . " users:\n\n" .
                         implode("\n", array_map(
-                            fn($user) =>
-                            "• {$user['name']} ({$user['email']}) - {$user['role']}",
+                            fn ($user) => "• {$user['name']} ({$user['email']}) - {$user['role']}",
                             $users
-                        ))
-                ]
-            ]
+                        )),
+                ],
+            ],
         ];
     }
 );
@@ -229,20 +236,20 @@ $server->tool(
         'properties' => [
             'name' => [
                 'type' => 'string',
-                'description' => 'User name'
+                'description' => 'User name',
             ],
             'email' => [
                 'type' => 'string',
-                'description' => 'User email address'
+                'description' => 'User email address',
             ],
             'role' => [
                 'type' => 'string',
                 'description' => 'User role',
                 'enum' => ['admin', 'user'],
-                'default' => 'user'
-            ]
+                'default' => 'user',
+            ],
         ],
-        'required' => ['name', 'email']
+        'required' => ['name', 'email'],
     ],
     function (array $args) use ($container): array {
         // Laravel-style validation
@@ -250,23 +257,23 @@ $server->tool(
         $validator = $validatorClass::make($args, [
             'name' => 'required|min:2',
             'email' => 'required|email',
-            'role' => 'required'
+            'role' => 'required',
         ]);
 
         if ($validator->fails()) {
             $errors = $validator->errors();
             $errorMessages = [];
             foreach ($errors as $field => $fieldErrors) {
-                $errorMessages[] = "• " . implode(', ', $fieldErrors);
+                $errorMessages[] = '• ' . implode(', ', $fieldErrors);
             }
 
             return [
                 'content' => [
                     [
                         'type' => 'text',
-                        'text' => "❌ Validation failed:\n" . implode("\n", $errorMessages)
-                    ]
-                ]
+                        'text' => "❌ Validation failed:\n" . implode("\n", $errorMessages),
+                    ],
+                ],
             ];
         }
 
@@ -276,7 +283,7 @@ $server->tool(
             'name' => $args['name'],
             'email' => $args['email'],
             'role' => $args['role'] ?? 'user',
-            'created_at' => date('Y-m-d H:i:s')
+            'created_at' => date('Y-m-d H:i:s'),
         ];
 
         return [
@@ -288,9 +295,9 @@ $server->tool(
                         "Name: {$user['name']}\n" .
                         "Email: {$user['email']}\n" .
                         "Role: {$user['role']}\n" .
-                        "Created: {$user['created_at']}"
-                ]
-            ]
+                        "Created: {$user['created_at']}",
+                ],
+            ],
         ];
     }
 );
@@ -305,13 +312,13 @@ $server->tool(
             'status' => [
                 'type' => 'string',
                 'description' => 'Filter posts by status',
-                'enum' => ['published', 'draft']
+                'enum' => ['published', 'draft'],
             ],
             'user_id' => [
                 'type' => 'integer',
-                'description' => 'Filter posts by user ID'
-            ]
-        ]
+                'description' => 'Filter posts by user ID',
+            ],
+        ],
     ],
     function (array $args) use ($container): array {
         $db = $container->make('db');
@@ -341,16 +348,16 @@ $server->tool(
             $postList[] = "📝 {$post['title']}\n" .
                 "   Author: {$author}\n" .
                 "   Status: {$post['status']}\n" .
-                "   Content: " . substr($post['content'], 0, 100) . "...";
+                '   Content: ' . substr($post['content'], 0, 100) . '...';
         }
 
         return [
             'content' => [
                 [
                     'type' => 'text',
-                    'text' => "Found " . count($posts) . " posts:\n\n" . implode("\n\n", $postList)
-                ]
-            ]
+                    'text' => 'Found ' . count($posts) . " posts:\n\n" . implode("\n\n", $postList),
+                ],
+            ],
         ];
     }
 );
@@ -362,7 +369,7 @@ $server->resource(
     [
         'title' => 'Laravel Application Information',
         'description' => 'Information about the Laravel MCP integration',
-        'mimeType' => 'application/json'
+        'mimeType' => 'application/json',
     ],
     function (): string {
         return json_encode([
@@ -373,12 +380,12 @@ $server->resource(
                 'Database Query Builder',
                 'Request Validation',
                 'Middleware Support',
-                'Event System'
+                'Event System',
             ],
             'database_tables' => ['users', 'posts'],
             'available_tools' => ['get_users', 'create_user', 'get_posts'],
             'environment' => 'development',
-            'version' => '1.0.0'
+            'version' => '1.0.0',
         ], JSON_PRETTY_PRINT);
     }
 );
@@ -390,34 +397,34 @@ $server->resource(
     [
         'title' => 'Database Schema Information',
         'description' => 'Schema information for the application database',
-        'mimeType' => 'text/plain'
+        'mimeType' => 'text/plain',
     ],
     function (): string {
         return <<<SCHEMA
-Laravel MCP Database Schema
-==========================
+            Laravel MCP Database Schema
+            ==========================
 
-Users Table:
-- id (integer, primary key)
-- name (string, required)
-- email (string, required, unique)
-- role (string, enum: admin|user)
+            Users Table:
+            - id (integer, primary key)
+            - name (string, required)
+            - email (string, required, unique)
+            - role (string, enum: admin|user)
 
-Posts Table:
-- id (integer, primary key)
-- user_id (integer, foreign key -> users.id)
-- title (string, required)
-- content (text, required)
-- status (string, enum: published|draft)
+            Posts Table:
+            - id (integer, primary key)
+            - user_id (integer, foreign key -> users.id)
+            - title (string, required)
+            - content (text, required)
+            - status (string, enum: published|draft)
 
-Relationships:
-- User hasMany Posts
-- Post belongsTo User
+            Relationships:
+            - User hasMany Posts
+            - Post belongsTo User
 
-Sample Data:
-- 3 users (1 admin, 2 regular users)
-- 3 posts (2 published, 1 draft)
-SCHEMA;
+            Sample Data:
+            - 3 users (1 admin, 2 regular users)
+            - 3 posts (2 published, 1 draft)
+            SCHEMA;
     }
 );
 
@@ -434,9 +441,9 @@ $server->prompt(
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => 'How do I integrate MCP with Laravel?'
-                        ]
-                    ]
+                            'text' => 'How do I integrate MCP with Laravel?',
+                        ],
+                    ],
                 ],
                 [
                     'role' => 'assistant',
@@ -464,11 +471,11 @@ $server->prompt(
                                 "• get_users - Retrieve users with optional filtering\n" .
                                 "• create_user - Create users with validation\n" .
                                 "• get_posts - Get posts with relationships\n\n" .
-                                "Try: 'Use the get_users tool to see all admin users'"
-                        ]
-                    ]
-                ]
-            ]
+                                "Try: 'Use the get_users tool to see all admin users'",
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 );
@@ -476,7 +483,7 @@ $server->prompt(
 // Start the server
 async(function () use ($server, $container) {
     echo "🚀 Laravel MCP Integration Server starting...\n";
-    echo "📊 Database: " . count($container->make('db')->table('users')->get()) . " users, " .
+    echo '📊 Database: ' . count($container->make('db')->table('users')->get()) . ' users, ' .
         count($container->make('db')->table('posts')->get()) . " posts\n";
     echo "🛠️  Available tools: get_users, create_user, get_posts\n";
     echo "📚 Resources: app-info, schema\n" . PHP_EOL;

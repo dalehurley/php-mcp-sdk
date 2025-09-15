@@ -2,8 +2,8 @@
 <?php
 
 /**
- * MCP Server Monitor Utility
- * 
+ * MCP Server Monitor Utility.
+ *
  * This utility provides comprehensive monitoring capabilities for MCP servers:
  * - Monitor server health and performance in real-time
  * - Track request/response times and success rates
@@ -15,14 +15,14 @@
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use function Amp\async;
+
 use MCP\Client\Client;
 use MCP\Client\ClientOptions;
 use MCP\Client\Transport\StdioClientTransport;
 use MCP\Client\Transport\StdioServerParameters;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ClientCapabilities;
-use function Amp\async;
-use function Amp\delay;
+use MCP\Types\Implementation;
 
 // Command line argument parsing
 $options = getopt('', [
@@ -35,7 +35,7 @@ $options = getopt('', [
     'log:',
     'dashboard',
     'json',
-    'help'
+    'help',
 ]);
 
 if (isset($options['help'])) {
@@ -48,12 +48,12 @@ $config = [
     'server' => $options['server'] ?? null,
     'command' => $options['command'] ?? 'php',
     'args' => isset($options['args']) ? explode(',', $options['args']) : [],
-    'interval' => (int)($options['interval'] ?? 5), // seconds
-    'duration' => isset($options['duration']) ? (int)$options['duration'] : null, // seconds
+    'interval' => (int) ($options['interval'] ?? 5), // seconds
+    'duration' => isset($options['duration']) ? (int) $options['duration'] : null, // seconds
     'alerts' => isset($options['alerts']),
     'log_file' => $options['log'] ?? null,
     'dashboard' => isset($options['dashboard']),
-    'json_output' => isset($options['json'])
+    'json_output' => isset($options['json']),
 ];
 
 // Monitoring state
@@ -65,7 +65,7 @@ $monitoringData = [
     'response_times' => [],
     'errors' => [],
     'memory_usage' => [],
-    'alerts' => []
+    'alerts' => [],
 ];
 
 // Alert thresholds
@@ -73,7 +73,7 @@ $alertThresholds = [
     'response_time_ms' => 5000,
     'error_rate_percent' => 10,
     'memory_usage_mb' => 100,
-    'consecutive_failures' => 3
+    'consecutive_failures' => 3,
 ];
 
 async(function () use ($config, &$monitoringData, $alertThresholds) {
@@ -97,7 +97,7 @@ async(function () use ($config, &$monitoringData, $alertThresholds) {
         if ($config['duration']) {
             echo "⏰ Duration: {$config['duration']} seconds\n";
         }
-        echo "🚨 Alerts: " . ($config['alerts'] ? 'enabled' : 'disabled') . "\n";
+        echo '🚨 Alerts: ' . ($config['alerts'] ? 'enabled' : 'disabled') . "\n";
         if ($config['log_file']) {
             echo "📝 Logging to: {$config['log_file']}\n";
         }
@@ -149,11 +149,11 @@ async(function () use ($config, &$monitoringData, $alertThresholds) {
                         'timestamp' => time(),
                         'status' => 'healthy',
                         'response_time_ms' => round($responseTime, 2),
-                        'health_data' => $healthData
+                        'health_data' => $healthData,
                     ]) . "\n";
                 } else {
                     $timestamp = date('Y-m-d H:i:s');
-                    echo "[$timestamp] ✅ Healthy - Response: " . round($responseTime, 2) . "ms";
+                    echo "[$timestamp] ✅ Healthy - Response: " . round($responseTime, 2) . 'ms';
                     if (isset($healthData['tools_count'])) {
                         echo " - Tools: {$healthData['tools_count']}";
                     }
@@ -169,7 +169,7 @@ async(function () use ($config, &$monitoringData, $alertThresholds) {
                         'timestamp' => time(),
                         'status' => 'healthy',
                         'response_time_ms' => round($responseTime, 2),
-                        'health_data' => $healthData
+                        'health_data' => $healthData,
                     ]);
                 }
             } catch (\Exception $e) {
@@ -181,7 +181,7 @@ async(function () use ($config, &$monitoringData, $alertThresholds) {
                 $monitoringData['errors'][] = [
                     'timestamp' => time(),
                     'message' => $e->getMessage(),
-                    'response_time_ms' => round($responseTime, 2)
+                    'response_time_ms' => round($responseTime, 2),
                 ];
 
                 // Keep only last 50 errors
@@ -195,7 +195,7 @@ async(function () use ($config, &$monitoringData, $alertThresholds) {
                         'type' => 'consecutive_failures',
                         'message' => "Server has failed $consecutiveFailures consecutive health checks",
                         'severity' => 'critical',
-                        'timestamp' => time()
+                        'timestamp' => time(),
                     ];
                     $monitoringData['alerts'][] = $alert;
                     echo "🚨 CRITICAL ALERT: {$alert['message']}\n";
@@ -208,7 +208,7 @@ async(function () use ($config, &$monitoringData, $alertThresholds) {
                         'timestamp' => time(),
                         'status' => 'error',
                         'error' => $e->getMessage(),
-                        'response_time_ms' => round($responseTime, 2)
+                        'response_time_ms' => round($responseTime, 2),
                     ]) . "\n";
                 } else {
                     $timestamp = date('Y-m-d H:i:s');
@@ -221,7 +221,7 @@ async(function () use ($config, &$monitoringData, $alertThresholds) {
                         'timestamp' => time(),
                         'status' => 'error',
                         'error' => $e->getMessage(),
-                        'response_time_ms' => round($responseTime, 2)
+                        'response_time_ms' => round($responseTime, 2),
                     ]);
                 }
             }
@@ -240,13 +240,13 @@ async(function () use ($config, &$monitoringData, $alertThresholds) {
             displaySummary($monitoringData);
         }
     } catch (\Throwable $e) {
-        echo "❌ Monitor Error: " . $e->getMessage() . "\n";
+        echo '❌ Monitor Error: ' . $e->getMessage() . "\n";
         exit(1);
     }
 })->await();
 
 /**
- * Perform health check on the server
+ * Perform health check on the server.
  */
 function performHealthCheck(array $config): \Amp\Future
 {
@@ -271,7 +271,7 @@ function performHealthCheck(array $config): \Amp\Future
                 'server_info' => $client->getServerVersion(),
                 'tools_count' => 0,
                 'resources_count' => 0,
-                'prompts_count' => 0
+                'prompts_count' => 0,
             ];
 
             // Try to list tools
@@ -310,13 +310,14 @@ function performHealthCheck(array $config): \Amp\Future
             } catch (\Exception $closeError) {
                 // Ignore close errors
             }
+
             throw $e;
         }
     });
 }
 
 /**
- * Check for alert conditions
+ * Check for alert conditions.
  */
 function checkAlerts(array $healthData, float $responseTime, array $monitoringData, array $thresholds): array
 {
@@ -326,8 +327,8 @@ function checkAlerts(array $healthData, float $responseTime, array $monitoringDa
     if ($responseTime > $thresholds['response_time_ms']) {
         $alerts[] = [
             'type' => 'high_response_time',
-            'message' => "High response time: " . round($responseTime, 2) . "ms (threshold: {$thresholds['response_time_ms']}ms)",
-            'severity' => 'warning'
+            'message' => 'High response time: ' . round($responseTime, 2) . "ms (threshold: {$thresholds['response_time_ms']}ms)",
+            'severity' => 'warning',
         ];
     }
 
@@ -337,8 +338,8 @@ function checkAlerts(array $healthData, float $responseTime, array $monitoringDa
         if ($errorRate > $thresholds['error_rate_percent']) {
             $alerts[] = [
                 'type' => 'high_error_rate',
-                'message' => "High error rate: " . round($errorRate, 1) . "% (threshold: {$thresholds['error_rate_percent']}%)",
-                'severity' => 'warning'
+                'message' => 'High error rate: ' . round($errorRate, 1) . "% (threshold: {$thresholds['error_rate_percent']}%)",
+                'severity' => 'warning',
             ];
         }
     }
@@ -347,8 +348,8 @@ function checkAlerts(array $healthData, float $responseTime, array $monitoringDa
     if (isset($healthData['memory_usage']) && $healthData['memory_usage'] > $thresholds['memory_usage_mb']) {
         $alerts[] = [
             'type' => 'high_memory_usage',
-            'message' => "High memory usage: " . round($healthData['memory_usage'], 1) . "MB (threshold: {$thresholds['memory_usage_mb']}MB)",
-            'severity' => 'warning'
+            'message' => 'High memory usage: ' . round($healthData['memory_usage'], 1) . "MB (threshold: {$thresholds['memory_usage_mb']}MB)",
+            'severity' => 'warning',
         ];
     }
 
@@ -356,7 +357,7 @@ function checkAlerts(array $healthData, float $responseTime, array $monitoringDa
 }
 
 /**
- * Display dashboard-style output
+ * Display dashboard-style output.
  */
 function displayDashboard(array $monitoringData, ?array $healthData, float $responseTime, ?string $error = null): void
 {
@@ -373,11 +374,11 @@ function displayDashboard(array $monitoringData, ?array $healthData, float $resp
     echo "📊 MCP Server Monitor Dashboard\n";
     echo "===============================\n\n";
 
-    echo "🕐 Uptime: " . formatDuration($uptime) . "\n";
+    echo '🕐 Uptime: ' . formatDuration($uptime) . "\n";
     echo "📈 Checks: {$monitoringData['checks']} (✅ {$monitoringData['successful_checks']} | ❌ {$monitoringData['failed_checks']})\n";
-    echo "📊 Success Rate: " . round($successRate, 1) . "%\n";
-    echo "⏱️  Avg Response: " . round($avgResponseTime, 2) . "ms\n";
-    echo "🔄 Current Response: " . round($responseTime, 2) . "ms\n";
+    echo '📊 Success Rate: ' . round($successRate, 1) . "%\n";
+    echo '⏱️  Avg Response: ' . round($avgResponseTime, 2) . "ms\n";
+    echo '🔄 Current Response: ' . round($responseTime, 2) . "ms\n";
 
     if ($error) {
         echo "❌ Current Status: ERROR - $error\n";
@@ -394,7 +395,7 @@ function displayDashboard(array $monitoringData, ?array $healthData, float $resp
         echo "   Prompts: {$healthData['prompts_count']}\n";
 
         if (isset($healthData['memory_usage'])) {
-            echo "   Memory: " . round($healthData['memory_usage'], 1) . " MB\n";
+            echo '   Memory: ' . round($healthData['memory_usage'], 1) . " MB\n";
         }
     }
 
@@ -424,51 +425,55 @@ function displayDashboard(array $monitoringData, ?array $healthData, float $resp
         }
     }
 
-    echo "\n" . str_repeat("─", 50) . "\n";
+    echo "\n" . str_repeat('─', 50) . "\n";
     echo "Press Ctrl+C to stop monitoring\n";
 }
 
 /**
- * Display simple ASCII graph
+ * Display simple ASCII graph.
  */
 function displayAsciiGraph(array $data, string $unit): void
 {
     $width = 50;
     $height = 10;
 
-    if (empty($data)) return;
+    if (empty($data)) {
+        return;
+    }
 
     $min = min($data);
     $max = max($data);
     $range = $max - $min;
 
-    if ($range == 0) $range = 1; // Avoid division by zero
+    if ($range == 0) {
+        $range = 1;
+    } // Avoid division by zero
 
     // Take last $width data points
     $graphData = array_slice($data, -$width);
 
-    echo "   Max: " . round($max, 1) . " $unit\n";
+    echo '   Max: ' . round($max, 1) . " $unit\n";
 
     for ($y = $height - 1; $y >= 0; $y--) {
-        echo "   ";
+        echo '   ';
         foreach ($graphData as $value) {
             $normalizedValue = ($value - $min) / $range;
             $barHeight = $normalizedValue * ($height - 1);
 
             if ($barHeight >= $y) {
-                echo "█";
+                echo '█';
             } else {
-                echo " ";
+                echo ' ';
             }
         }
         echo "\n";
     }
 
-    echo "   Min: " . round($min, 1) . " $unit\n";
+    echo '   Min: ' . round($min, 1) . " $unit\n";
 }
 
 /**
- * Display final summary
+ * Display final summary.
  */
 function displaySummary(array $monitoringData): void
 {
@@ -479,11 +484,11 @@ function displaySummary(array $monitoringData): void
     $successRate = $monitoringData['checks'] > 0 ?
         ($monitoringData['successful_checks'] / $monitoringData['checks']) * 100 : 0;
 
-    echo "⏱️  Total Duration: " . formatDuration($uptime) . "\n";
+    echo '⏱️  Total Duration: ' . formatDuration($uptime) . "\n";
     echo "📈 Total Checks: {$monitoringData['checks']}\n";
     echo "✅ Successful: {$monitoringData['successful_checks']}\n";
     echo "❌ Failed: {$monitoringData['failed_checks']}\n";
-    echo "📊 Success Rate: " . round($successRate, 1) . "%\n";
+    echo '📊 Success Rate: ' . round($successRate, 1) . "%\n";
 
     if (!empty($monitoringData['response_times'])) {
         $avgResponseTime = array_sum($monitoringData['response_times']) / count($monitoringData['response_times']);
@@ -491,13 +496,13 @@ function displaySummary(array $monitoringData): void
         $maxResponseTime = max($monitoringData['response_times']);
 
         echo "⏱️  Response Times:\n";
-        echo "   Average: " . round($avgResponseTime, 2) . "ms\n";
-        echo "   Minimum: " . round($minResponseTime, 2) . "ms\n";
-        echo "   Maximum: " . round($maxResponseTime, 2) . "ms\n";
+        echo '   Average: ' . round($avgResponseTime, 2) . "ms\n";
+        echo '   Minimum: ' . round($minResponseTime, 2) . "ms\n";
+        echo '   Maximum: ' . round($maxResponseTime, 2) . "ms\n";
     }
 
     if (!empty($monitoringData['alerts'])) {
-        echo "🚨 Total Alerts: " . count($monitoringData['alerts']) . "\n";
+        echo '🚨 Total Alerts: ' . count($monitoringData['alerts']) . "\n";
 
         $alertTypes = [];
         foreach ($monitoringData['alerts'] as $alert) {
@@ -511,7 +516,7 @@ function displaySummary(array $monitoringData): void
 }
 
 /**
- * Log monitoring data to file
+ * Log monitoring data to file.
  */
 function logToFile(string $filename, array $data): void
 {
@@ -520,7 +525,7 @@ function logToFile(string $filename, array $data): void
 }
 
 /**
- * Format duration in human-readable format
+ * Format duration in human-readable format.
  */
 function formatDuration(int $seconds): string
 {
@@ -529,16 +534,16 @@ function formatDuration(int $seconds): string
     $seconds = $seconds % 60;
 
     if ($hours > 0) {
-        return sprintf("%dh %dm %ds", $hours, $minutes, $seconds);
+        return sprintf('%dh %dm %ds', $hours, $minutes, $seconds);
     } elseif ($minutes > 0) {
-        return sprintf("%dm %ds", $minutes, $seconds);
+        return sprintf('%dm %ds', $minutes, $seconds);
     } else {
-        return sprintf("%ds", $seconds);
+        return sprintf('%ds', $seconds);
     }
 }
 
 /**
- * Show help information
+ * Show help information.
  */
 function showHelp(): void
 {

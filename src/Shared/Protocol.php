@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace MCP\Shared;
 
-use Amp\CancelledException;
+use function Amp\async;
+
 use Amp\DeferredFuture;
 use Amp\Future;
-use Amp\TimeoutCancellation;
 use Evenement\EventEmitter;
+use MCP\Types\Capabilities\ClientCapabilities;
+use MCP\Types\Capabilities\ServerCapabilities;
 use MCP\Types\ErrorCode;
 use MCP\Types\JsonRpc\JSONRPCError;
 use MCP\Types\JsonRpc\JSONRPCMessage;
@@ -22,20 +24,10 @@ use MCP\Types\Notifications\ProgressNotification;
 use MCP\Types\Progress;
 use MCP\Types\Request;
 use MCP\Types\RequestId;
-use MCP\Types\RequestMeta;
 use MCP\Types\Requests\PingRequest;
 use MCP\Types\Result;
-use MCP\Types\Capabilities\ServerCapabilities;
-use MCP\Types\Capabilities\ClientCapabilities;
-use MCP\Shared\ProtocolOptions;
-use MCP\Shared\RequestOptions;
-use MCP\Shared\NotificationOptions;
-use MCP\Shared\RequestHandlerExtra;
-use MCP\Shared\TimeoutInfo;
-use MCP\Validation\ValidationService;
 
-use function Amp\async;
-use function Amp\delay;
+use MCP\Validation\ValidationService;
 
 /**
  * Type alias for progress callback.
@@ -43,14 +35,10 @@ use function Amp\delay;
 
 // PHP doesn't support type aliases, so we'll use callable directly
 
-
 /**
  * The default request timeout, in milliseconds.
  */
 const DEFAULT_REQUEST_TIMEOUT_MSEC = 60000;
-
-
-
 
 /**
  * Implements MCP protocol framing on top of a pluggable transport, including
@@ -63,6 +51,7 @@ const DEFAULT_REQUEST_TIMEOUT_MSEC = 60000;
 abstract class Protocol extends EventEmitter
 {
     private ?Transport $transport = null;
+
     private int $requestMessageId = 0;
 
     /** @var array<string, callable(JSONRPCRequest, RequestHandlerExtra): Future<SendResultT>> */
@@ -106,12 +95,14 @@ abstract class Protocol extends EventEmitter
 
     /**
      * A handler to invoke for any request types that do not have their own handler installed.
+     *
      * @var callable(JSONRPCRequest, RequestHandlerExtra): Future<SendResultT>|null
      */
     public $fallbackRequestHandler = null;
 
     /**
      * A handler to invoke for any notification types that do not have their own handler installed.
+     *
      * @var callable(Notification): Future<void>|null
      */
     public $fallbackNotificationHandler = null;
@@ -179,9 +170,10 @@ abstract class Protocol extends EventEmitter
         $totalElapsed = (time() * 1000) - $info->startTime;
         if ($info->maxTotalTimeout && $totalElapsed >= $info->maxTotalTimeout) {
             unset($this->timeoutInfo[$messageId]);
+
             throw new McpError(
                 ErrorCode::RequestTimeout,
-                "Maximum total timeout exceeded",
+                'Maximum total timeout exceeded',
                 ['maxTotalTimeout' => $info->maxTotalTimeout, 'totalElapsed' => $totalElapsed]
             );
         }
@@ -226,7 +218,7 @@ abstract class Protocol extends EventEmitter
                 } elseif ($jsonrpcMessage instanceof JSONRPCNotification) {
                     $this->onnotification($jsonrpcMessage);
                 } else {
-                    $this->onerror(new \Error("Unknown message type: " . json_encode($message)));
+                    $this->onerror(new \Error('Unknown message type: ' . json_encode($message)));
                 }
             });
 
@@ -246,7 +238,7 @@ abstract class Protocol extends EventEmitter
             ($this->onclose)();
         }
 
-        $error = new McpError(ErrorCode::ConnectionClosed, "Connection closed");
+        $error = new McpError(ErrorCode::ConnectionClosed, 'Connection closed');
         foreach ($responseHandlers as $deferred) {
             $deferred->error($error);
         }
@@ -274,7 +266,7 @@ abstract class Protocol extends EventEmitter
             try {
                 $handler($notification);
             } catch (\Throwable $error) {
-                $this->onerror(new \Error("Uncaught error in notification handler: " . $error->getMessage()));
+                $this->onerror(new \Error('Uncaught error in notification handler: ' . $error->getMessage()));
             }
         });
     }
@@ -297,6 +289,7 @@ abstract class Protocol extends EventEmitter
                     ],
                 ])->await();
             });
+
             return;
         }
 
@@ -306,7 +299,7 @@ abstract class Protocol extends EventEmitter
         $fullExtra = new RequestHandlerExtra(
             signal: $suspension,
             authInfo: $extra['authInfo'] ?? null,
-            sessionId: isset($extra['sessionId']) ? $extra['sessionId'] : null,
+            sessionId: $extra['sessionId'] ?? null,
             _meta: $request->getParams()['_meta'] ?? null,
             requestId: $request->getId(),
             requestInfo: $extra['requestInfo'] ?? null,
@@ -324,6 +317,7 @@ abstract class Protocol extends EventEmitter
                     resumptionToken: $options?->resumptionToken,
                     onresumptiontoken: $options?->onresumptiontoken
                 );
+
                 return $this->request($r, $resultSchema, $newOptions);
             }
         );
@@ -374,7 +368,8 @@ abstract class Protocol extends EventEmitter
     {
         $progressToken = $notification->getProgressToken();
         if (!$progressToken) {
-            $this->onerror(new \Error("Received a progress notification without a token"));
+            $this->onerror(new \Error('Received a progress notification without a token'));
+
             return;
         }
 
@@ -383,7 +378,8 @@ abstract class Protocol extends EventEmitter
 
         $handler = $this->progressHandlers[$messageId] ?? null;
         if (!$handler || !$progress) {
-            $this->onerror(new \Error("Received a progress notification for an unknown token: " . json_encode($notification)));
+            $this->onerror(new \Error('Received a progress notification for an unknown token: ' . json_encode($notification)));
+
             return;
         }
 
@@ -395,6 +391,7 @@ abstract class Protocol extends EventEmitter
                 $this->resetTimeout($messageId);
             } catch (McpError $error) {
                 $responseHandler->error($error);
+
                 return;
             }
         }
@@ -409,8 +406,9 @@ abstract class Protocol extends EventEmitter
 
         if ($deferred === null) {
             $this->onerror(new \Error(
-                "Received a response for an unknown message ID: " . json_encode($response)
+                'Received a response for an unknown message ID: ' . json_encode($response)
             ));
+
             return;
         }
 
@@ -467,9 +465,11 @@ abstract class Protocol extends EventEmitter
      * Sends a request and wait for a response.
      *
      * @template T
+     *
      * @param SendRequestT $request
      * @param ValidationService $resultSchema
      * @param RequestOptions|null $options
+     *
      * @return Future<T>
      */
     public function request(
@@ -479,7 +479,7 @@ abstract class Protocol extends EventEmitter
     ): Future {
         return async(function () use ($request, $resultSchema, $options) {
             if (!$this->transport) {
-                throw new \Error("Not connected");
+                throw new \Error('Not connected');
             }
 
             if ($this->options?->enforceStrictCapabilities === true) {
@@ -509,7 +509,7 @@ abstract class Protocol extends EventEmitter
                         '_meta' => array_merge(
                             $params['_meta'] ?? [],
                             ['progressToken' => $messageId]
-                        )
+                        ),
                     ]
                 );
             }
@@ -538,7 +538,7 @@ abstract class Protocol extends EventEmitter
 
             if ($options?->signal) {
                 \Revolt\EventLoop::onSignal(SIGTERM, function () use ($cancel, $options) {
-                    $cancel("Aborted");
+                    $cancel('Aborted');
                 });
             }
 
@@ -546,7 +546,7 @@ abstract class Protocol extends EventEmitter
             $timeoutHandler = function () use ($cancel, $timeout) {
                 $cancel(new McpError(
                     ErrorCode::RequestTimeout,
-                    "Request timed out",
+                    'Request timed out',
                     ['timeout' => $timeout]
                 ));
             };
@@ -563,6 +563,7 @@ abstract class Protocol extends EventEmitter
                 $this->transport->send($jsonrpcRequest)->await();
             } catch (\Throwable $error) {
                 $this->cleanupTimeout($messageId);
+
                 throw $error;
             }
 
@@ -581,7 +582,7 @@ abstract class Protocol extends EventEmitter
                     } catch (\Throwable $e) {
                         // Log validation errors but don't fail the request
                         // This maintains backward compatibility
-                        error_log("Result validation warning: " . $e->getMessage());
+                        error_log('Result validation warning: ' . $e->getMessage());
                     }
                 }
 
@@ -589,7 +590,7 @@ abstract class Protocol extends EventEmitter
                 return $this->convertToTypedResult($request, $result);
             }
 
-            throw new \Error("Unexpected response type");
+            throw new \Error('Unexpected response type');
         });
     }
 
@@ -602,7 +603,7 @@ abstract class Protocol extends EventEmitter
     ): Future {
         return async(function () use ($notification, $options) {
             if (!$this->transport) {
-                throw new \Error("Not connected");
+                throw new \Error('Not connected');
             }
 
             $this->assertNotificationCapability($notification->getMethod());
@@ -659,6 +660,7 @@ abstract class Protocol extends EventEmitter
      * Note that this will replace any previous request handler for the same method.
      *
      * @template T
+     *
      * @param class-string<T> $requestClass
      * @param callable(T, RequestHandlerExtra): SendResultT|Future<SendResultT> $handler
      */
@@ -667,10 +669,10 @@ abstract class Protocol extends EventEmitter
         callable $handler
     ): void {
         if (!is_subclass_of($requestClass, Request::class)) {
-            throw new \InvalidArgumentException("Request class must extend Request");
+            throw new \InvalidArgumentException('Request class must extend Request');
         }
 
-        $method = $requestClass::METHOD ?? throw new \Error("Request class must have METHOD constant");
+        $method = $requestClass::METHOD ?? throw new \Error('Request class must have METHOD constant');
         $this->assertRequestHandlerCapability($method);
 
         // Apply wrapper if one is set
@@ -682,7 +684,7 @@ abstract class Protocol extends EventEmitter
             $typedRequest = $requestClass::fromArray($request->jsonSerialize());
             $result = $wrappedHandler($typedRequest, $extra);
 
-            return $result instanceof Future ? $result : async(fn() => $result);
+            return $result instanceof Future ? $result : async(fn () => $result);
         };
     }
 
@@ -729,6 +731,7 @@ abstract class Protocol extends EventEmitter
      * Note that this will replace any previous notification handler for the same method.
      *
      * @template T
+     *
      * @param class-string<T> $notificationClass
      * @param callable(T): void|Future<void> $handler
      */
@@ -737,16 +740,16 @@ abstract class Protocol extends EventEmitter
         callable $handler
     ): void {
         if (!is_subclass_of($notificationClass, Notification::class)) {
-            throw new \InvalidArgumentException("Notification class must extend Notification");
+            throw new \InvalidArgumentException('Notification class must extend Notification');
         }
 
-        $method = $notificationClass::METHOD ?? throw new \Error("Notification class must have METHOD constant");
+        $method = $notificationClass::METHOD ?? throw new \Error('Notification class must have METHOD constant');
 
         $this->notificationHandlers[$method] = function (JSONRPCNotification $notification) use ($notificationClass, $handler) {
             $typedNotification = $notificationClass::fromArray($notification->jsonSerialize());
             $result = $handler($typedNotification);
 
-            return $result instanceof Future ? $result : async(fn() => $result);
+            return $result instanceof Future ? $result : async(fn () => $result);
         };
     }
 
@@ -764,6 +767,7 @@ abstract class Protocol extends EventEmitter
      * @param Request $request
      * @param array<string, mixed> $result
      * @param ValidationService $resultSchema
+     *
      * @throws \Throwable
      */
     private function validateAndConvertResult(Request $request, array $result, ValidationService $resultSchema): void
@@ -790,6 +794,7 @@ abstract class Protocol extends EventEmitter
      *
      * @param Request $request
      * @param mixed $result
+     *
      * @return mixed
      */
     private function convertToTypedResult(Request $request, mixed $result): mixed
@@ -821,6 +826,7 @@ abstract class Protocol extends EventEmitter
         } catch (\Throwable $e) {
             // If type conversion fails, log and return raw result for backward compatibility
             error_log("Result type conversion warning for method '$method': " . $e->getMessage());
+
             return $result;
         }
     }
@@ -830,8 +836,10 @@ abstract class Protocol extends EventEmitter
  * Merge capabilities objects.
  *
  * @template T of ServerCapabilities|ClientCapabilities
+ *
  * @param T $base
  * @param T $additional
+ *
  * @return T
  */
 function mergeCapabilities(

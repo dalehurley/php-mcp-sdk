@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Transport;
 
-use PHPUnit\Framework\TestCase;
 use MCP\Client\Transport\StdioClientTransport;
 use MCP\Client\Transport\StdioServerParameters;
-use Amp\Future;
+use PHPUnit\Framework\TestCase;
 
 class StdioClientTransportTest extends TestCase
 {

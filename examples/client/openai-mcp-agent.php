@@ -2,19 +2,19 @@
 <?php
 
 /**
- * OpenAI Tool Calling with FullCX MCP Integration
- * 
- * This example demonstrates how OpenAI can use function calling to interact 
+ * OpenAI Tool Calling with FullCX MCP Integration.
+ *
+ * This example demonstrates how OpenAI can use function calling to interact
  * with FullCX MCP server for product management tasks.
- * 
+ *
  * Usage:
  *   php examples/client/openai-mcp-agent.php "your request here"
- * 
+ *
  * Examples:
  *   php examples/client/openai-mcp-agent.php "show me all products"
  *   php examples/client/openai-mcp-agent.php "create a feature called 'User Dashboard' for product-123"
  *   php examples/client/openai-mcp-agent.php "analyze product product-123 and create 2 requirements"
- * 
+ *
  * Environment Variables:
  *   FULLCX_API_TOKEN   - Your FullCX API token (required)
  *   FULLCX_MCP_URL     - FullCX MCP server URL (default: https://full.cx/mcp)
@@ -25,14 +25,15 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use function Amp\async;
+
 use FullCX\MCP\FullCXClient;
 use OpenAI\Client as OpenAIClient;
-use function Amp\async;
-use function Amp\delay;
 
 class OpenAIMCPAgent
 {
     private FullCXClient $fullcx;
+
     private OpenAIClient $openai;
 
     private array $config;
@@ -43,7 +44,7 @@ class OpenAIMCPAgent
             'fullcx_token' => $_ENV['FULLCX_API_TOKEN'] ?? null,
             'openai_key' => $_ENV['OPENAI_API_KEY'] ?? null,
             'openai_org' => $_ENV['OPENAI_ORGANIZATION'] ?? null,
-            'openai_timeout' => (int)($_ENV['OPENAI_REQUEST_TIMEOUT'] ?? 300),
+            'openai_timeout' => (int) ($_ENV['OPENAI_REQUEST_TIMEOUT'] ?? 300),
         ];
 
         if (!$this->config['fullcx_token']) {
@@ -72,7 +73,7 @@ class OpenAIMCPAgent
         // Add timeout configuration
         $factory = $factory->withHttpClient(
             new \GuzzleHttp\Client([
-                'timeout' => $this->config['openai_timeout']
+                'timeout' => $this->config['openai_timeout'],
             ])
         );
 
@@ -80,7 +81,7 @@ class OpenAIMCPAgent
     }
 
     /**
-     * Convert MCP tool schema to OpenAI function definition
+     * Convert MCP tool schema to OpenAI function definition.
      */
     private function convertMCPToolToOpenAIFunction(\MCP\Types\Tool $mcpTool): array
     {
@@ -91,14 +92,14 @@ class OpenAIMCPAgent
                 'description' => $mcpTool->getDescription(),
                 'parameters' => $mcpTool->getInputSchema() ?? [
                     'type' => 'object',
-                    'properties' => []
-                ]
-            ]
+                    'properties' => [],
+                ],
+            ],
         ];
     }
 
     /**
-     * Get tool definitions dynamically from MCP server
+     * Get tool definitions dynamically from MCP server.
      */
     public function getToolDefinitions(): \Generator
     {
@@ -116,18 +117,18 @@ class OpenAIMCPAgent
             echo "  📋 Found tool: {$mcpTool->getName()}\n";
         }
 
-        echo "✅ Discovered " . count($openaiTools) . " tools from MCP server\n\n";
+        echo '✅ Discovered ' . count($openaiTools) . " tools from MCP server\n\n";
 
         return $openaiTools;
     }
 
     /**
-     * Execute MCP tool calls dynamically
+     * Execute MCP tool calls dynamically.
      */
     public function executeTool(string $toolName, array $arguments): \Generator
     {
         echo "🔧 Executing MCP tool: {$toolName}\n";
-        echo "   Arguments: " . json_encode($arguments, JSON_PRETTY_PRINT) . "\n";
+        echo '   Arguments: ' . json_encode($arguments, JSON_PRETTY_PRINT) . "\n";
 
         try {
             // Call the MCP tool directly using the client's callToolByName method
@@ -155,21 +156,22 @@ class OpenAIMCPAgent
                 'raw_result' => $result,
                 'text_content' => $textContent,
                 'parsed_data' => $data,
-                'message' => "Successfully executed tool '{$toolName}'"
+                'message' => "Successfully executed tool '{$toolName}'",
             ];
         } catch (\Exception $e) {
             echo "   ❌ Tool execution failed: {$e->getMessage()}\n";
+
             return [
                 'success' => false,
                 'tool_name' => $toolName,
                 'error' => $e->getMessage(),
-                'message' => "Failed to execute tool '{$toolName}': {$e->getMessage()}"
+                'message' => "Failed to execute tool '{$toolName}': {$e->getMessage()}",
             ];
         }
     }
 
     /**
-     * Process user request using OpenAI function calling
+     * Process user request using OpenAI function calling.
      */
     public function processRequest(string $userMessage): \Generator
     {
@@ -188,15 +190,15 @@ class OpenAIMCPAgent
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'You are a helpful product management assistant that can interact with FullCX to manage products, features, requirements, and ideas. Use the available tools to fulfill user requests. Always be helpful and provide clear explanations of what you\'re doing.'
+                        'content' => 'You are a helpful product management assistant that can interact with FullCX to manage products, features, requirements, and ideas. Use the available tools to fulfill user requests. Always be helpful and provide clear explanations of what you\'re doing.',
                     ],
                     [
                         'role' => 'user',
-                        'content' => $userMessage
-                    ]
+                        'content' => $userMessage,
+                    ],
                 ],
                 'tools' => $toolDefinitions,
-                'tool_choice' => 'auto'
+                'tool_choice' => 'auto',
             ]);
 
             $message = $response->choices[0]->message;
@@ -208,13 +210,13 @@ class OpenAIMCPAgent
                 [
                     'role' => 'assistant',
                     'content' => $message->content,
-                    'tool_calls' => $message->toolCalls
-                ]
+                    'tool_calls' => $message->toolCalls,
+                ],
             ];
 
             // Process tool calls if any
             if ($message->toolCalls) {
-                echo "🔧 OpenAI wants to call " . count($message->toolCalls) . " tool(s):\n\n";
+                echo '🔧 OpenAI wants to call ' . count($message->toolCalls) . " tool(s):\n\n";
 
                 foreach ($message->toolCalls as $toolCall) {
                     $toolName = $toolCall->function->name;
@@ -227,7 +229,7 @@ class OpenAIMCPAgent
                     $messages[] = [
                         'role' => 'tool',
                         'tool_call_id' => $toolCall->id,
-                        'content' => json_encode($result)
+                        'content' => json_encode($result),
                     ];
 
                     echo "\n";
@@ -237,53 +239,54 @@ class OpenAIMCPAgent
                 echo "💭 OpenAI is formulating the final response...\n";
                 $finalResponse = $this->openai->chat()->create([
                     'model' => 'gpt-4.1',
-                    'messages' => $messages
+                    'messages' => $messages,
                 ]);
 
                 $finalMessage = $finalResponse->choices[0]->message->content;
 
                 echo "\n🎯 Final Response:\n";
-                echo str_repeat("-", 50) . "\n";
+                echo str_repeat('-', 50) . "\n";
                 echo $finalMessage . "\n";
-                echo str_repeat("-", 50) . "\n";
+                echo str_repeat('-', 50) . "\n";
 
                 return $finalMessage;
             } else {
                 // Direct response without tool calls
                 echo "\n💬 Direct Response:\n";
-                echo str_repeat("-", 50) . "\n";
+                echo str_repeat('-', 50) . "\n";
                 echo $message->content . "\n";
-                echo str_repeat("-", 50) . "\n";
+                echo str_repeat('-', 50) . "\n";
 
                 return $message->content;
             }
         } catch (\Exception $e) {
             echo "❌ Error processing request: {$e->getMessage()}\n";
-            return "I encountered an error: " . $e->getMessage();
+
+            return 'I encountered an error: ' . $e->getMessage();
         } finally {
             yield $this->fullcx->close();
         }
     }
 
     /**
-     * Interactive demo mode
+     * Interactive demo mode.
      */
     public function runDemo(): \Generator
     {
         echo "🎬 OpenAI + FullCX MCP Integration Demo\n";
-        echo str_repeat("=", 50) . "\n\n";
+        echo str_repeat('=', 50) . "\n\n";
 
         $demoRequests = [
-            "Show me all the products in the system",
-            "Get detailed information about the first product",
+            'Show me all the products in the system',
+            'Get detailed information about the first product',
             "Create a new feature called 'Advanced Search' for the first product with description 'Implement advanced search functionality with filters and sorting'",
             "Create a high-priority requirement for the first product called 'Search Performance' with description 'Search results should load within 2 seconds'",
-            "Generate an idea for improving user experience in the first product with high impact and medium effort"
+            'Generate an idea for improving user experience in the first product with high impact and medium effort',
         ];
 
         foreach ($demoRequests as $index => $request) {
-            echo "Demo Step " . ($index + 1) . ":\n";
-            echo str_repeat("=", 70) . "\n";
+            echo 'Demo Step ' . ($index + 1) . ":\n";
+            echo str_repeat('=', 70) . "\n";
 
             yield $this->processRequest($request);
 
@@ -304,14 +307,14 @@ class OpenAIMCPAgent
 if (basename($_SERVER['argv'][0]) === 'openai-mcp-agent.php') {
     try {
         echo "🚀 FullCX OpenAI MCP Agent\n";
-        echo str_repeat("=", 30) . "\n\n";
+        echo str_repeat('=', 30) . "\n\n";
 
         // Show configuration
         echo "Configuration:\n";
-        echo "  FullCX Token: " . (($_ENV['FULLCX_API_TOKEN'] ?? '') ? 'Set ✅' : 'Not set ❌') . "\n";
-        echo "  OpenAI Key: " . (($_ENV['OPENAI_API_KEY'] ?? '') ? 'Set ✅' : 'Not set ❌') . "\n";
-        echo "  OpenAI Org: " . ($_ENV['OPENAI_ORGANIZATION'] ?? 'Not set') . "\n";
-        echo "  Timeout: " . ($_ENV['OPENAI_REQUEST_TIMEOUT'] ?? '300') . " seconds\n\n";
+        echo '  FullCX Token: ' . (($_ENV['FULLCX_API_TOKEN'] ?? '') ? 'Set ✅' : 'Not set ❌') . "\n";
+        echo '  OpenAI Key: ' . (($_ENV['OPENAI_API_KEY'] ?? '') ? 'Set ✅' : 'Not set ❌') . "\n";
+        echo '  OpenAI Org: ' . ($_ENV['OPENAI_ORGANIZATION'] ?? 'Not set') . "\n";
+        echo '  Timeout: ' . ($_ENV['OPENAI_REQUEST_TIMEOUT'] ?? '300') . " seconds\n\n";
 
         $agent = new OpenAIMCPAgent();
 

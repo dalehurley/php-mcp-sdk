@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Validation;
 
-use PHPUnit\Framework\TestCase;
 use MCP\Validation\ValidationException;
+use PHPUnit\Framework\TestCase;
 
 class ValidationExceptionTest extends TestCase
 {
@@ -40,7 +40,7 @@ class ValidationExceptionTest extends TestCase
         $errors = [
             'name' => ['Name is required'],
             'email' => ['Email format is invalid', 'Email is required'],
-            'age' => ['Age must be a positive integer']
+            'age' => ['Age must be a positive integer'],
         ];
 
         $exception = new ValidationException('Multiple validation errors', $errors);
@@ -53,7 +53,7 @@ class ValidationExceptionTest extends TestCase
     {
         $errors = [
             'field1' => ['Error 1', 'Error 2'],
-            'field2' => ['Error 3']
+            'field2' => ['Error 3'],
         ];
 
         $exception = new ValidationException('Test error', $errors);
@@ -74,7 +74,7 @@ class ValidationExceptionTest extends TestCase
     {
         $errors = [
             'name' => ['Name is required', 'Name must be string'],
-            'email' => ['Email is invalid']
+            'email' => ['Email is invalid'],
         ];
 
         $exception = new ValidationException('Test', $errors);

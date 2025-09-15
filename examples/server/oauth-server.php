@@ -2,8 +2,8 @@
 <?php
 
 /**
- * OAuth Protected Server Example
- * 
+ * OAuth Protected Server Example.
+ *
  * This example demonstrates how to create an MCP server with OAuth authentication:
  * - OAuth 2.0 flow implementation
  * - Token validation and scope checking
@@ -21,17 +21,17 @@ require_once __DIR__ . '/../../src/Server/ResourceTemplate.php';
 require_once __DIR__ . '/../../src/Server/ServerOptions.php';
 require_once __DIR__ . '/../../src/Server/Server.php';
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
 use MCP\Server\ServerOptions;
 use MCP\Server\Transport\StdioServerTransport;
-use MCP\Server\Auth\OAuthProvider;
-use MCP\Types\Implementation;
 use MCP\Types\Capabilities\ServerCapabilities;
+use MCP\Types\Content\TextContent;
+use MCP\Types\Implementation;
+use MCP\Types\Resources\TextResourceContents;
 use MCP\Types\Results\CallToolResult;
 use MCP\Types\Results\ReadResourceResult;
-use MCP\Types\Resources\TextResourceContents;
-use MCP\Types\Content\TextContent;
-use function Amp\async;
 
 // Create the server with OAuth capabilities
 $server = new McpServer(
@@ -41,7 +41,7 @@ $server = new McpServer(
             tools: ['listChanged' => true],
             resources: ['listChanged' => true]
         ),
-        instructions: "This server demonstrates OAuth 2.0 authentication with protected resources and scoped access."
+        instructions: 'This server demonstrates OAuth 2.0 authentication with protected resources and scoped access.'
     )
 );
 
@@ -53,8 +53,8 @@ $oauthConfig = [
     'scopes' => [
         'read' => 'Read access to resources',
         'write' => 'Write access to resources',
-        'admin' => 'Administrative access'
-    ]
+        'admin' => 'Administrative access',
+    ],
 ];
 
 // In-memory storage for demo (use proper database in production)
@@ -67,8 +67,8 @@ $users = [
         'profile' => [
             'name' => 'Alice Johnson',
             'role' => 'Developer',
-            'department' => 'Engineering'
-        ]
+            'department' => 'Engineering',
+        ],
     ],
     'user2' => [
         'id' => 'user2',
@@ -78,8 +78,8 @@ $users = [
         'profile' => [
             'name' => 'Bob Smith',
             'role' => 'Analyst',
-            'department' => 'Data Science'
-        ]
+            'department' => 'Data Science',
+        ],
     ],
     'admin' => [
         'id' => 'admin',
@@ -89,16 +89,16 @@ $users = [
         'profile' => [
             'name' => 'System Administrator',
             'role' => 'Admin',
-            'department' => 'IT'
-        ]
-    ]
+            'department' => 'IT',
+        ],
+    ],
 ];
 
 $sessions = [];
 $accessTokens = [];
 
 /**
- * Validate access token and return user info
+ * Validate access token and return user info.
  */
 function validateToken(string $token): ?array
 {
@@ -113,6 +113,7 @@ function validateToken(string $token): ?array
     // Check if token is expired
     if (time() > $tokenInfo['expires_at']) {
         unset($accessTokens[$token]);
+
         return null;
     }
 
@@ -123,12 +124,12 @@ function validateToken(string $token): ?array
 
     return [
         'user' => $users[$userId],
-        'token_info' => $tokenInfo
+        'token_info' => $tokenInfo,
     ];
 }
 
 /**
- * Check if user has required scope
+ * Check if user has required scope.
  */
 function hasScope(array $userScopes, string $requiredScope): bool
 {
@@ -136,7 +137,7 @@ function hasScope(array $userScopes, string $requiredScope): bool
 }
 
 /**
- * Generate a demo access token
+ * Generate a demo access token.
  */
 function generateAccessToken(string $userId, array $scopes): string
 {
@@ -148,7 +149,7 @@ function generateAccessToken(string $userId, array $scopes): string
         'scopes' => $scopes,
         'created_at' => time(),
         'expires_at' => time() + 3600, // 1 hour
-        'token_type' => 'Bearer'
+        'token_type' => 'Bearer',
     ];
 
     return $token;
@@ -161,7 +162,7 @@ $server->resource(
     [
         'title' => 'OAuth Configuration',
         'description' => 'OAuth 2.0 configuration and endpoints',
-        'mimeType' => 'application/json'
+        'mimeType' => 'application/json',
     ],
     function ($uri, $extra) use ($oauthConfig) {
         $info = [
@@ -172,9 +173,9 @@ $server->resource(
             'endpoints' => [
                 'authorization' => $oauthConfig['issuer'] . '/oauth/authorize',
                 'token' => $oauthConfig['issuer'] . '/oauth/token',
-                'userinfo' => $oauthConfig['issuer'] . '/oauth/userinfo'
+                'userinfo' => $oauthConfig['issuer'] . '/oauth/userinfo',
             ],
-            'demo_note' => 'This is a demonstration server. Use the demo-login tool to get access tokens.'
+            'demo_note' => 'This is a demonstration server. Use the demo-login tool to get access tokens.',
         ];
 
         return new ReadResourceResult(
@@ -183,7 +184,7 @@ $server->resource(
                     uri: $uri,
                     text: json_encode($info, JSON_PRETTY_PRINT),
                     mimeType: 'application/json'
-                )
+                ),
             ]
         );
     }
@@ -196,7 +197,7 @@ $server->resource(
     [
         'title' => 'User Profile',
         'description' => 'Current user profile information (requires authentication)',
-        'mimeType' => 'application/json'
+        'mimeType' => 'application/json',
     ],
     function ($uri, $extra) use ($users) {
         // Check for authorization header
@@ -226,7 +227,7 @@ $server->resource(
             'email' => $user['email'],
             'profile' => $user['profile'],
             'scopes' => $user['scopes'],
-            'token_expires_at' => date('c', $tokenInfo['expires_at'])
+            'token_expires_at' => date('c', $tokenInfo['expires_at']),
         ];
 
         return new ReadResourceResult(
@@ -235,7 +236,7 @@ $server->resource(
                     uri: $uri,
                     text: json_encode($profile, JSON_PRETTY_PRINT),
                     mimeType: 'application/json'
-                )
+                ),
             ]
         );
     }
@@ -249,8 +250,8 @@ $server->tool(
         'username' => [
             'type' => 'string',
             'description' => 'Username (alice, bob, or admin)',
-            'enum' => ['alice', 'bob', 'admin']
-        ]
+            'enum' => ['alice', 'bob', 'admin'],
+        ],
     ],
     function (array $args) use ($users) {
         $username = $args['username'] ?? '';
@@ -283,9 +284,9 @@ $server->tool(
             'user' => [
                 'id' => $user['id'],
                 'username' => $user['username'],
-                'email' => $user['email']
+                'email' => $user['email'],
             ],
-            'usage' => "Use this token in the Authorization header: 'Bearer $token'"
+            'usage' => "Use this token in the Authorization header: 'Bearer $token'",
         ];
 
         return new CallToolResult(
@@ -305,8 +306,8 @@ $server->tool(
         'include_profiles' => [
             'type' => 'boolean',
             'description' => 'Include full profile information',
-            'default' => false
-        ]
+            'default' => false,
+        ],
     ],
     function (array $args, array $context = []) use ($users) {
         // Extract auth from context (this would be set by middleware in a real implementation)
@@ -345,7 +346,7 @@ $server->tool(
             $userInfo = [
                 'id' => $user['id'],
                 'username' => $user['username'],
-                'email' => $user['email']
+                'email' => $user['email'],
             ];
 
             if ($includeProfiles) {
@@ -373,12 +374,12 @@ $server->tool(
         'field' => [
             'type' => 'string',
             'description' => 'Profile field to update',
-            'enum' => ['name', 'role', 'department']
+            'enum' => ['name', 'role', 'department'],
         ],
         'value' => [
             'type' => 'string',
-            'description' => 'New value for the field'
-        ]
+            'description' => 'New value for the field',
+        ],
     ],
     function (array $args, array $context = []) use (&$users) {
         $authHeader = $context['headers']['authorization'] ?? '';
@@ -473,14 +474,14 @@ $server->tool(
         $stats = [
             'server_info' => [
                 'uptime' => 'Demo server',
-                'version' => '1.0.0'
+                'version' => '1.0.0',
             ],
             'users' => [
                 'total_users' => count($users),
                 'active_tokens' => count($accessTokens),
-                'active_sessions' => count($sessions)
+                'active_sessions' => count($sessions),
             ],
-            'tokens' => []
+            'tokens' => [],
         ];
 
         // Token statistics (anonymized)
@@ -490,7 +491,7 @@ $server->tool(
                 'scopes' => $tokenData['scopes'],
                 'created_at' => date('c', $tokenData['created_at']),
                 'expires_at' => date('c', $tokenData['expires_at']),
-                'expires_in_seconds' => max(0, $tokenData['expires_at'] - time())
+                'expires_in_seconds' => max(0, $tokenData['expires_at'] - time()),
             ];
         }
 
@@ -510,8 +511,8 @@ $server->tool(
     [
         'token' => [
             'type' => 'string',
-            'description' => 'Access token to validate'
-        ]
+            'description' => 'Access token to validate',
+        ],
     ],
     function (array $args) {
         $token = $args['token'] ?? '';
@@ -540,11 +541,11 @@ $server->tool(
             'user' => [
                 'id' => $user['id'],
                 'username' => $user['username'],
-                'email' => $user['email']
+                'email' => $user['email'],
             ],
             'scopes' => $tokenInfo['scopes'],
             'expires_at' => date('c', $tokenInfo['expires_at']),
-            'expires_in_seconds' => max(0, $tokenInfo['expires_at'] - time())
+            'expires_in_seconds' => max(0, $tokenInfo['expires_at'] - time()),
         ];
 
         return new CallToolResult(
@@ -565,7 +566,7 @@ async(function () use ($server, $oauthConfig) {
         echo "OAuth Configuration:\n";
         echo "- Client ID: {$oauthConfig['client_id']}\n";
         echo "- Issuer: {$oauthConfig['issuer']}\n";
-        echo "- Supported scopes: " . implode(', ', array_keys($oauthConfig['scopes'])) . "\n\n";
+        echo '- Supported scopes: ' . implode(', ', array_keys($oauthConfig['scopes'])) . "\n\n";
 
         echo "Demo Users:\n";
         echo "- alice (scopes: read, write)\n";
@@ -579,7 +580,7 @@ async(function () use ($server, $oauthConfig) {
 
         $server->connect($transport)->await();
     } catch (\Throwable $e) {
-        error_log("Server error: " . $e->getMessage());
+        error_log('Server error: ' . $e->getMessage());
         exit(1);
     }
 })->await();

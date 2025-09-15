@@ -4,43 +4,40 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Shared;
 
+use function Amp\async;
+
 use Amp\DeferredFuture;
 use Amp\Future;
-use Amp\TimeoutException;
 use MCP\Shared\Protocol;
 use MCP\Shared\ProtocolOptions;
 use MCP\Shared\RequestOptions;
-use MCP\Shared\NotificationOptions;
 use MCP\Shared\Transport;
 use MCP\Types\ErrorCode;
-use MCP\Types\JsonRpc\JSONRPCRequest;
-use MCP\Types\JsonRpc\JSONRPCResponse;
-use MCP\Types\JsonRpc\JSONRPCError;
-use MCP\Types\JsonRpc\JSONRPCNotification;
 use MCP\Types\McpError;
 use MCP\Types\Notification;
-use MCP\Types\Request;
-use MCP\Types\RequestId;
-use MCP\Types\Result;
-use MCP\Types\Requests\PingRequest;
 use MCP\Types\Notifications\CancelledNotification;
-use MCP\Types\Notifications\ProgressNotification;
 use MCP\Types\Progress;
+use MCP\Types\Request;
+use MCP\Types\Requests\PingRequest;
+use MCP\Types\Result;
 use MCP\Validation\ValidationService;
 use PHPUnit\Framework\TestCase;
-use function Amp\async;
-use function Amp\delay;
 
 /**
- * Mock transport for testing
+ * Mock transport for testing.
  */
 class MockTransport implements Transport
 {
     public array $sentMessages = [];
+
     public mixed $messageHandler = null;
+
     public mixed $closeHandler = null;
+
     public mixed $errorHandler = null;
+
     public bool $isStarted = false;
+
     public bool $isClosed = false;
 
     public function start(): Future
@@ -48,6 +45,7 @@ class MockTransport implements Transport
         $this->isStarted = true;
         $deferred = new DeferredFuture();
         $deferred->complete();
+
         return $deferred->getFuture();
     }
 
@@ -56,6 +54,7 @@ class MockTransport implements Transport
         $this->sentMessages[] = $message;
         $deferred = new DeferredFuture();
         $deferred->complete();
+
         return $deferred->getFuture();
     }
 
@@ -67,6 +66,7 @@ class MockTransport implements Transport
         }
         $deferred = new DeferredFuture();
         $deferred->complete();
+
         return $deferred->getFuture();
     }
 
@@ -108,7 +108,7 @@ class MockTransport implements Transport
 }
 
 /**
- * Test implementation of Protocol
+ * Test implementation of Protocol.
  */
 class TestProtocol extends Protocol
 {
@@ -138,6 +138,7 @@ class TestProtocol extends Protocol
 class ProtocolTest extends TestCase
 {
     private MockTransport $transport;
+
     private TestProtocol $protocol;
 
     protected function setUp(): void
@@ -194,7 +195,7 @@ class ProtocolTest extends TestCase
             'jsonrpc' => '2.0',
             'id' => 123,
             'method' => 'ping',
-            'params' => []
+            'params' => [],
         ]);
 
         // Give async handler time to process
@@ -226,7 +227,7 @@ class ProtocolTest extends TestCase
             $this->transport->simulateMessage([
                 'jsonrpc' => '2.0',
                 'id' => 0, // First request ID
-                'result' => ['success' => true]
+                'result' => ['success' => true],
             ]);
 
             return $future->await();
@@ -283,8 +284,8 @@ class ProtocolTest extends TestCase
                     'progressToken' => 0, // Matches request ID
                     'progress' => 50,
                     'total' => 100,
-                    'message' => 'Processing...'
-                ]
+                    'message' => 'Processing...',
+                ],
             ]);
 
             \Amp\delay(10);
@@ -293,7 +294,7 @@ class ProtocolTest extends TestCase
             $this->transport->simulateMessage([
                 'jsonrpc' => '2.0',
                 'id' => 0,
-                'result' => ['success' => true]
+                'result' => ['success' => true],
             ]);
 
             return $future->await();
@@ -352,6 +353,7 @@ class ProtocolTest extends TestCase
             PingRequest::class,
             function (PingRequest $request) use (&$handlerCalled) {
                 $handlerCalled = true;
+
                 return new Result();
             }
         );
@@ -361,7 +363,7 @@ class ProtocolTest extends TestCase
             'jsonrpc' => '2.0',
             'id' => 456,
             'method' => 'ping',
-            'params' => []
+            'params' => [],
         ]);
 
         \Amp\delay(10);
@@ -391,8 +393,8 @@ class ProtocolTest extends TestCase
             'method' => 'notifications/cancelled',
             'params' => [
                 'requestId' => 123,
-                'reason' => 'User cancelled'
-            ]
+                'reason' => 'User cancelled',
+            ],
         ]);
 
         \Amp\delay(10);
@@ -436,8 +438,8 @@ class ProtocolTest extends TestCase
                 'method' => 'notifications/cancelled',
                 'params' => [
                     'requestId' => 0,
-                    'reason' => 'Cancelled by user'
-                ]
+                    'reason' => 'Cancelled by user',
+                ],
             ]);
 
             try {
@@ -456,7 +458,7 @@ class ProtocolTest extends TestCase
         $sentMessages = $this->transport->sentMessages;
 
         // Filter only request messages (not notifications)
-        $requestMessages = array_filter($sentMessages, fn($msg) => isset($msg['id']));
+        $requestMessages = array_filter($sentMessages, fn ($msg) => isset($msg['id']));
 
         $this->assertCount(1, $requestMessages);
         $firstRequest = array_values($requestMessages)[0];
@@ -497,7 +499,7 @@ class ProtocolTest extends TestCase
             'jsonrpc' => '2.0',
             'id' => 789,
             'method' => 'unknown_method',
-            'params' => []
+            'params' => [],
         ]);
 
         \Amp\delay(10);
@@ -526,7 +528,7 @@ class ProtocolTest extends TestCase
         }
 
         // Filter only request-type capability calls (not handler registrations)
-        $requestCalls = array_filter($protocol->capabilityCalls, fn($call) => $call['type'] === 'request');
+        $requestCalls = array_filter($protocol->capabilityCalls, fn ($call) => $call['type'] === 'request');
 
         $this->assertCount(1, $requestCalls);
         $firstRequestCall = array_values($requestCalls)[0];

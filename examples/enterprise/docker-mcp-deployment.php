@@ -2,8 +2,8 @@
 <?php
 
 /**
- * Docker MCP Deployment Example
- * 
+ * Docker MCP Deployment Example.
+ *
  * This example demonstrates how to containerize MCP servers for production deployment.
  * It includes:
  * - Production-ready server configuration
@@ -11,13 +11,13 @@
  * - Environment-based configuration
  * - Graceful shutdown handling
  * - Docker best practices for MCP
- * 
+ *
  * This server is designed to run in a Docker container with proper
  * configuration management and monitoring capabilities.
- * 
+ *
  * Usage:
  *   php docker-mcp-deployment.php
- *   
+ *
  * Docker Usage:
  *   docker build -t mcp-server .
  *   docker run -p 8080:8080 mcp-server
@@ -25,11 +25,11 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use function Amp\async;
+
 use MCP\Server\McpServer;
 use MCP\Server\Transport\StdioServerTransport;
 use MCP\Types\Implementation;
-use MCP\Types\McpError;
-use function Amp\async;
 
 // Production-ready configuration
 class ProductionConfig
@@ -45,13 +45,17 @@ class ProductionConfig
         if ($value === null) {
             throw new Exception("Required environment variable {$key} is not set");
         }
+
         return $value;
     }
 
     public static function getBool(string $key, bool $default = false): bool
     {
         $value = self::get($key);
-        if ($value === null) return $default;
+        if ($value === null) {
+            return $default;
+        }
+
         return in_array(strtolower($value), ['true', '1', 'yes', 'on']);
     }
 
@@ -65,6 +69,7 @@ class ProductionConfig
 class HealthChecker
 {
     private array $checks = [];
+
     private array $metrics = [];
 
     public function addCheck(string $name, callable $check): void
@@ -86,7 +91,7 @@ class HealthChecker
                 $results[$name] = [
                     'status' => $result ? 'healthy' : 'unhealthy',
                     'duration_ms' => round($duration * 1000, 2),
-                    'timestamp' => date('c')
+                    'timestamp' => date('c'),
                 ];
 
                 if (!$result) {
@@ -96,7 +101,7 @@ class HealthChecker
                 $results[$name] = [
                     'status' => 'error',
                     'error' => $e->getMessage(),
-                    'timestamp' => date('c')
+                    'timestamp' => date('c'),
                 ];
                 $overallHealth = false;
             }
@@ -106,7 +111,7 @@ class HealthChecker
             'status' => $overallHealth ? 'healthy' : 'unhealthy',
             'checks' => $results,
             'timestamp' => date('c'),
-            'uptime' => $this->getUptime()
+            'uptime' => $this->getUptime(),
         ];
     }
 
@@ -114,7 +119,7 @@ class HealthChecker
     {
         $this->metrics[$name] = [
             'value' => $value,
-            'timestamp' => time()
+            'timestamp' => time(),
         ];
     }
 
@@ -126,6 +131,7 @@ class HealthChecker
     private function getUptime(): string
     {
         $uptime = time() - ($_SERVER['REQUEST_TIME'] ?? time());
+
         return gmdate('H:i:s', $uptime);
     }
 }
@@ -139,7 +145,7 @@ $config = [
     'health_check_enabled' => ProductionConfig::getBool('HEALTH_CHECK_ENABLED', true),
     'metrics_enabled' => ProductionConfig::getBool('METRICS_ENABLED', true),
     'max_memory_mb' => ProductionConfig::getInt('MAX_MEMORY_MB', 128),
-    'max_execution_time' => ProductionConfig::getInt('MAX_EXECUTION_TIME', 30)
+    'max_execution_time' => ProductionConfig::getInt('MAX_EXECUTION_TIME', 30),
 ];
 
 // Initialize health checker
@@ -148,6 +154,7 @@ $healthChecker = new HealthChecker();
 // Add health checks
 $healthChecker->addCheck('memory', function () use ($config) {
     $memoryUsage = memory_get_usage(true) / 1024 / 1024; // MB
+
     return $memoryUsage < $config['max_memory_mb'];
 });
 
@@ -155,6 +162,7 @@ $healthChecker->addCheck('disk_space', function () {
     $freeSpace = disk_free_space('.');
     $totalSpace = disk_total_space('.');
     $usagePercent = (($totalSpace - $freeSpace) / $totalSpace) * 100;
+
     return $usagePercent < 90; // Less than 90% usage
 });
 
@@ -181,9 +189,9 @@ $server->tool(
             'detailed' => [
                 'type' => 'boolean',
                 'description' => 'Include detailed health information',
-                'default' => false
-            ]
-        ]
+                'default' => false,
+            ],
+        ],
     ],
     function (array $args) use ($healthChecker): array {
         $detailed = $args['detailed'] ?? false;
@@ -195,7 +203,7 @@ $server->tool(
                 'environment' => $_ENV['ENVIRONMENT'] ?? 'unknown',
                 'php_version' => PHP_VERSION,
                 'memory_limit' => ini_get('memory_limit'),
-                'max_execution_time' => ini_get('max_execution_time')
+                'max_execution_time' => ini_get('max_execution_time'),
             ];
         }
 
@@ -206,9 +214,9 @@ $server->tool(
                 [
                     'type' => 'text',
                     'text' => "{$statusIcon} Server Health: {$health['status']}\n\n" .
-                        json_encode($health, JSON_PRETTY_PRINT)
-                ]
-            ]
+                        json_encode($health, JSON_PRETTY_PRINT),
+                ],
+            ],
         ];
     }
 );
@@ -219,7 +227,7 @@ $server->tool(
     'Get system and container information',
     [
         'type' => 'object',
-        'properties' => []
+        'properties' => [],
     ],
     function (array $args) use ($config): array {
         $info = [
@@ -227,26 +235,26 @@ $server->tool(
                 'name' => $config['server_name'],
                 'version' => $config['server_version'],
                 'environment' => $config['environment'],
-                'uptime' => gmdate('H:i:s', time() - ($_SERVER['REQUEST_TIME'] ?? time()))
+                'uptime' => gmdate('H:i:s', time() - ($_SERVER['REQUEST_TIME'] ?? time())),
             ],
             'system' => [
                 'php_version' => PHP_VERSION,
                 'os' => PHP_OS,
                 'architecture' => php_uname('m'),
                 'hostname' => gethostname(),
-                'current_time' => date('c')
+                'current_time' => date('c'),
             ],
             'resources' => [
                 'memory_usage' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
                 'memory_peak' => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB',
                 'memory_limit' => ini_get('memory_limit'),
-                'disk_free' => round(disk_free_space('.') / 1024 / 1024, 2) . ' MB'
+                'disk_free' => round(disk_free_space('.') / 1024 / 1024, 2) . ' MB',
             ],
             'container' => [
                 'is_docker' => file_exists('/.dockerenv'),
                 'container_id' => substr(file_get_contents('/proc/self/cgroup') ?? '', 0, 12),
-                'environment_vars' => array_filter($_ENV, fn($key) => str_starts_with($key, 'MCP_'), ARRAY_FILTER_USE_KEY)
-            ]
+                'environment_vars' => array_filter($_ENV, fn ($key) => str_starts_with($key, 'MCP_'), ARRAY_FILTER_USE_KEY),
+            ],
         ];
 
         return [
@@ -254,9 +262,9 @@ $server->tool(
                 [
                     'type' => 'text',
                     'text' => "🐳 Docker MCP Server System Information\n\n" .
-                        json_encode($info, JSON_PRETTY_PRINT)
-                ]
-            ]
+                        json_encode($info, JSON_PRETTY_PRINT),
+                ],
+            ],
         ];
     }
 );
@@ -271,9 +279,9 @@ $server->tool(
             'reset' => [
                 'type' => 'boolean',
                 'description' => 'Reset metrics after reading',
-                'default' => false
-            ]
-        ]
+                'default' => false,
+            ],
+        ],
     ],
     function (array $args) use ($healthChecker): array {
         $metrics = $healthChecker->getMetrics();
@@ -296,9 +304,9 @@ $server->tool(
                 [
                     'type' => 'text',
                     'text' => "📊 Performance Metrics\n\n" .
-                        json_encode($currentMetrics, JSON_PRETTY_PRINT)
-                ]
-            ]
+                        json_encode($currentMetrics, JSON_PRETTY_PRINT),
+                ],
+            ],
         ];
     }
 );
@@ -310,7 +318,7 @@ $server->resource(
     [
         'title' => 'Docker Configuration',
         'description' => 'Docker deployment configuration and environment',
-        'mimeType' => 'application/json'
+        'mimeType' => 'application/json',
     ],
     function () use ($config): string {
         $dockerConfig = [
@@ -318,23 +326,23 @@ $server->resource(
                 'base_image' => 'php:8.1-cli',
                 'mcp_sdk_version' => '1.0.0',
                 'build_date' => date('c'),
-                'maintainer' => 'MCP Team'
+                'maintainer' => 'MCP Team',
             ],
             'environment' => $config,
             'recommended_resources' => [
                 'memory' => '256MB',
                 'cpu' => '0.5',
-                'disk' => '1GB'
+                'disk' => '1GB',
             ],
             'ports' => [
                 'health_check' => '8080',
-                'metrics' => '9090'
+                'metrics' => '9090',
             ],
             'volumes' => [
                 '/app/data' => 'Application data',
                 '/app/logs' => 'Application logs',
-                '/app/config' => 'Configuration files'
-            ]
+                '/app/config' => 'Configuration files',
+            ],
         ];
 
         return json_encode($dockerConfig, JSON_PRETTY_PRINT);
@@ -348,61 +356,61 @@ $server->resource(
     [
         'title' => 'Production Dockerfile',
         'description' => 'Complete Dockerfile for production deployment',
-        'mimeType' => 'text/plain'
+        'mimeType' => 'text/plain',
     ],
     function (): string {
         return <<<DOCKERFILE
-# Production Dockerfile for MCP Server
-FROM php:8.1-cli
+            # Production Dockerfile for MCP Server
+            FROM php:8.1-cli
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \\
-    git \\
-    curl \\
-    libzip-dev \\
-    zip \\
-    unzip \\
-    && rm -rf /var/lib/apt/lists/*
+            # Install system dependencies
+            RUN apt-get update && apt-get install -y \\
+                git \\
+                curl \\
+                libzip-dev \\
+                zip \\
+                unzip \\
+                && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install zip
+            # Install PHP extensions
+            RUN docker-php-ext-install zip
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+            # Install Composer
+            COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
-WORKDIR /app
+            # Set working directory
+            WORKDIR /app
 
-# Copy composer files
-COPY composer.json composer.lock ./
+            # Copy composer files
+            COPY composer.json composer.lock ./
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+            # Install dependencies
+            RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Copy application code
-COPY . .
+            # Copy application code
+            COPY . .
 
-# Create non-root user
-RUN groupadd -r mcp && useradd -r -g mcp mcp
-RUN chown -R mcp:mcp /app
-USER mcp
+            # Create non-root user
+            RUN groupadd -r mcp && useradd -r -g mcp mcp
+            RUN chown -R mcp:mcp /app
+            USER mcp
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\
-    CMD php -r "echo 'healthy';" || exit 1
+            # Health check
+            HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\
+                CMD php -r "echo 'healthy';" || exit 1
 
-# Set environment variables
-ENV ENVIRONMENT=production
-ENV MCP_SERVER_NAME=docker-mcp-server
-ENV LOG_LEVEL=info
-ENV HEALTH_CHECK_ENABLED=true
+            # Set environment variables
+            ENV ENVIRONMENT=production
+            ENV MCP_SERVER_NAME=docker-mcp-server
+            ENV LOG_LEVEL=info
+            ENV HEALTH_CHECK_ENABLED=true
 
-# Expose ports
-EXPOSE 8080
+            # Expose ports
+            EXPOSE 8080
 
-# Run the server
-CMD ["php", "docker-mcp-deployment.php"]
-DOCKERFILE;
+            # Run the server
+            CMD ["php", "docker-mcp-deployment.php"]
+            DOCKERFILE;
     }
 );
 
@@ -419,9 +427,9 @@ $server->prompt(
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => 'How do I deploy this MCP server with Docker?'
-                        ]
-                    ]
+                            'text' => 'How do I deploy this MCP server with Docker?',
+                        ],
+                    ],
                 ],
                 [
                     'role' => 'assistant',
@@ -449,11 +457,11 @@ $server->prompt(
                                 "• Health monitoring and metrics\n" .
                                 "• Graceful shutdown handling\n" .
                                 "• Resource usage monitoring\n\n" .
-                                "Try: 'Use the system_info tool to see container details'"
-                        ]
-                    ]
-                ]
-            ]
+                                "Try: 'Use the system_info tool to see container details'",
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 );
@@ -477,7 +485,7 @@ if (function_exists('pcntl_signal')) {
 }
 
 register_shutdown_function(function () {
-    echo "📊 Final metrics: Memory peak = " . round(memory_get_peak_usage(true) / 1024 / 1024, 2) . "MB\n";
+    echo '📊 Final metrics: Memory peak = ' . round(memory_get_peak_usage(true) / 1024 / 1024, 2) . "MB\n";
 });
 
 // Start the server
@@ -486,8 +494,8 @@ async(function () use ($server, $config, $healthChecker) {
     echo "📋 Environment: {$config['environment']}\n";
     echo "🔧 Configuration: {$config['server_name']} v{$config['server_version']}\n";
     echo "💾 Memory limit: {$config['max_memory_mb']}MB\n";
-    echo "🏥 Health checks: " . ($config['health_check_enabled'] ? 'enabled' : 'disabled') . "\n";
-    echo "📊 Metrics: " . ($config['metrics_enabled'] ? 'enabled' : 'disabled') . "\n";
+    echo '🏥 Health checks: ' . ($config['health_check_enabled'] ? 'enabled' : 'disabled') . "\n";
+    echo '📊 Metrics: ' . ($config['metrics_enabled'] ? 'enabled' : 'disabled') . "\n";
     echo "🛠️  Available tools: health_check, system_info, metrics\n" . PHP_EOL;
 
     // Record startup metric

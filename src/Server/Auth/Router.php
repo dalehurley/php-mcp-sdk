@@ -59,10 +59,15 @@ final readonly class AuthMetadataOptions
 final class McpAuthRouter implements MiddlewareInterface
 {
     private OAuthMetadata $oauthMetadata;
+
     private AuthorizeHandler $authorizeHandler;
+
     private TokenHandler $tokenHandler;
+
     private ?RegisterHandler $registerHandler;
+
     private ?RevokeHandler $revokeHandler;
+
     private MetadataHandler $metadataHandler;
 
     public function __construct(AuthRouterOptions $options)

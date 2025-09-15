@@ -69,9 +69,10 @@ abstract class PrimitiveSchemaDefinition implements \JsonSerializable
      * Create from an array based on the type field.
      *
      * @param array<string, mixed> $data
+     *
      * @return BooleanSchema|StringSchema|NumberSchema|EnumSchema
      */
-    public static function fromArray(array $data): PrimitiveSchemaDefinition
+    public static function fromArray(array $data): self
     {
         if (!isset($data['type']) || !is_string($data['type'])) {
             throw new \InvalidArgumentException('PrimitiveSchemaDefinition must have a type property');
