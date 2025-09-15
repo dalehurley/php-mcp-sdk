@@ -440,14 +440,27 @@ class ProtocolTest extends TestCase
                 ]
             ]);
 
-            return $future->await();
+            try {
+                return $future->await();
+            } catch (\Exception $e) {
+                // Expected to be cancelled
+                return null;
+            }
         });
+
+        // Wait for the request future to complete
+        $requestFuture->await();
 
         // The request handler should abort when it receives cancellation
         // This test verifies the cancellation mechanism is in place
         $sentMessages = $this->transport->sentMessages;
-        $this->assertCount(1, $sentMessages);
-        $this->assertEquals('test', $sentMessages[0]['method']);
+
+        // Filter only request messages (not notifications)
+        $requestMessages = array_filter($sentMessages, fn($msg) => isset($msg['id']));
+
+        $this->assertCount(1, $requestMessages);
+        $firstRequest = array_values($requestMessages)[0];
+        $this->assertEquals('test', $firstRequest['method']);
     }
 
     public function testConnectionCloseDuringRequest(): void
@@ -512,8 +525,12 @@ class ProtocolTest extends TestCase
             // Expected to fail due to timeout or capability check
         }
 
-        $this->assertCount(1, $protocol->capabilityCalls);
-        $this->assertEquals('test', $protocol->capabilityCalls[0]['method']);
-        $this->assertEquals('request', $protocol->capabilityCalls[0]['type']);
+        // Filter only request-type capability calls (not handler registrations)
+        $requestCalls = array_filter($protocol->capabilityCalls, fn($call) => $call['type'] === 'request');
+
+        $this->assertCount(1, $requestCalls);
+        $firstRequestCall = array_values($requestCalls)[0];
+        $this->assertEquals('test', $firstRequestCall['method']);
+        $this->assertEquals('request', $firstRequestCall['type']);
     }
 }

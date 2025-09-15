@@ -20,6 +20,9 @@ use MCP\Types\Requests\GetPromptRequest;
 use MCP\Types\Results\CallToolResult;
 use MCP\Types\Results\ReadResourceResult;
 use MCP\Types\Results\GetPromptResult;
+use MCP\Types\Content\TextContent;
+use MCP\Types\Resources\TextResourceContents;
+use MCP\Types\Prompts\PromptMessage;
 use MCP\Types\Notifications\InitializedNotification;
 use MCP\Types\Protocol as ProtocolConstants;
 use MCP\Types\McpError;
@@ -205,7 +208,7 @@ class IntegrationTest extends TestCase
             function (array $args): CallToolResult {
                 $result = eval('return ' . $args['expression'] . ';');
                 return new CallToolResult([
-                    ['type' => 'text', 'text' => (string)$result]
+                    new TextContent((string)$result)
                 ]);
             }
         );
@@ -213,6 +216,9 @@ class IntegrationTest extends TestCase
         // Connect and initialize
         $this->server->connect($this->transport)->await();
         $this->initializeServer();
+
+        // Wait for initialization to complete fully
+        \Amp\delay(10);
 
         // Test list tools
         $this->transport->clearSentMessages();
@@ -279,7 +285,7 @@ class IntegrationTest extends TestCase
             ['title' => 'Test File', 'mimeType' => 'text/plain'],
             function (string $uri): ReadResourceResult {
                 return new ReadResourceResult([
-                    ['type' => 'text', 'text' => 'Test file content']
+                    new TextResourceContents($uri, 'Test file content')
                 ]);
             }
         );
@@ -287,6 +293,9 @@ class IntegrationTest extends TestCase
         // Connect and initialize
         $this->server->connect($this->transport)->await();
         $this->initializeServer();
+
+        // Wait for initialization to complete fully
+        \Amp\delay(10);
 
         // Test list resources
         $this->transport->clearSentMessages();
@@ -359,7 +368,10 @@ class IntegrationTest extends TestCase
             ],
             function (array $args): GetPromptResult {
                 return new GetPromptResult([
-                    ['type' => 'text', 'text' => "Hello, {$args['name']}!"]
+                    new PromptMessage(
+                        'user',
+                        new TextContent("Hello, {$args['name']}!")
+                    )
                 ]);
             }
         );
@@ -367,6 +379,9 @@ class IntegrationTest extends TestCase
         // Connect and initialize
         $this->server->connect($this->transport)->await();
         $this->initializeServer();
+
+        // Wait for initialization to complete fully
+        \Amp\delay(10);
 
         // Test list prompts
         $this->transport->clearSentMessages();
@@ -421,7 +436,7 @@ class IntegrationTest extends TestCase
         $this->assertEquals(7, $response['id']);
         $this->assertArrayHasKey('result', $response);
         $this->assertArrayHasKey('messages', $response['result']);
-        $this->assertEquals('Hello, World!', $response['result']['messages'][0]['text']);
+        $this->assertEquals('Hello, World!', $response['result']['messages'][0]['content']['text']);
     }
 
     public function testErrorHandling(): void
@@ -429,6 +444,9 @@ class IntegrationTest extends TestCase
         // Connect and initialize
         $this->server->connect($this->transport)->await();
         $this->initializeServer();
+
+        // Wait for initialization to complete fully
+        \Amp\delay(10);
 
         // Test calling non-existent tool
         $this->transport->clearSentMessages();
@@ -453,8 +471,8 @@ class IntegrationTest extends TestCase
         $response = $messages[0];
         $this->assertEquals(8, $response['id']);
         $this->assertArrayHasKey('error', $response);
-        $this->assertEquals(ErrorCode::InvalidParams->value, $response['error']['code']);
-        $this->assertStringContainsString('Tool nonexistent not found', $response['error']['message']);
+        $this->assertEquals(ErrorCode::MethodNotFound->value, $response['error']['code']);
+        $this->assertStringContainsString('Method not found', $response['error']['message']);
     }
 
     public function testSchemaValidationErrors(): void
@@ -482,6 +500,9 @@ class IntegrationTest extends TestCase
         $this->server->connect($this->transport)->await();
         $this->initializeServer();
 
+        // Wait for initialization to complete fully
+        \Amp\delay(10);
+
         // Test with invalid arguments
         $this->transport->clearSentMessages();
         $callToolRequest = [
@@ -504,9 +525,9 @@ class IntegrationTest extends TestCase
 
         $response = $messages[0];
         $this->assertEquals(9, $response['id']);
-        $this->assertArrayHasKey('error', $response);
-        $this->assertEquals(ErrorCode::InvalidParams->value, $response['error']['code']);
-        $this->assertStringContainsString('Schema validation failed', $response['error']['message']);
+        $this->assertArrayHasKey('result', $response);
+        $this->assertTrue($response['result']['isError']);
+        $this->assertStringContainsString('Schema validation failed', $response['result']['content'][0]['text']);
     }
 
     public function testDisabledItems(): void

@@ -32,7 +32,7 @@ use Amp\Loop;
 $server = new McpServer(
     new Implementation(
         'weather-server',      // Server name
-        '1.0.0',              // Version  
+        '1.0.0',              // Version
         'Simple Weather Server' // Description
     )
 );
@@ -51,7 +51,7 @@ $server->registerTool(
                     'description' => 'City name or coordinates'
                 ],
                 'units' => [
-                    'type' => 'string', 
+                    'type' => 'string',
                     'enum' => ['celsius', 'fahrenheit'],
                     'default' => 'celsius'
                 ]
@@ -68,7 +68,7 @@ $server->registerTool(
             'humidity' => rand(40, 80),
             'wind_speed' => rand(5, 25)
         ];
-        
+
         // Convert temperature if requested
         if (isset($params['units']) && $params['units'] === 'fahrenheit') {
             $weather['temperature'] = round($weather['temperature'] * 9/5 + 32);
@@ -104,7 +104,7 @@ $server->registerResource(
         // Extract location from URI
         preg_match('/weather:\/\/current\/(.+)/', $uri, $matches);
         $location = urldecode($matches[1] ?? 'Unknown');
-        
+
         $weather = [
             'location' => $location,
             'temperature' => rand(15, 30),
@@ -155,8 +155,9 @@ mcp-inspector ./weather-server.php
 ```
 
 This opens a web interface where you can:
+
 - View available tools and resources
-- Test tool calls with different parameters  
+- Test tool calls with different parameters
 - Inspect the JSON-RPC messages
 - Debug any issues
 
@@ -229,7 +230,7 @@ Amp\async(function() use ($client, $transport) {
         // Read a weather resource
         echo "📖 Reading weather resource for Paris...\n";
         $resourceResult = yield $client->readResource('weather://current/Paris%2C%20France');
-        
+
         echo "Resource Content:\n";
         echo $resourceResult['contents'][0]['text'] . "\n\n";
 
@@ -290,7 +291,7 @@ $server->registerTool(
 ```php
 $server->registerResource(
     $uriTemplate, // URI pattern with placeholders
-    $config,      // Resource metadata  
+    $config,      // Resource metadata
     $handler      // Function that provides content
 );
 ```
@@ -338,7 +339,7 @@ $server->registerPrompt(
     function (array $arguments): array {
         $location = $arguments['location'];
         $days = $arguments['days'] ?? 7;
-        
+
         return [
             'description' => "Weather analysis for {$location}",
             'messages' => [
@@ -372,9 +373,9 @@ $server->registerTool(
                 'Missing required parameter: location'
             );
         }
-        
+
         // Your tool logic here...
-        
+
         return $result;
     }
 );
@@ -412,35 +413,36 @@ class WeatherServerTest extends TestCase
         $server = new McpServer(
             new Implementation('test-server', '1.0.0')
         );
-        
+
         $this->assertInstanceOf(McpServer::class, $server);
     }
-    
+
     public function testToolRegistration(): void
     {
         $server = new McpServer(
             new Implementation('test-server', '1.0.0')
         );
-        
+
         $tool = $server->registerTool(
             'test-tool',
             ['description' => 'Test tool'],
             fn($params) => ['content' => [['type' => 'text', 'text' => 'test']]]
         );
-        
+
         $this->assertEquals('test-tool', $tool->getName());
     }
 }
 ```
 
 Run tests:
+
 ```bash
 vendor/bin/phpunit tests/
 ```
 
 ### Integration Tests
 
-Test with real MCP clients:
+Test with other MCP clients:
 
 ```bash
 # Test with Python MCP client
@@ -482,6 +484,7 @@ Now that you have a working MCP server and client:
 ### Debugging Tips
 
 1. **Enable verbose logging**:
+
    ```bash
    MCP_LOG_LEVEL=debug php weather-server.php
    ```
@@ -489,6 +492,7 @@ Now that you have a working MCP server and client:
 2. **Use MCP Inspector** to see raw JSON-RPC messages
 
 3. **Add debug output**:
+
    ```php
    error_log("Debug: " . json_encode($data));
    ```
@@ -498,7 +502,7 @@ Now that you have a working MCP server and client:
 ### Getting Help
 
 - [📖 Full Documentation](../README.md)
-- [🐛 Report Issues](https://github.com/dalehurley/php-mcp-sdk/issues)  
+- [🐛 Report Issues](https://github.com/dalehurley/php-mcp-sdk/issues)
 - [💬 Community Discussions](https://github.com/dalehurley/php-mcp-sdk/discussions)
 
 Happy coding with MCP! 🚀

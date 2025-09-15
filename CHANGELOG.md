@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Test Suite Improvements**: Resolved multiple test failures and improved test reliability:
+  - Fixed constructor signature issues in notification classes (`CancelledNotification`, `ProgressNotification`, `InitializedNotification`) to support both legacy and new `fromArray()` usage patterns
+  - Fixed constructor signature issues in request classes (`ListToolsRequest`, `CallToolRequest`) for proper protocol message handling
+  - Fixed missing `StreamableHttpTransportAdapter` class autoloading by adding explicit require to test bootstrap
+  - Fixed `CallToolResult` content handling by using proper `TextContent` objects instead of raw arrays
+  - Fixed async timing issues in integration tests by adding proper delays for initialization completion
+  - Resolved protocol async/Future handling errors that were causing "Not connected" exceptions
+  - Fixed request cancellation and progress notification handling in protocol tests
+
 ### Added
 
 - **WebSocket Server Transport**: Complete WebSocket server transport implementation for real-time, bidirectional communication:

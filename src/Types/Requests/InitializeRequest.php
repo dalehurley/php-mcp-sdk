@@ -14,14 +14,23 @@ use MCP\Types\Capabilities\ClientCapabilities;
  */
 final class InitializeRequest extends Request
 {
-    public const METHOD = 'initialize';
-
-    /**
-     * @param array<string, mixed>|null $params
+    public const METHOD = 'initialize';        /**
+     * @param array<string, mixed>|null|string $methodOrParams For backward compatibility, can be params array or method string
+     * @param array<string, mixed>|null $params Only used when first parameter is method string
      */
-    public function __construct(?array $params = null)
+    public function __construct($methodOrParams = null, ?array $params = null)
     {
-        parent::__construct(self::METHOD, $params);
+        // Handle backward compatibility: if first param is array, treat as params
+        if (is_array($methodOrParams)) {
+            parent::__construct(self::METHOD, $methodOrParams);
+        } else {
+            // If method is null, use default. If method is provided, it should match our expected method.
+            $method = $methodOrParams ?? self::METHOD;
+            if ($method !== self::METHOD) {
+                throw new \InvalidArgumentException("Invalid method for InitializeRequest: expected '" . self::METHOD . "', got '$method'");
+            }
+            parent::__construct($method, $params);
+        }
     }
 
     /**
