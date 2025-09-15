@@ -3,8 +3,8 @@
 [![Latest Version](https://img.shields.io/packagist/v/dalehurley/php-mcp-sdk.svg?style=flat-square)](https://packagist.org/packages/dalehurley/php-mcp-sdk)
 [![PHP Version](https://img.shields.io/packagist/php-v/dalehurley/php-mcp-sdk.svg?style=flat-square)](https://packagist.org/packages/dalehurley/php-mcp-sdk)
 [![Total Downloads](https://img.shields.io/packagist/dt/dalehurley/php-mcp-sdk.svg?style=flat-square)](https://packagist.org/packages/dalehurley/php-mcp-sdk)
-[![License](https://img.shields.io/packagist/l/dalehurley/php-mcp-sdk.svg?style=flat-square)](https://packagist.org/packages/dalehurley/php-mcp-sdk)
-[![Tests](https://github.com/dalehurley/php-mcp-sdk/workflows/Tests/badge.svg)](https://github.com/dalehurley/php-mcp-sdk/actions)
+[![License](https://img.shields.io/github/license/dalehurley/php-mcp-sdk.svg?style=flat-square)](https://github.com/dalehurley/php-mcp-sdk/blob/main/LICENSE)
+[![Documentation](https://github.com/dalehurley/php-mcp-sdk/workflows/Deploy%20Documentation/badge.svg)](https://github.com/dalehurley/php-mcp-sdk/actions)
 
 PHP implementation of the Model Context Protocol (MCP), enabling seamless integration between LLM applications and external data sources and tools.
 
