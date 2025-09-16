@@ -240,7 +240,10 @@ abstract class Protocol extends EventEmitter
 
         $error = new McpError(ErrorCode::ConnectionClosed, 'Connection closed');
         foreach ($responseHandlers as $deferred) {
-            $deferred->error($error);
+            // Use async + ignore to prevent unhandled future errors during cleanup
+            async(function () use ($deferred, $error) {
+                $deferred->error($error);
+            })->ignore();
         }
     }
 
@@ -684,7 +687,7 @@ abstract class Protocol extends EventEmitter
             $typedRequest = $requestClass::fromArray($request->jsonSerialize());
             $result = $wrappedHandler($typedRequest, $extra);
 
-            return $result instanceof Future ? $result : async(fn () => $result);
+            return $result instanceof Future ? $result : async(fn() => $result);
         };
     }
 
@@ -749,7 +752,7 @@ abstract class Protocol extends EventEmitter
             $typedNotification = $notificationClass::fromArray($notification->jsonSerialize());
             $result = $handler($typedNotification);
 
-            return $result instanceof Future ? $result : async(fn () => $result);
+            return $result instanceof Future ? $result : async(fn() => $result);
         };
     }
 

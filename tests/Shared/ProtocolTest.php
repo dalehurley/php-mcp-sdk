@@ -400,7 +400,10 @@ class ProtocolTest extends TestCase
         \Amp\delay(10);
 
         $this->assertNotNull($received);
-        $this->assertEquals('User cancelled', $received->getReason());
+        $this->assertInstanceOf(CancelledNotification::class, $received);
+        if ($received !== null) {
+            $this->assertEquals('User cancelled', $received->getReason());
+        }
     }
 
     public function testErrorHandling(): void
@@ -458,7 +461,7 @@ class ProtocolTest extends TestCase
         $sentMessages = $this->transport->sentMessages;
 
         // Filter only request messages (not notifications)
-        $requestMessages = array_filter($sentMessages, fn ($msg) => isset($msg['id']));
+        $requestMessages = array_filter($sentMessages, fn($msg) => isset($msg['id']));
 
         $this->assertCount(1, $requestMessages);
         $firstRequest = array_values($requestMessages)[0];
@@ -488,6 +491,66 @@ class ProtocolTest extends TestCase
         });
 
         $requestFuture->await();
+    }
+
+    public function testConnectionCloseWithMultiplePendingRequestsNoUnhandledFutures(): void
+    {
+        $this->protocol->connect($this->transport)->await();
+
+        // Create multiple pending requests without simulating responses
+        $requestFutures = [];
+        for ($i = 0; $i < 3; $i++) {
+            $request = new Request('test' . $i);
+            $validationService = new ValidationService();
+
+            $requestFutures[] = async(function () use ($request, $validationService) {
+                try {
+                    return $this->protocol->request($request, $validationService)->await();
+                } catch (McpError $e) {
+                    // Expected - connection will be closed
+                    if ($e->errorCode === ErrorCode::ConnectionClosed) {
+                        return 'closed';
+                    }
+                    throw $e;
+                }
+            });
+        }
+
+        // Wait for requests to be sent
+        \Amp\delay(10);
+
+        // Verify requests were sent
+        $this->assertCount(3, $this->transport->sentMessages);
+
+        // Install error handler to catch any unhandled futures
+        $unhandledErrors = [];
+        $originalHandler = \Revolt\EventLoop::getErrorHandler();
+
+        \Revolt\EventLoop::setErrorHandler(function (\Throwable $e) use (&$unhandledErrors) {
+            if (str_contains($e->getMessage(), 'Unhandled future')) {
+                $unhandledErrors[] = $e;
+            }
+        });
+
+        try {
+            // Simulate connection close - this should not create unhandled futures
+            $this->transport->simulateClose();
+
+            // Wait for all request futures to complete
+            foreach ($requestFutures as $future) {
+                $result = $future->await();
+                $this->assertEquals('closed', $result);
+            }
+
+            // Give time for any unhandled futures to be detected
+            \Amp\delay(50);
+
+            // Verify no unhandled future errors were generated
+            $this->assertEmpty($unhandledErrors, 'Connection close should not generate unhandled futures');
+        } finally {
+            // Restore original error handler
+            \Revolt\EventLoop::setErrorHandler($originalHandler);
+        }
     }
 
     public function testUnknownMethodRequest(): void
@@ -528,7 +591,7 @@ class ProtocolTest extends TestCase
         }
 
         // Filter only request-type capability calls (not handler registrations)
-        $requestCalls = array_filter($protocol->capabilityCalls, fn ($call) => $call['type'] === 'request');
+        $requestCalls = array_filter($protocol->capabilityCalls, fn($call) => $call['type'] === 'request');
 
         $this->assertCount(1, $requestCalls);
         $firstRequestCall = array_values($requestCalls)[0];

@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Unhandled Future Errors During Connection Cleanup**: Fixed critical bug in `Protocol::onclose()` that caused "Unhandled future" errors when MCP server connections failed
+
+  - Modified `Protocol::onclose()` method to properly handle error futures during connection cleanup
+  - Used `async()->ignore()` pattern to prevent unhandled future exceptions when cleaning up pending requests
+  - Added comprehensive test coverage to verify no unhandled futures are generated during connection close
+  - Eliminates error log pollution when MCP servers become unavailable or connections fail
+  - Maintains proper error propagation for active requests while preventing cleanup-related warnings
+
+- **Documentation 404 Error**: Fixed missing Laravel server documentation that was causing 404 errors on GitHub
+
+  - Created missing `docs/examples/laravel/laravel-server.md` file with comprehensive Laravel integration guide
+  - Added complete Laravel MCP integration guide at `docs/guides/laravel-integration.md`
+  - Created redirect file at `docs/guides/integrations/laravel-integration.md` for backward compatibility
+  - Removed references to non-existent `laravel-mcp-sdk` package and updated all documentation to focus on core SDK integration
+  - Added clarifying notes that a dedicated Laravel package is planned for future release
+  - All Laravel-related documentation links now resolve correctly
+
 - **Test Suite Improvements**: Resolved multiple test failures and improved test reliability:
   - Fixed constructor signature issues in notification classes (`CancelledNotification`, `ProgressNotification`, `InitializedNotification`) to support both legacy and new `fromArray()` usage patterns
   - Fixed constructor signature issues in request classes (`ListToolsRequest`, `CallToolRequest`) for proper protocol message handling
