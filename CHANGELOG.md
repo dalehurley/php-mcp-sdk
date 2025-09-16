@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2025-01-16
+
 ### Fixed
 
 - **Unhandled Future Errors During Connection Cleanup**: Fixed critical bug in `Protocol::onclose()` that caused "Unhandled future" errors when MCP server connections failed
