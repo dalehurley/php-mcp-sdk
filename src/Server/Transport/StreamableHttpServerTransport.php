@@ -51,6 +51,9 @@ class StreamableHttpServerTransport implements Transport
     /** @var array<string, Response> Active SSE streams mapped by stream ID */
     private array $_streamMapping = [];
 
+    /** @var array<string, \Amp\ByteStream\WritableStream> Stream sinks for writing */
+    private array $_streamSinks = [];
+
     /** @var array<string, string> Request ID to stream ID mapping */
     private array $_requestToStreamMapping = [];
 
@@ -245,15 +248,18 @@ class StreamableHttpServerTransport implements Transport
             }
 
             // Create streaming response
-            $stream = new \Amp\ByteStream\WritableIterableStream(8192);
-            $response = new Response(HttpStatus::OK, $headers, $stream->getIterator());
+            $pipe = new \Amp\ByteStream\Pipe(8192);
+            $stream = $pipe->getSink();
+            $response = new Response(HttpStatus::OK, $headers, $pipe->getSource());
 
-            // Store the stream
+            // Store the stream and sink
             $this->_streamMapping[self::STANDALONE_SSE_STREAM_ID] = $response;
+            $this->_streamSinks[self::STANDALONE_SSE_STREAM_ID] = $stream;
 
             // Clean up on stream close
             $stream->onClose(function () {
                 unset($this->_streamMapping[self::STANDALONE_SSE_STREAM_ID]);
+                unset($this->_streamSinks[self::STANDALONE_SSE_STREAM_ID]);
             });
 
             return $response;
@@ -406,11 +412,13 @@ class StreamableHttpServerTransport implements Transport
                         }
 
                         // Create streaming response
-                        $stream = new \Amp\ByteStream\WritableIterableStream(8192);
-                        $response = new Response(HttpStatus::OK, $headers, $stream->getIterator());
+                        $pipe = new \Amp\ByteStream\Pipe(8192);
+                        $stream = $pipe->getSink();
+                        $response = new Response(HttpStatus::OK, $headers, $pipe->getSource());
 
                         // Store the stream and mappings
                         $this->_streamMapping[$streamId] = $response;
+                        $this->_streamSinks[$streamId] = $stream;
 
                         foreach ($messages as $message) {
                             if ($message instanceof JSONRPCRequest) {
@@ -421,6 +429,7 @@ class StreamableHttpServerTransport implements Transport
                         // Clean up on stream close
                         $stream->onClose(function () use ($streamId) {
                             unset($this->_streamMapping[$streamId]);
+                            unset($this->_streamSinks[$streamId]);
                         });
 
                         // Process messages asynchronously
@@ -494,7 +503,7 @@ class StreamableHttpServerTransport implements Transport
 
                         $body = count($responses) === 1
                             ? json_encode($responses[0] instanceof \JsonSerializable ? $responses[0]->jsonSerialize() : (array) $responses[0])
-                            : json_encode(array_map(fn ($r) => $r instanceof \JsonSerializable ? $r->jsonSerialize() : (array) $r, $responses));
+                            : json_encode(array_map(fn($r) => $r instanceof \JsonSerializable ? $r->jsonSerialize() : (array) $r, $responses));
 
                         return new Response(HttpStatus::OK, $headers, $body);
                     }
@@ -631,8 +640,9 @@ class StreamableHttpServerTransport implements Transport
                 }
 
                 // Create streaming response
-                $stream = new \Amp\ByteStream\WritableIterableStream(8192);
-                $response = new Response(HttpStatus::OK, $headers, $stream->getIterator());
+                $pipe = new \Amp\ByteStream\Pipe(8192);
+                $stream = $pipe->getSink();
+                $response = new Response(HttpStatus::OK, $headers, $pipe->getSource());
 
                 // Replay events
                 $streamId = $this->_options->eventStore->replayEventsAfter(
@@ -649,10 +659,12 @@ class StreamableHttpServerTransport implements Transport
                 )->await();
 
                 $this->_streamMapping[$streamId] = $response;
+                $this->_streamSinks[$streamId] = $stream;
 
                 // Clean up on stream close
                 $stream->onClose(function () use ($streamId) {
                     unset($this->_streamMapping[$streamId]);
+                    unset($this->_streamSinks[$streamId]);
                 });
 
                 return $response;
@@ -690,34 +702,30 @@ class StreamableHttpServerTransport implements Transport
                     );
                 }
 
-                $response = $this->_streamMapping[self::STANDALONE_SSE_STREAM_ID] ?? null;
-                if ($response === null) {
+                $sink = $this->_streamSinks[self::STANDALONE_SSE_STREAM_ID] ?? null;
+                if ($sink === null) {
                     // No stream available, silently discard
                     return;
                 }
 
-                // Get the stream from the response
-                $body = $response->getBody();
-                if ($body instanceof \Amp\ByteStream\WritableIterableStream) {
-                    // Generate event ID if event store is available
-                    $eventId = null;
-                    if ($this->_options->eventStore !== null) {
-                        /** @var JSONRPCMessage $jsonrpcMessage */
-                        $eventId = $this->_options->eventStore->storeEvent(
-                            self::STANDALONE_SSE_STREAM_ID,
-                            $jsonrpcMessage
-                        )->await();
-                    }
-
-                    // Write SSE event
-                    $data = "event: message\n";
-                    if ($eventId !== null) {
-                        $data .= "id: $eventId\n";
-                    }
-                    $data .= 'data: ' . json_encode($message) . "\n\n";
-
-                    $body->write($data);
+                // Generate event ID if event store is available
+                $eventId = null;
+                if ($this->_options->eventStore !== null) {
+                    /** @var JSONRPCMessage $jsonrpcMessage */
+                    $eventId = $this->_options->eventStore->storeEvent(
+                        self::STANDALONE_SSE_STREAM_ID,
+                        $jsonrpcMessage
+                    )->await();
                 }
+
+                // Write SSE event
+                $data = "event: message\n";
+                if ($eventId !== null) {
+                    $data .= "id: $eventId\n";
+                }
+                $data .= 'data: ' . json_encode($message) . "\n\n";
+
+                $sink->write($data);
 
                 return;
             }
@@ -730,29 +738,26 @@ class StreamableHttpServerTransport implements Transport
 
             // Handle SSE response mode
             if (!$this->_options->enableJsonResponse) {
-                $response = $this->_streamMapping[$streamId] ?? null;
-                if ($response !== null) {
-                    $body = $response->getBody();
-                    if ($body instanceof \Amp\ByteStream\WritableIterableStream) {
-                        // Generate event ID if event store is available
-                        $eventId = null;
-                        if ($this->_options->eventStore !== null) {
-                            /** @var JSONRPCMessage $jsonrpcMessage */
-                            $eventId = $this->_options->eventStore->storeEvent(
-                                $streamId,
-                                $jsonrpcMessage
-                            )->await();
-                        }
-
-                        // Write SSE event
-                        $data = "event: message\n";
-                        if ($eventId !== null) {
-                            $data .= "id: $eventId\n";
-                        }
-                        $data .= 'data: ' . json_encode($message) . "\n\n";
-
-                        $body->write($data);
+                $sink = $this->_streamSinks[$streamId] ?? null;
+                if ($sink !== null) {
+                    // Generate event ID if event store is available
+                    $eventId = null;
+                    if ($this->_options->eventStore !== null) {
+                        /** @var JSONRPCMessage $jsonrpcMessage */
+                        $eventId = $this->_options->eventStore->storeEvent(
+                            $streamId,
+                            $jsonrpcMessage
+                        )->await();
                     }
+
+                    // Write SSE event
+                    $data = "event: message\n";
+                    if ($eventId !== null) {
+                        $data .= "id: $eventId\n";
+                    }
+                    $data .= 'data: ' . json_encode($message) . "\n\n";
+
+                    $sink->write($data);
                 }
             }
 
@@ -779,12 +784,9 @@ class StreamableHttpServerTransport implements Transport
 
                     if ($allReady) {
                         // Close the SSE stream
-                        $response = $this->_streamMapping[$streamId] ?? null;
-                        if ($response !== null) {
-                            $body = $response->getBody();
-                            if ($body instanceof \Amp\ByteStream\WritableIterableStream) {
-                                $body->close();
-                            }
+                        $sink = $this->_streamSinks[$streamId] ?? null;
+                        if ($sink !== null) {
+                            $sink->close();
                         }
 
                         // Clean up
@@ -793,6 +795,7 @@ class StreamableHttpServerTransport implements Transport
                             unset($this->_requestToStreamMapping[$id]);
                         }
                         unset($this->_streamMapping[$streamId]);
+                        unset($this->_streamSinks[$streamId]);
                     }
                 }
             }
@@ -806,14 +809,12 @@ class StreamableHttpServerTransport implements Transport
     {
         return async(function () {
             // Close all SSE connections
-            foreach ($this->_streamMapping as $response) {
-                $body = $response->getBody();
-                if ($body instanceof \Amp\ByteStream\WritableIterableStream) {
-                    $body->close();
-                }
+            foreach ($this->_streamSinks as $sink) {
+                $sink->close();
             }
 
             $this->_streamMapping = [];
+            $this->_streamSinks = [];
             $this->_requestResponseMap = [];
             $this->_requestToStreamMapping = [];
 

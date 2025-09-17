@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.6] - 2025-01-16
+## [0.1.7] - 2025-09-17
+
+### Fixed
+
+- **StreamableHttpServerTransport Response Body Type** - Fixed Response body construction to use `Amp\ByteStream\Pipe` instead of deprecated `WritableIterableStream` for SSE responses in HTTP transport
+
+## [0.1.6] - 2025-09-16
 
 ### Fixed
 
