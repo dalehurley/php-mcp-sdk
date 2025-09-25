@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Unhandled Future Errors in StreamableHttpClientTransport**: Fixed critical bug where async operations were not properly awaited, causing "UnhandledFutureError" exceptions when session errors occurred
+  - Modified `startSseStream()`, `handleSseStream()`, and `scheduleReconnection()` methods to properly return Future objects
+  - Added `->ignore()` calls to all async operations that don't require result handling
+  - Ensures all futures are properly awaited or explicitly ignored to prevent Amp framework warnings
+  - Fixes "Streamable HTTP error: missing or invalid session" causing unhandled future exceptions
+  - Improves error handling robustness when HTTP 400 errors occur
+
 ## [0.1.7] - 2025-09-17
 
 ### Fixed

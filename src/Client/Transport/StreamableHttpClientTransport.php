@@ -109,7 +109,7 @@ class StreamableHttpClientTransport implements Transport
 
             // Try to start SSE stream (optional - server may not support it)
             try {
-                $this->startSseStream();
+                $this->startSseStream()->ignore();
             } catch (StreamableHttpError $e) {
                 // 405 Method Not Allowed is expected if server doesn't support GET SSE
                 if ($e->getCode() !== 405) {
@@ -122,9 +122,9 @@ class StreamableHttpClientTransport implements Transport
     /**
      * Start or reconnect the SSE stream.
      */
-    private function startSseStream(?string $resumptionToken = null): void
+    private function startSseStream(?string $resumptionToken = null): Future
     {
-        async(function () use ($resumptionToken) {
+        return async(function () use ($resumptionToken) {
             try {
                 $request = new Request($this->_url, 'GET');
 
@@ -152,7 +152,7 @@ class StreamableHttpClientTransport implements Transport
                 }
 
                 // Handle SSE stream
-                $this->handleSseStream($response);
+                $this->handleSseStream($response)->ignore();
             } catch (\Throwable $e) {
                 if ($this->onerror !== null) {
                     ($this->onerror)($e);
@@ -160,7 +160,7 @@ class StreamableHttpClientTransport implements Transport
 
                 // Attempt reconnection if not cancelled
                 if ($this->_cancellation !== null && !$this->_cancellation->isCancelled()) {
-                    $this->scheduleReconnection();
+                    $this->scheduleReconnection()->ignore();
                 }
             }
         });
@@ -169,9 +169,9 @@ class StreamableHttpClientTransport implements Transport
     /**
      * Handle Server-Sent Events stream.
      */
-    private function handleSseStream(Response $response): void
+    private function handleSseStream(Response $response): Future
     {
-        async(function () use ($response) {
+        return async(function () use ($response) {
             try {
                 $reader = new BufferedReader($response->getBody());
                 $eventData = '';
@@ -225,7 +225,7 @@ class StreamableHttpClientTransport implements Transport
 
                 // Attempt reconnection if not cancelled
                 if ($this->_cancellation !== null && !$this->_cancellation->isCancelled()) {
-                    $this->scheduleReconnection();
+                    $this->scheduleReconnection()->ignore();
                 }
             }
         });
@@ -259,7 +259,7 @@ class StreamableHttpClientTransport implements Transport
     /**
      * Schedule reconnection with exponential backoff.
      */
-    private function scheduleReconnection(): void
+    private function scheduleReconnection(): Future
     {
         $options = $this->_options->reconnectionOptions ?? new StreamableHttpReconnectionOptions();
 
@@ -268,17 +268,17 @@ class StreamableHttpClientTransport implements Transport
                 ($this->onerror)(new \Error("Maximum reconnection attempts ({$options->maxRetries}) exceeded."));
             }
 
-            return;
+            return Future::complete(null);
         }
 
         $delay = $this->getNextReconnectionDelay();
 
-        async(function () use ($delay) {
+        return async(function () use ($delay) {
             delay($delay / 1000); // Convert ms to seconds
 
             if ($this->_cancellation !== null && !$this->_cancellation->isCancelled()) {
                 $this->_reconnectAttempt++;
-                $this->startSseStream($this->_lastEventId);
+                $this->startSseStream($this->_lastEventId)->ignore();
             }
         });
     }
@@ -337,7 +337,7 @@ class StreamableHttpClientTransport implements Transport
                         $jsonrpcMessage->getMethod() === 'initialized'
                     ) {
                         // Start SSE stream after initialization
-                        $this->startSseStream();
+                        $this->startSseStream()->ignore();
                     }
 
                     return;
@@ -368,7 +368,7 @@ class StreamableHttpClientTransport implements Transport
 
                     if (str_contains($contentType, 'text/event-stream')) {
                         // Handle SSE response
-                        $this->handleSseStream($response);
+                        $this->handleSseStream($response)->ignore();
                     } elseif (str_contains($contentType, 'application/json')) {
                         // Handle JSON response
                         $body = $response->getBody()->buffer();
