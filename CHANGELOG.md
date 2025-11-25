@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9] - 2025-11-25
+
 ### Fixed
 
 - **Protocol connection close timeout handling**: Fixed bug where pending request timeouts would still fire after connection close, causing "Request timed out" errors instead of "Connection closed" errors
