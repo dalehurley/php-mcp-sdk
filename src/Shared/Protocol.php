@@ -234,6 +234,13 @@ abstract class Protocol extends EventEmitter
         $this->pendingDebouncedNotifications = [];
         $this->transport = null;
 
+        // Cancel all pending timeouts to prevent "Request timed out" errors
+        // from firing after connection close
+        foreach ($this->timeoutInfo as $info) {
+            \Revolt\EventLoop::cancel($info->timeoutId);
+        }
+        $this->timeoutInfo = [];
+
         if ($this->onclose) {
             ($this->onclose)();
         }

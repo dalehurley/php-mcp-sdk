@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MCP\Tests\Transport;
 
+use Amp\ByteStream\ReadableBuffer;
+use Amp\ByteStream\WritableBuffer;
 use Amp\Future;
 use MCP\Server\Transport\StdioServerTransport;
 use PHPUnit\Framework\TestCase;
@@ -12,9 +14,16 @@ class StdioServerTransportTest extends TestCase
 {
     private StdioServerTransport $transport;
 
+    private ReadableBuffer $mockStdin;
+
+    private WritableBuffer $mockStdout;
+
     protected function setUp(): void
     {
-        $this->transport = new StdioServerTransport();
+        // Use mock streams to avoid blocking on real stdin/stdout
+        $this->mockStdin = new ReadableBuffer('');
+        $this->mockStdout = new WritableBuffer();
+        $this->transport = new StdioServerTransport($this->mockStdin, $this->mockStdout);
     }
 
     public function testTransportCreation(): void
@@ -36,6 +45,9 @@ class StdioServerTransportTest extends TestCase
     {
         // Start the transport first
         $this->transport->start()->await();
+
+        // Give event loop time to process
+        \Amp\delay(0.001);
 
         $future = $this->transport->close();
         $this->assertInstanceOf(Future::class, $future);

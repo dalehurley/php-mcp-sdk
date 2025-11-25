@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Protocol connection close timeout handling**: Fixed bug where pending request timeouts would still fire after connection close, causing "Request timed out" errors instead of "Connection closed" errors
+  - Added timeout cancellation in `onclose()` method to properly cleanup all pending timeout handlers
+- **Test suite stability**: Fixed multiple test reliability issues
+  - Corrected `\Amp\delay()` calls to use seconds (e.g., `0.01`) instead of milliseconds (e.g., `10`) - Amp's delay function expects seconds as float
+  - Fixed `StdioServerTransportTest` to use mock stdin/stdout streams instead of blocking on real system streams
+  - Added error handler isolation in `ProtocolTest` to prevent test pollution from orphaned async operations
+
+### Added
+
+- **Production install optimization**: Added `.gitattributes` file to exclude development files from Composer installs
+  - Excludes `docs/`, `examples/`, `tests/`, `coverage/`, `ai-prompts/` directories
+  - Excludes config files: `phpunit.xml`, `phpstan.neon`, `psalm.xml.dist`, `phpcs.xml`, `phpdoc.xml`
+  - Reduces package size for production deployments
+
+- **MCP-UI Support**: Full support for interactive UI resources (SEP-1865 MCP Apps Extension)
+  - `UIResource` class for creating UI resource responses with support for:
+    - Inline HTML content (`UIResource::html()`)
+    - External URL embedding (`UIResource::url()`)
+    - Remote DOM scripts (`UIResource::remoteDom()`)
+    - JavaScript action helpers (`UIResource::actionScript()`)
+  - `UIResourceData` value object for parsed UI resources with type-safe accessors
+  - `UIResourceParser` for extracting and filtering UI resources from tool responses
+  - `UIResourceClient` wrapper providing UI-aware tool call methods:
+    - `callToolWithUI()` - Returns parsed text and UI resources
+    - `callToolForFrontend()` - Returns JSON-ready response for APIs
+    - `callToolWithRenderedUI()` - Returns pre-rendered HTML iframes
+    - `callToolTextOnly()` - Text fallback for non-UI clients
+  - `UIResourceRenderer` for rendering UI resources as HTML iframes with:
+    - Sandbox permission controls (strict, default, permissive)
+    - Grid and single rendering modes
+    - Action handler JavaScript for bidirectional communication
+    - Default CSS styles
+  - `UITemplate` class with pre-built templates:
+    - `card()` - Card widget with title, content, actions, footer
+    - `table()` - Data table with sorting and styling options
+    - `stats()` - Metrics dashboard with icon support
+    - `form()` - Interactive forms with validation and submission handling
+  - Complete test suite for all UI components
+  - Example servers demonstrating UI resource usage:
+    - `weather-widget-server.php` - Interactive weather widgets
+    - `dashboard-server.php` - Dashboard templates showcase
+    - `ui-aware-client.php` - Client-side UI handling
+  - Comprehensive UI Resources Guide documentation
+
 ## [0.1.8] - 2025-09-25
 
 ### Fixed
