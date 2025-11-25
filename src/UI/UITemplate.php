@@ -78,6 +78,7 @@ class UITemplate
 
         $actionsHtml = $actionButtons ? "<div class=\"actions\">{$actionButtons}</div>" : '';
         $footerHtml = $footer ? "<div class=\"footer\">{$footer}</div>" : '';
+        $script = self::_SCRIPT;
 
         return <<<HTML
         <!DOCTYPE html>
@@ -159,7 +160,7 @@ class UITemplate
                 {$footerHtml}
             </div>
             <script>
-            {$_SCRIPT}
+            {$script}
             </script>
         </body>
         </html>
@@ -192,14 +193,14 @@ class UITemplate
         $titleHtml = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
 
         $headerHtml = implode('', array_map(
-            fn ($h) => '<th>' . htmlspecialchars((string) $h, ENT_QUOTES, 'UTF-8') . '</th>',
+            fn($h) => '<th>' . htmlspecialchars((string) $h, ENT_QUOTES, 'UTF-8') . '</th>',
             $headers
         ));
 
         $rowsHtml = '';
         foreach ($rows as $index => $row) {
             $cells = implode('', array_map(
-                fn ($c) => '<td>' . htmlspecialchars((string) $c, ENT_QUOTES, 'UTF-8') . '</td>',
+                fn($c) => '<td>' . htmlspecialchars((string) $c, ENT_QUOTES, 'UTF-8') . '</td>',
                 $row
             ));
             $rowClass = $striped && $index % 2 === 1 ? ' class="striped"' : '';
@@ -207,6 +208,7 @@ class UITemplate
         }
 
         $hoverStyle = $hoverable ? 'tr:hover { background: #f0f7ff; }' : '';
+        $script = self::_SCRIPT;
 
         return <<<HTML
         <!DOCTYPE html>
@@ -265,7 +267,7 @@ class UITemplate
                 </table>
             </div>
             <script>
-            {$_SCRIPT}
+            {$script}
             </script>
         </body>
         </html>
@@ -315,6 +317,7 @@ class UITemplate
             </div>
             HTML;
         }
+        $script = self::_SCRIPT;
 
         return <<<HTML
         <!DOCTYPE html>
@@ -387,7 +390,7 @@ class UITemplate
                 </div>
             </div>
             <script>
-            {$_SCRIPT}
+            {$script}
             </script>
         </body>
         </html>
@@ -446,6 +449,7 @@ class UITemplate
         $submitToolJs = $submitTool
             ? "mcpToolCall('{$submitTool}', formData);"
             : "mcpNotify('Form submitted: ' + JSON.stringify(formData));";
+        $script = self::_SCRIPT;
 
         return <<<HTML
         <!DOCTYPE html>
@@ -530,7 +534,7 @@ class UITemplate
                 </form>
             </div>
             <script>
-            {$_SCRIPT}
+            {$script}
             function handleSubmit(e) {
                 e.preventDefault();
                 const form = document.getElementById('mcpForm');
@@ -578,4 +582,3 @@ class UITemplate
     }
     JS;
 }
-

@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10] - 2025-11-25
+
+### Added
+
+- **Comprehensive Test Coverage Improvements**: Added 15 new test files with 300+ test methods to increase code coverage from ~32% to target 50%+:
+  - `OAuthClientTest.php` - Expanded from 5 to 30+ tests covering token exchange, refresh, revocation, authorization flows
+  - `ToolTest.php` - 30+ tests for Tool class construction, serialization, validation
+  - `ToolAnnotationsTest.php` - 25+ tests for tool annotation hints
+  - `CallToolRequestTest.php` - 20+ tests for tool call request handling
+  - `GetPromptRequestTest.php` - 20+ tests for prompt request handling
+  - `ReadResourceRequestTest.php` - 20+ tests for resource read requests
+  - `CallToolResultTest.php` - 20+ tests for tool result handling
+  - `ReadResourceResultTest.php` - 15+ tests for resource read results
+  - `TextContentTest.php` - 20+ tests for text content type
+  - `ImageContentTest.php` - 25+ tests for image content with base64 validation
+  - `ContentBlockFactoryTest.php` - 20+ tests for content block factory
+  - `LoggingMessageNotificationTest.php` - 25+ tests for logging notifications
+  - `ResourceUpdatedNotificationTest.php` - 20+ tests for resource update notifications
+  - `JSONRPCErrorTest.php` - 50+ tests for JSON-RPC error handling
+  - `JSONRPCMessageTest.php` - 20+ tests for JSON-RPC message routing
+
+### Fixed
+
+- Fixed test assertions for `JSONRPCResponse` result handling (returns `Result` object, not array)
+- Fixed test data for `ResourceLink` content type (requires both `name` and `uri` properties)
+- Fixed test assertions for `JSONRPCMessage::isValid()` with response type (result must be array, not null)
+
 ## [0.1.9] - 2025-11-25
 
 ### Fixed
@@ -21,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Production install optimization**: Added `.gitattributes` file to exclude development files from Composer installs
+
   - Excludes `docs/`, `examples/`, `tests/`, `coverage/`, `ai-prompts/` directories
   - Excludes config files: `phpunit.xml`, `phpstan.neon`, `psalm.xml.dist`, `phpcs.xml`, `phpdoc.xml`
   - Reduces package size for production deployments
